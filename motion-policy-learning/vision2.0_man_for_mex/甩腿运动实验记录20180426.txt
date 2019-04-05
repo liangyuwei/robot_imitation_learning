@@ -1,0 +1,24 @@
+2018-04-26ÊµÑé¼ÇÂ¼£º
+
+	  mu_k	angular_acc	traj_radius	traj_height
+
+	0.3/0.8   1/5deg        380/480/580        300/350/400/
+
+
+simu_0 :    0.3	      1 deg           380             300	
+simu_1 :    0.8       1 deg		380		300
+simu_2 :    0.3       5 deg		380		300
+simu_3 :    0.3       1 deg		480		300
+simu_4 :    0.3       1 deg		380		350
+
+simu_5 :    0.5       1 deg		380		300
+
+simu_6 :    0.3	      3 deg           380             300
+
+simu_7 :    0.3       1 deg		580		300
+
+simu_8 :    0.3       1 deg		380		400
+
+
+
+
