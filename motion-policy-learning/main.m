@@ -1,9 +1,8 @@
 %% Setup
 Q = {}; % n_samples x n_dof x Time(Length)
 len_samples = 1000;
-n_dof = 7;
-n_samples = 1; % num of trajectory samples
 t_series = 1:1000; % should be more than one sample..
+
 %% Build robot models
 global uLINK th
 th = zeros(6, 1);
@@ -24,24 +23,66 @@ uLINK(8) = struct('name', 'ee_fixed_joint', 'mom', 7, 'child', 0, 'b', [0 0.0946
 
 
 % human joint trajectory -> robot joint trajectory (affine transform)
-% for a single sample of trajectory
+% % Way 1: Apply affine transform for a single sample of trajectory
 % t_start_trans = 1; % tao
 % [M, loss] = optimize_affine_transform(t_start_trans, Q{1}); % optimize sample 1; M0??? goal ???
 % Q_prime = Q; % apply affine transform
 % Q_prime(:, t_start_trans:end) = M' * Q(:, t_start_trans:end) + (eye(n_dof) - M') * repmat(Q(:, t_start_trans), 1, len_samples - t_start_trans + 1);
 
-% use the joint trajectory data collected from RViz simulation directly
+% Way 2: Use the joint trajectory data collected from RViz simulation directly
+disp('==========Import the joint trajectories collected from RViz simulation==========');
 file_name = 'imi_joint_traj_dataset.h5';
-Q_prime = read_hdf5_imi_data(file_name);
-
-test_robot_fk(Q_prime{1, 1}); % display one trajectory at a time
+Q_dataset = read_hdf5_imi_data(file_name);
 
 
 %% Modeling of robot's elbow and wrist trajectories
 % robot joint trajectory -> robot elbow & wrist trajectories 
-[elbow_traj, wrist_traj] = FK_panda_arm(Q_prime); % here there's only one single trajectory, the whole dataset needs to be processd.
+n_samples = size(Q_dataset, 1);
+elbow_traj_dataset = cell(n_samples, 1);
+wrist_traj_dataset = cell(n_samples, 1);
+disp('==========Obtain the elbow and wrist trajectories==========');
+for n = 1:n_samples
+    % display some messages
+    disp(['Processing the trajectory ', num2str(n), '/', num2str(n_samples), '...']);
+    
+    % update the robot's state and obtain the elbow and wrist trajectories
+    [elbow_traj_points, wrist_traj_points] = obtain_robot_traj(Q_dataset{n, 1});
+
+    % Display the result
+    %{
+    figure;
+    plot3(wrist_traj_points(:, 1), wrist_traj_points(:, 2), wrist_traj_points(:, 3), 'b.'); hold on;
+    plot3(elbow_traj_points(:, 1), elbow_traj_points(:, 2), elbow_traj_points(:, 3), 'b.');
+    plot3(0, 0, 0, 'rx');
+    grid on;
+    xlabel('x'); ylabel('y'); zlabel('z');
+    axis([0, 0.8, -0.4, 0.4, 0, 0.7]);
+    view(135, 45);
+    pause;
+    %}
+    
+    % record the elbow and wrist trajectories
+    elbow_traj_dataset{n, 1} = elbow_traj_points;
+    wrist_traj_dataset{n, 1} = wrist_traj_points;
+    
+end
+
 
 % GTW(Generalized Time Warping) pre-processing
+disp('==========Perform GTW on the trajectories==========');
+% use elbow trajectories to perform time warping(or could be wrist
+% trajectories, t_series!!!!!) try it !!!!
+id_func = perform_gtw_on_traj(1000, elbow_traj_dataset); % set the total step size to 1000
+elbow_traj_dataset_aligned = cell(length(traj_dataset), 1);
+wrist_traj_dataset_aligned = cell(length(traj_dataset), 1);
+t_series_aligned = cell(length(traj_dataset), 1);
+for i = 1 : length(traj_dataset)
+    traj_dataset_aligned{i} = traj_dataset{i}(round(aliGtw.P(:, i)), :);
+end
+wrist_traj_dataset_aligned = perform_gtw_on_traj(1000, wrist_traj_dataset); % set the total step size to 1000
+%%%%%% t_series in Q_dataset should also be transformed using
+%%%%%% aliGtw.P!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+%%%%%% !!!!!!!!!!!!!!!!!
 
     %Github code!!!
 

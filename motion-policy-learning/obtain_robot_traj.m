@@ -1,5 +1,5 @@
-function test_robot_fk(q_traj)
-%% This function updates the robot's joint angles and displays its motion.
+function [elbow_traj_points, end_traj_points] = obtain_robot_traj(q_traj)
+%% This function updates the robot's joint angles and returns its wrist and elbow trajectories.
 
 % Initialize the position and pose of the base
 global uLINK
@@ -11,7 +11,8 @@ global th
 n = size(q_traj, 1); % number of time instances
 
 % Iteratively compute the robot's state
-traj_points = zeros(n, 3);
+end_traj_points = zeros(n, 3);
+elbow_traj_points = zeros(n, 3);
 for m = 1:n
     
     % assign joint angles
@@ -22,17 +23,12 @@ for m = 1:n
     ForwardKinematics(2);
     
     % record trajectory points
-    traj_points(m, :) = uLINK(7).p';
+    end_traj_points(m, :) = uLINK(7).p';
+    elbow_traj_points(m, :) = uLINK(4).p';
+    
 end
 
-% Display the result
-figure;
-plot3(traj_points(:, 1), traj_points(:, 2), traj_points(:, 3), 'b.'); hold on;
-plot3(0, 0, 0, 'rx');
-grid on;
-xlabel('x'); ylabel('y'); zlabel('z');
-axis([0, 0.8, -0.4, 0.4, 0, 0.7]);
-view(135, 45);
+
 end
 
 
