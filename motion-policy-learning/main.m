@@ -1,7 +1,6 @@
 %% Setup
 Q = {}; % n_samples x n_dof x Time(Length)
 len_samples = 1000;
-t_series = 1:1000; % should be more than one sample..
 
 %% Build robot models
 global uLINK th
@@ -33,7 +32,7 @@ uLINK(8) = struct('name', 'ee_fixed_joint', 'mom', 7, 'child', 0, 'b', [0 0.0946
 disp('==========Import the joint trajectories collected from RViz simulation==========');
 file_name = 'imi_joint_traj_dataset.h5';
 Q_dataset = read_hdf5_imi_data(file_name);
-
+t_series = Q_dataset(:, 2);
 
 %% Modeling of robot's elbow and wrist trajectories
 % robot joint trajectory -> robot elbow & wrist trajectories 
@@ -72,29 +71,72 @@ end
 disp('==========Perform GTW on the trajectories==========');
 % use elbow trajectories to perform time warping(or could be wrist
 % trajectories, t_series!!!!!) try it !!!!
-id_func = perform_gtw_on_traj(1000, elbow_traj_dataset); % set the total step size to 1000
+traj_dataset = elbow_traj_dataset;
+id_func = perform_gtw_on_traj(len_samples, traj_dataset); % set the total step to len_samples = 1000
 elbow_traj_dataset_aligned = cell(length(traj_dataset), 1);
 wrist_traj_dataset_aligned = cell(length(traj_dataset), 1);
 t_series_aligned = cell(length(traj_dataset), 1);
+disp('Do time warping...');
 for i = 1 : length(traj_dataset)
-    traj_dataset_aligned{i} = traj_dataset{i}(round(aliGtw.P(:, i)), :);
+    
+    % fix out-of-bound ceil for the last index(caused by poor precision)
+    if id_func(end, i) > size(traj_dataset{i}, 1)
+        id_func(end, i) = size(traj_dataset{i}, 1);
+    end
+    
+    % initialization
+    elbow_traj_dataset_aligned{i} = zeros(size(id_func, 1), 3);
+    wrist_traj_dataset_aligned{i} = zeros(size(id_func, 1), 3);
+    t_series_aligned{i} = zeros(size(id_func, 1), 1);
+    
+    for j = 1 : size(id_func, 1)
+        
+        t = id_func(j, i); t1 = floor(t); t2 = ceil(t);
+        
+        if t1 ~= t2 % do interpolation
+            % should perform interpolation since the same t can't correspond to the same trajectory point
+            elbow_traj_dataset_aligned{i}(j, :) = (t - t1) / (t2 - t1) * (elbow_traj_dataset{i}(t2, :) - elbow_traj_dataset{i}(t1, :)) + elbow_traj_dataset{i}(t1, :);
+            wrist_traj_dataset_aligned{i}(j, :) = (t - t1) / (t2 - t1) * (wrist_traj_dataset{i}(t2, :) - wrist_traj_dataset{i}(t1, :)) + wrist_traj_dataset{i}(t1, :);
+            t_series_aligned{i}(j) =  (t - t1) / (t2 - t1) * (t_series{i}(t2) - t_series{i}(t1)) + t_series{i}(t1);            
+        else % t1 == t2
+            elbow_traj_dataset_aligned{i}(j, :) = elbow_traj_dataset{i}(t1, :);
+            wrist_traj_dataset_aligned{i}(j, :) = wrist_traj_dataset{i}(t1, :);
+            t_series_aligned{i}(j) = t_series{i}(t1);
+        end
+        
+    end
 end
-wrist_traj_dataset_aligned = perform_gtw_on_traj(1000, wrist_traj_dataset); % set the total step size to 1000
-%%%%%% t_series in Q_dataset should also be transformed using
-%%%%%% aliGtw.P!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-%%%%%% !!!!!!!!!!!!!!!!!
-
-    %Github code!!!
+% display the 3 dimensional trajectory of the imitation data
+%{
+figure;
+display_traj_dataset = elbow_traj_dataset_aligned;
+display_t = t_series_aligned;
+for i = 1:length(display_traj_dataset)
+    subplot(3, 1, 1), plot((1:1000)/100, display_traj_dataset{i}(:, 1), 'b-'); hold on; grid on; title('x'); xlabel('t');
+    subplot(3, 1, 2), plot((1:1000)/100, display_traj_dataset{i}(:, 2), 'r-'); hold on; grid on; title('y'); xlabel('t');
+    subplot(3, 1, 3), plot(display_t{i}, display_traj_dataset{i}(:, 3), 'g-'); hold on; grid on; title('z'); xlabel('t');
+end
+%}
 
 % Construct GMM(Gaussian Mixture Model)
-K_w_t = 3; % number of submodels
-GM_wrist_time = fitgmdist([wrist_traj', t_series'], K_w_t); % data - N x 4; should use the whole dataset instead of just one trajectory
+disp('==========Construct GMM models==========');
+K_w_t = 8; %10;%3; % 4; % number of submodels
+wrist_traj_total = zeros(len_samples * length(wrist_traj_dataset), 3);
+t_series_total = zeros(len_samples * length(wrist_traj_dataset), 1);
+for i = 1 : length(wrist_traj_dataset_aligned)
+    wrist_traj_total((i-1) * len_samples + 1 : i * len_samples, :) = wrist_traj_dataset_aligned{i};
+    t_series_total((i-1) * len_samples + 1 : i * len_samples) = t_series_aligned{i}; % 1:len_samples;% % should use new time sequence???
+end
+GM_wrist_time = fitgmdist([wrist_traj_total, t_series_total], K_w_t); % data - N x 4; should use the whole dataset instead of just one trajectory
+disp('Done.');
 
 % Compute expected trajectory using Gaussian Mixture Regression
+disp('==========Compute expected wrist trajectory using Gaussian Mixture Regression==========');
 %K_w_t = GM_wrist_time.NumComponents;
 beta = GM_wrist_time.ComponentProportion; % 1 x K_w_t
 mu_t = zeros(1, K_w_t); cov_t_t = zeros(1, K_w_t);
 mu_xw = zeros(K_w_t, 3); cov_xw_t = zeros(3, K_w_t);
+% compute statistical properties
 for k = 1:K_w_t
     % for signal t
     mu_t(k) = GM_wrist_time.mu(k, 4); % the 4th column corresponds to t element; k rows - k components(submodels)
@@ -103,13 +145,43 @@ for k = 1:K_w_t
     mu_xw(k, :) = GM_wrist_time.mu(k, 1:3); % the 1st-3rd columns correspond to xw
     cov_xw_t(:, k) = GM_wrist_time.Sigma(1:3, 4, k); % 3 x 1 for each submodel
 end
-t_normpdf = @(t) normpdf(t, mu_t, cov_t_t); % for each t, t_normpdf outputs a 1 x K_w_t
-p_k_t = @(t) beta .* t_normpdf(t) / beta * t_normpdf(t)';% a vector of size 1 x K_w_t; each element corresponds to a submodel
-mu_hat_k_xw = @(t) mu_xw + cov_xw_t' .* repmat((1./cov_t_t .* (t - mu_t))', 1, 3); % output mu(hat)^k_t, a matrix of size K x 3
-mu_xw_at_t = p_k_t * mu_hat_k_xw; % output THE EXPECTED wrist position at time t, a vector of size 1 x 3;
-% for t = ... % export THE EXPECTED trajectory(the goal position is determined during data acquisition, i.e. fixed)
-%     mu_xw_at_t(....)
-% end 
+% compute the expected wrist trajectory
+t_normpdf_func = @(t) normpdf(t, mu_t, 100*sqrt(cov_t_t)); % for each t, t_normpdf outputs a 1 x K_w_t; should use standard deviation!!!!! Not variance!!!!!!
+% cov_t_t too small that the probability density is too focused... how to fix it ???    
+time_interval = 1:0.005:8; % seconds; should be within t?? or use warped time sequence?
+expected_wrist_traj = zeros(length(time_interval), 3);
+% test the pdf function's output
+test = [];
+for i = 1:length(time_interval)
+    test = [test; t_normpdf_func(time_interval(i))];
+end
+figure;
+plot(1:length(time_interval), test(:, 1), 'b.'); hold on; grid on;
+plot(1:length(time_interval), test(:, 2), 'r.');
+plot(1:length(time_interval), test(:, 3), 'g.');
+plot(1:length(time_interval), test(:, 4), 'c.');
+plot(1:length(time_interval), test(:, 5), 'y.');
+% axis([1, length(time_interval)+1, 0, 2]);
+
+for i = 1:length(time_interval) % export THE EXPECTED trajectory(the goal position is determined during data acquisition, i.e. fixed)
+    t = time_interval(i);
+    t_normpdf = t_normpdf_func(t); % 1 x K_w_t
+    
+    p_k_t = beta .* t_normpdf / (beta * t_normpdf');% a vector of size 1 x K_w_t; each element corresponds to a submodel; cannot start from t=0???
+
+    mu_hat_k_xw = mu_xw + cov_xw_t' .* repmat((1./cov_t_t .* (t - mu_t))', 1, 3); % output mu(hat)^k_t, a matrix of size K x 3 
+    mu_xw_at_t = p_k_t * mu_hat_k_xw; % output THE EXPECTED wrist position at time t, a vector of size 1 x 3;
+    
+    % record the newly generated trajectory point
+    expected_wrist_traj(i, :) = mu_xw_at_t;
+    
+end 
+
+% display the result
+figure;
+plot3(expected_wrist_traj(:, 1), expected_wrist_traj(:, 2), expected_wrist_traj(:, 3), 'b.'); hold on; grid on;
+plot3(0, 0, 0, 'rx');
+xlabel('x'); ylabel('y'); zlabel('z');
 
 %% Generalization using Dynamic Motion Primitive
 % Generate NEW wrist trajectory with NEW target position by Dynamic Motion Primitive   
