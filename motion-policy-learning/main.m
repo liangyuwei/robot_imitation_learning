@@ -71,7 +71,7 @@ end
 disp('==========Perform GTW on the trajectories==========');
 % use elbow trajectories to perform time warping(or could be wrist
 % trajectories, t_series!!!!!) try it !!!!
-traj_dataset = elbow_traj_dataset;
+traj_dataset = wrist_traj_dataset; %elbow_traj_dataset; % maybe it's better to perform GTW on wrist traj?? which looks more pattern-ed???
 id_func = perform_gtw_on_traj(len_samples, traj_dataset); % set the total step to len_samples = 1000
 elbow_traj_dataset_aligned = cell(length(traj_dataset), 1);
 wrist_traj_dataset_aligned = cell(length(traj_dataset), 1);
@@ -106,32 +106,62 @@ for i = 1 : length(traj_dataset)
         
     end
 end
+% use PbDlib to perform GMM and GMR
+Data = zeros(4, len_samples * length(wrist_traj_dataset));
+Data(1, :) = repmat((1:1000)/200, 1, length(wrist_traj_dataset));
+for i = 1 : length(wrist_traj_dataset)
+   Data(2:end, (i-1) * len_samples + 1 : i * len_samples) = wrist_traj_dataset_aligned{i}'; 
+end
+disp('==========Perform GMM and GMR using PbDlib==========');
+nbStates = 5; % number of states in GMM
+nbVar = 4; % number of variables, e.g. [t, x, y, z]
+dt = 1/200; % time step duration
+nbData = len_samples; % length of each trajectory; in our case, length of the GTW-aligned trajectory
+nbSamples = 10; % number of samples
+expected_wrist_traj = perform_GMM_GMR_xw(Data, nbStates, nbVar, dt, nbData, nbSamples); % 3 x 1000
+expected_wrist_traj = expected_wrist_traj'; % now 1000 x 3
+
 % display the 3 dimensional trajectory of the imitation data
 %{
 figure;
-display_traj_dataset = elbow_traj_dataset_aligned;
+display_traj_dataset = wrist_traj_dataset_aligned;
 display_t = t_series_aligned;
 for i = 1:length(display_traj_dataset)
-    subplot(3, 1, 1), plot((1:1000)/100, display_traj_dataset{i}(:, 1), 'b-'); hold on; grid on; title('x'); xlabel('t');
-    subplot(3, 1, 2), plot((1:1000)/100, display_traj_dataset{i}(:, 2), 'r-'); hold on; grid on; title('y'); xlabel('t');
-    subplot(3, 1, 3), plot(display_t{i}, display_traj_dataset{i}(:, 3), 'g-'); hold on; grid on; title('z'); xlabel('t');
+    subplot(3, 1, 1), plot((1:1000)/200, display_traj_dataset{i}(:, 1), 'b-'); hold on; grid on; title('x'); xlabel('t');
+    subplot(3, 1, 2), plot((1:1000)/200, display_traj_dataset{i}(:, 2), 'r-'); hold on; grid on; title('y'); xlabel('t');
+    subplot(3, 1, 3), plot((1:1000)/200, display_traj_dataset{i}(:, 3), 'g-'); hold on; grid on; title('z'); xlabel('t');
 end
+% display the euclidean trajectory; without the time information, xx_traj_dataset and xx_traj_dataset_aligned should look the same    
+figure;
+for i = 1 : length(display_traj_dataset)
+    plot3(display_traj_dataset{i}(:, 1), display_traj_dataset{i}(:, 2), display_traj_dataset{i}(:, 3), 'b-'); hold on; grid on;     
+%     pause;
+end
+xlabel('x'); ylabel('y'); zlabel('z');
 %}
 
 % Construct GMM(Gaussian Mixture Model)
-disp('==========Construct GMM models==========');
-K_w_t = 8; %10;%3; % 4; % number of submodels
-wrist_traj_total = zeros(len_samples * length(wrist_traj_dataset), 3);
-t_series_total = zeros(len_samples * length(wrist_traj_dataset), 1);
+% disp('==========Construct GMM models==========');
+%{
+K_w_t = 4; %10;%3; % 4; % number of submodels
+wrist_traj_total = zeros(len_samples * length(wrist_traj_dataset), 3); %zeros(length(wrist_traj_dataset_aligned), 3*len_samples); %
+t_series_total = zeros(len_samples * length(wrist_traj_dataset), 1); %zeros(length(wrist_traj_dataset_aligned), len_samples); %
 for i = 1 : length(wrist_traj_dataset_aligned)
     wrist_traj_total((i-1) * len_samples + 1 : i * len_samples, :) = wrist_traj_dataset_aligned{i};
-    t_series_total((i-1) * len_samples + 1 : i * len_samples) = t_series_aligned{i}; % 1:len_samples;% % should use new time sequence???
+    % already tried another way of modeling GMM, but it doesn't work because there are more rows than columns   
+%     tmp = wrist_traj_dataset_aligned{i}';
+%     wrist_traj_total(i, :) = tmp(:)';
+%     t_series_total(i, :) = 1:len_samples;
+    t_series_total((i-1) * len_samples + 1 : i * len_samples) = t_series_aligned{i}; %(1:len_samples)/200; % % 1:len_samples;% % should use new time sequence???
 end
 GM_wrist_time = fitgmdist([wrist_traj_total, t_series_total], K_w_t); % data - N x 4; should use the whole dataset instead of just one trajectory
 disp('Done.');
+% save GM_wrist_time_18c_1 GM_wrist_time
+%}
 
 % Compute expected trajectory using Gaussian Mixture Regression
-disp('==========Compute expected wrist trajectory using Gaussian Mixture Regression==========');
+% disp('==========Compute expected wrist trajectory using Gaussian Mixture Regression==========');
+%{
 %K_w_t = GM_wrist_time.NumComponents;
 beta = GM_wrist_time.ComponentProportion; % 1 x K_w_t
 mu_t = zeros(1, K_w_t); cov_t_t = zeros(1, K_w_t);
@@ -146,9 +176,9 @@ for k = 1:K_w_t
     cov_xw_t(:, k) = GM_wrist_time.Sigma(1:3, 4, k); % 3 x 1 for each submodel
 end
 % compute the expected wrist trajectory
-t_normpdf_func = @(t) normpdf(t, mu_t, 100*sqrt(cov_t_t)); % for each t, t_normpdf outputs a 1 x K_w_t; should use standard deviation!!!!! Not variance!!!!!!
+t_normpdf_func = @(t) normpdf(t, mu_t, sqrt(cov_t_t)); % for each t, t_normpdf outputs a 1 x K_w_t; should use standard deviation!!!!! Not variance!!!!!!
 % cov_t_t too small that the probability density is too focused... how to fix it ???    
-time_interval = 1:0.005:8; % seconds; should be within t?? or use warped time sequence?
+time_interval = (1:len_samples)/200; % seconds; should be within t?? or use warped time sequence?
 expected_wrist_traj = zeros(length(time_interval), 3);
 % test the pdf function's output
 test = [];
@@ -156,37 +186,80 @@ for i = 1:length(time_interval)
     test = [test; t_normpdf_func(time_interval(i))];
 end
 figure;
-plot(1:length(time_interval), test(:, 1), 'b.'); hold on; grid on;
-plot(1:length(time_interval), test(:, 2), 'r.');
-plot(1:length(time_interval), test(:, 3), 'g.');
-plot(1:length(time_interval), test(:, 4), 'c.');
-plot(1:length(time_interval), test(:, 5), 'y.');
+for i = 1 : size(test, 2)
+    plot((1:len_samples)/200, test(:, i), 'b.'); hold on; grid on;
+end
+%}
+% plot(1:length(time_interval), test(:, 1), 'b.'); hold on; grid on;
+% plot(1:length(time_interval), test(:, 2), 'r.');
+% plot(1:length(time_interval), test(:, 3), 'g.');
+% plot(1:length(time_interval), test(:, 4), 'c.');
+% plot(1:length(time_interval), test(:, 5), 'y.');
 % axis([1, length(time_interval)+1, 0, 2]);
 
+%{
 for i = 1:length(time_interval) % export THE EXPECTED trajectory(the goal position is determined during data acquisition, i.e. fixed)
     t = time_interval(i);
     t_normpdf = t_normpdf_func(t); % 1 x K_w_t
     
     p_k_t = beta .* t_normpdf / (beta * t_normpdf');% a vector of size 1 x K_w_t; each element corresponds to a submodel; cannot start from t=0???
-
+    
+%     mu_hat_k_xw = zeros(K_w_t, 3);
+%     for k = 1 : K_w_t
     mu_hat_k_xw = mu_xw + cov_xw_t' .* repmat((1./cov_t_t .* (t - mu_t))', 1, 3); % output mu(hat)^k_t, a matrix of size K x 3 
+%         mu_hat_k_xw(k, :) = mu_xw(k, :) + cov_xw_t(:, k)' / cov_t_t(k) * (t - mu_t(k));
+%     end
     mu_xw_at_t = p_k_t * mu_hat_k_xw; % output THE EXPECTED wrist position at time t, a vector of size 1 x 3;
     
     % record the newly generated trajectory point
     expected_wrist_traj(i, :) = mu_xw_at_t;
     
 end 
+%}
 
 % display the result
-figure;
-plot3(expected_wrist_traj(:, 1), expected_wrist_traj(:, 2), expected_wrist_traj(:, 3), 'b.'); hold on; grid on;
-plot3(0, 0, 0, 'rx');
-xlabel('x'); ylabel('y'); zlabel('z');
+% figure;
+% plot3(expected_wrist_traj(:, 1), expected_wrist_traj(:, 2), expected_wrist_traj(:, 3), 'b-'); hold on; grid on;
+% plot3(0, 0, 0, 'rx');
+% xlabel('x'); ylabel('y'); zlabel('z');
+
+% display the result, 3 dimensional 
+% figure;
+% subplot(3, 1, 1), plot(1:length(expected_wrist_traj), expected_wrist_traj(:, 1), 'b.'); hold on; grid on; xlabel('x');
+% subplot(3, 1, 2), plot(1:length(expected_wrist_traj), expected_wrist_traj(:, 2), 'r.'); hold on; grid on; xlabel('y');
+% subplot(3, 1, 3), plot(1:length(expected_wrist_traj), expected_wrist_traj(:, 3), 'g.'); hold on; grid on; xlabel('z');
+
 
 %% Generalization using Dynamic Motion Primitive
 % Generate NEW wrist trajectory with NEW target position by Dynamic Motion Primitive   
-g_f = [0, 0, 0]'; % new goal
-y0 = [0, 0, 0]'; % new initial position
+% Perform DMP using PbDlib
+disp('===========Perform DMP using PbDlib==========');
+nbStates = 5; % number of states/activation functions
+nbVar = 1; % number of the variables for the radial basis function
+nbVarPos = 3; % number of motion variables [x, y, z]
+kP = 50;%50; % stiffness gain
+kV = 40;%(2*50)^.5; %(2*kP)^.5; % damping gain (with ideal underdamped damping ratio)
+alpha = 1; % decay factor
+dt = 1/200; % duration of time step
+nbData = len_samples; % length of each trajectory(which is why they need to be GTW-aligned for use here)
+nbSamples = 10; % number of samples
+% be careful with the goal and initial state, don't swap them...
+new_goal = wrist_traj_dataset_aligned{1}(end, :)';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal
+new_start = wrist_traj_dataset_aligned{1}(1, :)';% + [0, 0.1, 0]';  % move down 0.1 in y direction; % new initial position
+new_wrist_traj = perform_DMP(wrist_traj_dataset_aligned, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbData, nbSamples, new_goal, new_start);
+new_wrist_traj = new_wrist_traj.Data;
+% plot the newly generated trajectory
+figure;
+plot3(new_wrist_traj(1, :), new_wrist_traj(2, :), new_wrist_traj(3, :), 'b.'); hold on; grid on;
+plot3(new_wrist_traj(1, 1), new_wrist_traj(2, 1), new_wrist_traj(3, 1), 'go');
+plot3(new_wrist_traj(1, end), new_wrist_traj(2, end), new_wrist_traj(3, end), 'ro');
+title(['kP = ', num2str(kP), ', kV = ', num2str(kV)]);
+view(135, 45);
+xlabel('x'); ylabel('y'); zlabel('z');
+% code programmed by me...
+%{
+g_f = [0.5, 0.35, 0.315]' + [0, 0.1, 0]'; % move up 0.1 in y direction; % new goal
+y0 = [0.5, -3.5, 0.315]' + [0, 0.1, 0]';  % move down 0.1 in y direction; % new initial position
 % global dcps; % declare the global variable dcps for use
 ID = [1, 2, 3]; n_rfs = 10; name = ['x', 'y', 'z'];
 dcp('Clear', ID); % clear the data
@@ -209,8 +282,16 @@ for i = 0 : 2 * tau / dt % two times, for displaying the whole process
     wrist_traj_new(i, :) = [x, y, z];
   
 end
+%}
+% wrist_traj_new = [];
 
 % Generate new elbow trajectory based on new wrist trajectory
+nbStates = 5;
+nbVar = 6;
+dt = 
+Data = zeros
+perform_GMM_GMR_xe(Data, nbStates, nbVar, dt, nbData, nbSamples, xw_in)
+%{
 %K_e_w = GM_elbow_wrist.NumComponents; % number of submodels
 K_e_w = 3;
 GM_elbow_wrist = fitgmdist([elbow_traj', wrist_traj_new], K_e_w); % data - N x 6; use the NEW TRAJ generated by DMP to model GMM!!!
@@ -238,6 +319,7 @@ cov_xe_at_xw = zeros(3, 3);
 for k = 1:K_e_w
     cov_xe_at_xw = cov_xe_at_xw + pi_k_xw(k) ^2 * cov_hat_xe(:, :, k);
 end
+%}
 
 %% Generation of joint trajectories(converted from Euclidean trajectory)
 % Find appropriate initial value for optimization

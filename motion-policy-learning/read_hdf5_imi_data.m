@@ -3,7 +3,7 @@ function Q = read_hdf5_imi_data(file_name)
 
 %% Read .h5 file
 info = h5info('imi_joint_traj_dataset.h5');
-n_samples = length(info.Groups);
+n_samples = 10;%length(info.Groups);
 Q = cell(n_samples, 2); % initialization, inconsistent time ==> must use cell  
 for i = 1:n_samples
    % Access the ith sample 
