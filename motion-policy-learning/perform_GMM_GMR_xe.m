@@ -1,4 +1,4 @@
-function xe_out = perform_GMM_GMR_xe(Data, nbStates, nbVar, dt, nbData, nbSamples, xw_in)
+function [DataOut, SigmaOut] = perform_GMM_GMR_xe(Data, nbStates, nbVar, dt, nbData, nbSamples, xw_in)
 % xw_in - 3-dim trajectory as input of GMR
 % Data - 6-dim, including xw and xe datasets(aligned)
 
@@ -39,7 +39,7 @@ function xe_out = perform_GMM_GMR_xe(Data, nbStates, nbVar, dt, nbData, nbSample
 % You should have received a copy of the GNU General Public License
 % along with PbDlib. If not, see <http://www.gnu.org/licenses/>.
 
-addpath('./m_fcts/');
+% addpath('./m_fcts/');
 
 
 %% Parameters
@@ -65,28 +65,29 @@ nbSamples = nbSamples; %5; %Number of demonstrations
 % 	s(n).Data = [[1:nbData]*model.dt; s(n).Data; spline(1:size(demos{n}.pos,2), demos{n}.pos, linspace(1,size(demos{n}.pos,2),nbData))]; %Resampling
 % 	Data = [Data s(n).Data]; 
 % end
-Data = [];
+% Data = [];
 
 
 %% Learning and reproduction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%model = init_GMM_kmeans(Data, model);
-model = init_GMM_timeBased(Data, model);
+model = init_GMM_kmeans(Data, model);
+% model = init_GMM_timeBased(Data, model);
 model = EM_GMM(Data, model);
 % 1:3 is xw_dataset_aligned, 4:6 is xe_dataset_aligned, xw_in is the input to GMR     
-[DataOut, SigmaOut] = GMR(model, xw_in, 1:3, 4:6); %see Eq. (17)-(19)
+[DataOut, SigmaOut] = GMR(model, xw_in, 1:3, 4:6); % 1:3 is xw_dataset, 4:6 is xe_dataset %see Eq. (17)-(19)
 
 
 %% Plots
+%{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Display figure (can take some time)...');
 figure('position',[10,10,1000,500]); 
 %Plot GMM
 subplot(1,2,1); hold on; box on; title('GMM');
-plotGMM3D(model.Mu(2:4,:), model.Sigma(2:4,2:4,:), [.8 0 0], .3);
+plotGMM3D(model.Mu(4:6,:), model.Sigma(4:6,4:6,:), [.8 0 0], .3);
 %plot3(Data(2,:),Data(3,:),Data(4,:),'.','markersize',8,'color',[.7 .7 .7]);
 for n=1:nbSamples
-	dTmp = [Data(2:4,(n-1)*nbData+1:n*nbData) fliplr(Data(2:4,(n-1)*nbData+1:n*nbData))];
+	dTmp = [Data(4:6,(n-1)*nbData+1:n*nbData) fliplr(Data(4:6,(n-1)*nbData+1:n*nbData))];
 	patch(dTmp(1,:),dTmp(2,:),dTmp(3,:), [.5,.5,.5],'facealpha',0,'linewidth',2,'edgecolor',[.5,.5,.5],'edgealpha',.5);
 end
 view(3); axis equal; set(gca,'Xtick',[]); set(gca,'Ytick',[]); set(gca,'Ztick',[]);
@@ -95,12 +96,13 @@ xlabel('x_1'); ylabel('x_2'); zlabel('x_3');
 subplot(1,2,2); hold on; box on; title('GMR');
 plotGMM3D(DataOut(1:3,1:2:end), SigmaOut(1:3,1:3,1:2:end), [0 .8 0], .2, 2);
 for n=1:nbSamples
-	dTmp = [Data(2:4,(n-1)*nbData+1:n*nbData) fliplr(Data(2:4,(n-1)*nbData+1:n*nbData))];
+	dTmp = [Data(4:6,(n-1)*nbData+1:n*nbData) fliplr(Data(4:6,(n-1)*nbData+1:n*nbData))];
 	patch(dTmp(1,:),dTmp(2,:),dTmp(3,:), [.5,.5,.5],'facealpha',0,'linewidth',2,'edgecolor',[.5,.5,.5],'edgealpha',.5);
 end
 plot3(DataOut(1,:),DataOut(2,:),DataOut(3,:),'-','linewidth',4,'color',[0 .4 0]);
 view(3); axis equal; set(gca,'Xtick',[]); set(gca,'Ytick',[]); set(gca,'Ztick',[]);
 xlabel('x_1'); ylabel('x_2'); zlabel('x_3');
+%}
 
 %print('-dpng','graphs/demo_GMR_3Dviz01.png');
 %pause;

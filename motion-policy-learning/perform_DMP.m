@@ -35,7 +35,7 @@ function r = perform_DMP(traj_dataset, nbStates, nbVar, nbVarPos, kP, kV, alpha,
 % You should have received a copy of the GNU General Public License
 % along with PbDlib. If not, see <http://www.gnu.org/licenses/>.
 
-addpath('./m_fcts/');
+% addpath('./m_fcts/');
 
 %% Parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -120,6 +120,7 @@ end
 
 
 %% Plots
+%{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 figure('PaperPosition',[0 0 16 4],'position',[10,10,1300,500],'color',[1 1 1]); 
 xx = round(linspace(1,64,model.nbStates));
@@ -156,7 +157,7 @@ axis([min(sIn) max(sIn) 0 1]);
 xlabel('$s$','fontsize',16,'interpreter','latex'); 
 ylabel('$h$','fontsize',16,'interpreter','latex');
 view(180,-90);
-
+%}
 %print('-dpng','graphs/demo_DMP01.png');
 %pause;
 %close all;

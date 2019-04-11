@@ -33,6 +33,7 @@ disp('==========Import the joint trajectories collected from RViz simulation====
 file_name = 'imi_joint_traj_dataset.h5';
 Q_dataset = read_hdf5_imi_data(file_name);
 t_series = Q_dataset(:, 2);
+disp('Done');
 
 %% Modeling of robot's elbow and wrist trajectories
 % robot joint trajectory -> robot elbow & wrist trajectories 
@@ -47,7 +48,7 @@ for n = 1:n_samples
     % update the robot's state and obtain the elbow and wrist trajectories
     [elbow_traj_points, wrist_traj_points] = obtain_robot_traj(Q_dataset{n, 1});
 
-    % Display the result
+    % Inspect the trajectories one by one
     %{
     figure;
     plot3(wrist_traj_points(:, 1), wrist_traj_points(:, 2), wrist_traj_points(:, 3), 'b.'); hold on;
@@ -65,7 +66,21 @@ for n = 1:n_samples
     wrist_traj_dataset{n, 1} = wrist_traj_points;
     
 end
-
+disp('Done.');
+% display the imitation data
+%{
+figure;
+for i = 1 : n_samples
+    traj_dataset = elbow_traj_dataset{i}; % wrist_traj_dataset{i};
+    plot3(traj_dataset(:, 1), traj_dataset(:, 2), traj_dataset(:, 3), 'b-'); hold on;
+    plot3(traj_dataset(1, 1), traj_dataset(1, 2), traj_dataset(1, 3), 'go');
+    plot3(traj_dataset(end, 1), traj_dataset(end, 2), traj_dataset(end, 3), 'ro');    
+end
+grid on;
+title('elbow trajectories');
+xlabel('x'); ylabel('y'); zlabel('z');
+view(140, 45);
+%}
 
 % GTW(Generalized Time Warping) pre-processing
 disp('==========Perform GTW on the trajectories==========');
@@ -106,13 +121,16 @@ for i = 1 : length(traj_dataset)
         
     end
 end
-% use PbDlib to perform GMM and GMR
+disp('Done.');
+
+% perform GMM and GMR(using PbDlib)
+disp('==========Perform GMM and GMR using PbDlib==========');
+disp('Compute the expected xw trajectory...');
 Data = zeros(4, len_samples * length(wrist_traj_dataset));
 Data(1, :) = repmat((1:1000)/200, 1, length(wrist_traj_dataset));
 for i = 1 : length(wrist_traj_dataset)
    Data(2:end, (i-1) * len_samples + 1 : i * len_samples) = wrist_traj_dataset_aligned{i}'; 
 end
-disp('==========Perform GMM and GMR using PbDlib==========');
 nbStates = 5; % number of states in GMM
 nbVar = 4; % number of variables, e.g. [t, x, y, z]
 dt = 1/200; % time step duration
@@ -120,6 +138,7 @@ nbData = len_samples; % length of each trajectory; in our case, length of the GT
 nbSamples = 10; % number of samples
 expected_wrist_traj = perform_GMM_GMR_xw(Data, nbStates, nbVar, dt, nbData, nbSamples); % 3 x 1000
 expected_wrist_traj = expected_wrist_traj'; % now 1000 x 3
+disp('Done.');
 
 % display the 3 dimensional trajectory of the imitation data
 %{
@@ -217,23 +236,23 @@ for i = 1:length(time_interval) % export THE EXPECTED trajectory(the goal positi
 end 
 %}
 
-% display the result
-% figure;
-% plot3(expected_wrist_traj(:, 1), expected_wrist_traj(:, 2), expected_wrist_traj(:, 3), 'b-'); hold on; grid on;
-% plot3(0, 0, 0, 'rx');
-% xlabel('x'); ylabel('y'); zlabel('z');
-
-% display the result, 3 dimensional 
-% figure;
-% subplot(3, 1, 1), plot(1:length(expected_wrist_traj), expected_wrist_traj(:, 1), 'b.'); hold on; grid on; xlabel('x');
-% subplot(3, 1, 2), plot(1:length(expected_wrist_traj), expected_wrist_traj(:, 2), 'r.'); hold on; grid on; xlabel('y');
-% subplot(3, 1, 3), plot(1:length(expected_wrist_traj), expected_wrist_traj(:, 3), 'g.'); hold on; grid on; xlabel('z');
-
+% display the result£¬ 3-dim plot and split-view
+%{
+figure;
+plot3(expected_wrist_traj(:, 1), expected_wrist_traj(:, 2), expected_wrist_traj(:, 3), 'b-'); hold on; grid on;
+plot3(0, 0, 0, 'rx');
+xlabel('x'); ylabel('y'); zlabel('z');
+figure;
+subplot(3, 1, 1), plot(1:length(expected_wrist_traj), expected_wrist_traj(:, 1), 'b.'); hold on; grid on; xlabel('x');
+subplot(3, 1, 2), plot(1:length(expected_wrist_traj), expected_wrist_traj(:, 2), 'r.'); hold on; grid on; xlabel('y');
+subplot(3, 1, 3), plot(1:length(expected_wrist_traj), expected_wrist_traj(:, 3), 'g.'); hold on; grid on; xlabel('z');
+%}
 
 %% Generalization using Dynamic Motion Primitive
 % Generate NEW wrist trajectory with NEW target position by Dynamic Motion Primitive   
 % Perform DMP using PbDlib
 disp('===========Perform DMP using PbDlib==========');
+disp('Generate new wrist trajectory based on the given new start and new goal...');
 nbStates = 5; % number of states/activation functions
 nbVar = 1; % number of the variables for the radial basis function
 nbVarPos = 3; % number of motion variables [x, y, z]
@@ -249,6 +268,7 @@ new_start = wrist_traj_dataset_aligned{1}(1, :)';% + [0, 0.1, 0]';  % move down 
 new_wrist_traj = perform_DMP(wrist_traj_dataset_aligned, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbData, nbSamples, new_goal, new_start);
 new_wrist_traj = new_wrist_traj.Data;
 % plot the newly generated trajectory
+%{
 figure;
 plot3(new_wrist_traj(1, :), new_wrist_traj(2, :), new_wrist_traj(3, :), 'b.'); hold on; grid on;
 plot3(new_wrist_traj(1, 1), new_wrist_traj(2, 1), new_wrist_traj(3, 1), 'go');
@@ -256,6 +276,8 @@ plot3(new_wrist_traj(1, end), new_wrist_traj(2, end), new_wrist_traj(3, end), 'r
 title(['kP = ', num2str(kP), ', kV = ', num2str(kV)]);
 view(135, 45);
 xlabel('x'); ylabel('y'); zlabel('z');
+%}
+
 % code programmed by me...
 %{
 g_f = [0.5, 0.35, 0.315]' + [0, 0.1, 0]'; % move up 0.1 in y direction; % new goal
@@ -284,13 +306,36 @@ for i = 0 : 2 * tau / dt % two times, for displaying the whole process
 end
 %}
 % wrist_traj_new = [];
+disp('Done.');
 
 % Generate new elbow trajectory based on new wrist trajectory
-nbStates = 5;
-nbVar = 6;
-dt = 
-Data = zeros
-perform_GMM_GMR_xe(Data, nbStates, nbVar, dt, nbData, nbSamples, xw_in)
+disp('Generate new elbow trajectory based on the newly wrist trajectory')
+Data = zeros(nbVar, len_samples * length(wrist_traj_dataset_aligned));
+for i = 1 :length(wrist_traj_dataset_aligned)
+    Data(1:3, (i-1)*len_samples+1 : i*len_samples) = wrist_traj_dataset_aligned{i}';
+    Data(4:6, (i-1)*len_samples+1 : i*len_samples) = elbow_traj_dataset_aligned{i}';
+end
+nbStates = 5; % number of states/components in GMM
+nbVar = 6; % number of variables
+dt = 1/200; % duration of time step
+nbData = len_samples; % length of each trajectory
+nbSamples = length(wrist_traj_dataset_aligned);
+xw_in = new_wrist_traj; % the expected wrist traj, used to generate corresponding elbow trajectory
+[xe_out, sigma_out] = perform_GMM_GMR_xe(Data, nbStates, nbVar, dt, nbData, nbSamples, xw_in);
+new_elbow_traj = xe_out;
+cov_xe_t = sigma_out; % 3 x 3 x len_samples
+
+% plot the newly generated trajectory
+%{
+figure;
+plot3(new_elbow_traj(1, :), new_elbow_traj(2, :), new_elbow_traj(3, :), 'b.'); hold on; grid on;
+plot3(new_elbow_traj(1, 1), new_elbow_traj(2, 1), new_elbow_traj(3, 1), 'go');
+plot3(new_elbow_traj(1, end), new_elbow_traj(2, end), new_elbow_traj(3, end), 'ro');
+view(135, 45);
+title('new elbow trajectory');
+xlabel('x'); ylabel('y'); zlabel('z');
+%}
+
 %{
 %K_e_w = GM_elbow_wrist.NumComponents; % number of submodels
 K_e_w = 3;
@@ -322,14 +367,24 @@ end
 %}
 
 %% Generation of joint trajectories(converted from Euclidean trajectory)
+disp('==========Find closest joint configurations from the imitation dataset==========');
 % Find appropriate initial value for optimization
-Compute xe_dataset, xw_dataset from the imitation dataset..
-Pick xe_goal, xw_goal from the newly generated trajectory mu_xw_prime and mu_xe_at_xw_seq
-x_shoulder = [0, 0, 0]; % this should be known; Is is fixed at the initial position ? or from the last step?
-q0 = find_closet_joint_configuration(x_shoulder, xe_goal, xw_goal, xe_dataset, xw_dataset);
-% there is one and only one q0 for each desired (xe_goal, xw_goal)
+% Compute xe_dataset, xw_dataset from the imitation dataset..
+% Pick xe_goal, xw_goal from the newly generated trajectory mu_xw_prime and mu_xe_at_xw_seq
+x_shoulder = uLINK(2).p; % try shoulder pan joint %[0, 0, 0]; % this should be known; Is is fixed at the initial position ? or from the last step?
+% use aligned dataset or what??? 
+best_q0_index = zeros(len_samples, 2); % [id for sample, id for time]
+for t = 1 : len_samples
+    disp(['Processing new trajectory point at t = ', num2str(t), '/', num2str(len_samples)]);
+    xe_target = new_elbow_traj(:, t);
+    xw_target = new_wrist_traj(:, t);
+    best_q0_index(t, :) = find_closet_joint_configuration(x_shoulder, xe_target, xw_target, ...
+                                                          elbow_traj_dataset, wrist_traj_dataset);   
+end
+disp('Done.');
 
 % Joint trajectory generation using sequential quadratic programming
+disp('==========Employ SQP to generate joint trajectory==========');
 global exp_xw_seq exp_xe_seq cov_xe_at_xw_seq
 global q_last_seq q_last q_vel_last
 q_last_seq = [];
