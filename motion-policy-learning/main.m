@@ -162,7 +162,7 @@ xlabel('x'); ylabel('y'); zlabel('z');
 % Construct GMM(Gaussian Mixture Model)
 % disp('==========Construct GMM models==========');
 %{
-K_w_t = 4; %10;%3; % 4; % number of submodels
+K_w_t = 5; %10;%3; % 4; % number of submodels
 wrist_traj_total = zeros(len_samples * length(wrist_traj_dataset), 3); %zeros(length(wrist_traj_dataset_aligned), 3*len_samples); %
 t_series_total = zeros(len_samples * length(wrist_traj_dataset), 1); %zeros(length(wrist_traj_dataset_aligned), len_samples); %
 for i = 1 : length(wrist_traj_dataset_aligned)
@@ -381,17 +381,29 @@ for t = 1 : len_samples
     best_q0_index(t, :) = find_closet_joint_configuration(x_shoulder, xe_target, xw_target, ...
                                                           elbow_traj_dataset, wrist_traj_dataset);   
 end
+% get the corresponding joint angles based on the indices
+q0_seq = zeros(len_samples, 6);
+for i = 1 :len_samples
+     q_tmp = Q_dataset{best_q0_index(i, 1)};
+     q0_seq(i, :) = q_tmp(best_q0_index(i, 2), :);
+end
 disp('Done.');
 
 % Joint trajectory generation using sequential quadratic programming
 disp('==========Employ SQP to generate joint trajectory==========');
-global exp_xw_seq exp_xe_seq cov_xe_at_xw_seq
+global P_lb P_ub V_lb V_ub A_lb A_ub
 global q_last_seq q_last q_vel_last
+P_lb = [-pi, -pi, -pi, -pi, -pi, -pi]'; P_ub = [pi, pi, pi, pi, pi, pi];
+V_lb = [-pi, -pi, -pi, -pi, -pi, -pi]'; V_ub = [pi, pi, pi, pi, pi, pi];
+A_lb = [-1, -1, -1, -1, -1, -1]'; A_ub = [1, 1, 1, 1, 1, 1]';
 q_last_seq = [];
 q_last = []; % initial position???
 q_vel_last = [0, 0, 0, 0, 0, 0, 0]'; % the starting velocity should be zero, i.e. static  
+dt = 1 / 200;
 % what about q_last and q_last_vel at the start???
-q = generate_joint_trajectory(exp_xw, exp_xe, cov_xe_at_xw_seq, q0);
-clear global exp_xw_seq exp_xe_seq cov_xe_at_xw_seq
+q_seq = generate_joint_trajectory(new_wrist_traj, new_elbow_traj, cov_xe_t, q0_seq, dt);
+%clear global exp_xw_seq exp_xe_seq cov_xe_at_xw_seq
 
+% save the result
+save q_seq_result.mat q_seq 
 

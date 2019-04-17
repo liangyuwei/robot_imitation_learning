@@ -1,0 +1,232 @@
+`/bin/bash -c "alias ll='ls -la'
+
+vecho() {
+    if [[ \"false\" == \"true\" ]]; then
+        echo \"\$@\"
+    fi
+}
+vecho_red() {
+    (vecho \"\$@\" >&2)
+}
+
+# Save bash history (and optionally echo it out as it happens)
+save_history() {
+    vecho_red \" ---> \$BASH_COMMAND\"
+    history -s \"\$BASH_COMMAND\"
+    history -a
+}
+
+# Save our environment into \`/meta/.env\`, eliminating read-only variables
+# so that this file can be sourced upon entering a debug shell.
+save_env() {
+    set +x
+    set > /meta/.env
+    # Ignore read-only variables
+    for l in BASHOPTS BASH_VERSINFO UID EUID PPID SHELLOPTS; do
+        grep -v \"^\$l=\" /meta/.env > /meta/.env2
+        mv /meta/.env2 /meta/.env
+    done
+    echo \"cd \$(pwd)\" >> /meta/.env
+}
+
+# We do a little sleight-of-hand here; we want to build inside of a tmpfs
+# because \`srcdir\` might be mapped in through a networked filesystem, which
+# totally wrecks our I/O performance.  So what we do instead is bind-mount
+# \`srcdir\` to another location so that we can always get at it, copy its
+# contents to a new tmpfs we mount at the location of \`srcdir\`, then when
+# we exit on an error, we copy everything back over again
+tmpify_srcdir() {
+    vecho \"Copying srcdir to tmpfs...\"
+    mkdir -p \$WORKSPACE/.true_srcdir
+    mount --bind \$WORKSPACE/srcdir \$WORKSPACE/.true_srcdir
+    mount -t tmpfs tmpfs \$WORKSPACE/srcdir
+    rsync -rlptD \$WORKSPACE/.true_srcdir/ \$WORKSPACE/srcdir
+
+    # We may have changed what pwd() means out from underneath ourselves
+    cd \$(pwd)
+}
+
+# Copy our tmpfs version of \`srcdir\` back onto disk.
+save_srcdir() {
+    vecho_red \"Saving srcdir due to previous error...\"
+    rsync -rlptD \$WORKSPACE/srcdir/ \$WORKSPACE/.true_srcdir --delete
+}
+
+# If /meta is mounted, then we want to save history and environment
+if [[ -d /meta ]]; then
+    trap save_history DEBUG
+    trap \"save_env\" EXIT
+    trap \"save_env; save_srcdir\" INT TERM ERR
+fi
+
+# Stop if we hit any errors.
+set -e
+
+# Swap out srcdir from underneath our feet
+tmpify_srcdir
+
+cd \$WORKSPACE/srcdir/nlopt
+
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=\$prefix -DCMAKE_TOOLCHAIN_FILE=/opt/\$target/\$target.toolchain -DNLOPT_PYTHON=Off -DNLOPT_OCTAVE=Off -DNLOPT_MATLAB=Off -DNLOPT_GUILE=Off -DNLOPT_SWIG=Off -DNLOPT_LINK_PYTHON=Off ..
+make && make install
+
+"`
+-- The C compiler identification is GNU 4.8.5
+-- The CXX compiler identification is GNU 4.8.5
+-- Check for working C compiler: /opt/x86_64-w64-mingw32/bin/x86_64-w64-mingw32-gcc
+-- Check for working C compiler: /opt/x86_64-w64-mingw32/bin/x86_64-w64-mingw32-gcc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /opt/x86_64-w64-mingw32/bin/x86_64-w64-mingw32-g++
+-- Check for working CXX compiler: /opt/x86_64-w64-mingw32/bin/x86_64-w64-mingw32-g++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- NLopt version 2.6.1
+-- Looking for dlfcn.h
+-- Looking for dlfcn.h - not found
+-- Looking for getopt.h
+-- Looking for getopt.h - found
+-- Looking for unistd.h
+-- Looking for unistd.h - found
+-- Looking for string.h
+-- Looking for string.h - found
+-- Looking for strings.h
+-- Looking for strings.h - found
+-- Looking for inttypes.h
+-- Looking for inttypes.h - found
+-- Looking for memory.h
+-- Looking for memory.h - found
+-- Looking for stdlib.h
+-- Looking for stdlib.h - found
+-- Looking for stdint.h
+-- Looking for stdint.h - found
+-- Looking for time.h
+-- Looking for time.h - found
+-- Looking for sys/types.h
+-- Looking for sys/types.h - found
+-- Looking for sys/stat.h
+-- Looking for sys/stat.h - found
+-- Looking for sys/time.h
+-- Looking for sys/time.h - found
+-- Looking for getpid
+-- Looking for getpid - found
+-- Looking for syscall
+-- Looking for syscall - not found
+-- Looking for isinf
+-- Looking for isinf - not found
+-- Looking for isnan
+-- Looking for isnan - found
+-- Looking for gettimeofday
+-- Looking for gettimeofday - found
+-- Looking for qsort_r
+-- Looking for qsort_r - not found
+-- Looking for time
+-- Looking for time - found
+-- Looking for copysign
+-- Looking for copysign - found
+-- Looking for stddef.h
+-- Looking for stddef.h - found
+-- Check size of uint32_t
+-- Check size of uint32_t - done
+-- Check size of unsigned int
+-- Check size of unsigned int - done
+-- Check size of unsigned long
+-- Check size of unsigned long - done
+-- Looking for sqrt in m
+-- Looking for sqrt in m - found
+-- Looking for fpclassify
+-- Looking for fpclassify - TRUE
+-- Performing Test HAVE_THREAD_LOCAL_STORAGE
+-- Performing Test HAVE_THREAD_LOCAL_STORAGE - Success
+-- Performing Test HAVE_THREAD_LOCAL_STORAGE
+-- Performing Test HAVE_THREAD_LOCAL_STORAGE - Success
+-- Looking for __cplusplus
+-- Looking for __cplusplus - found
+-- Performing Test SUPPORTS_STDCXX11
+-- Performing Test SUPPORTS_STDCXX11 - Success
+-- Configuring done
+-- Generating done
+CMake Warning:
+  Manually-specified variables were not used by the project:
+
+    NLOPT_LINK_PYTHON
+
+
+-- Build files have been written to: /workspace/srcdir/nlopt/build
+Scanning dependencies of target nlopt
+[  1%] Building C object CMakeFiles/nlopt.dir/src/algs/direct/DIRect.c.obj
+[  3%] Building C object CMakeFiles/nlopt.dir/src/algs/direct/direct_wrap.c.obj
+[  5%] Building C object CMakeFiles/nlopt.dir/src/algs/direct/DIRserial.c.obj
+[  7%] Building C object CMakeFiles/nlopt.dir/src/algs/direct/DIRsubrout.c.obj
+[  9%] Building C object CMakeFiles/nlopt.dir/src/algs/cdirect/cdirect.c.obj
+[ 11%] Building C object CMakeFiles/nlopt.dir/src/algs/cdirect/hybrid.c.obj
+[ 13%] Building C object CMakeFiles/nlopt.dir/src/algs/praxis/praxis.c.obj
+[ 15%] Building C object CMakeFiles/nlopt.dir/src/algs/luksan/plis.c.obj
+[ 16%] Building C object CMakeFiles/nlopt.dir/src/algs/luksan/plip.c.obj
+[ 18%] Building C object CMakeFiles/nlopt.dir/src/algs/luksan/pnet.c.obj
+[ 20%] Building C object CMakeFiles/nlopt.dir/src/algs/luksan/mssubs.c.obj
+[ 22%] Building C object CMakeFiles/nlopt.dir/src/algs/luksan/pssubs.c.obj
+[ 24%] Building C object CMakeFiles/nlopt.dir/src/algs/crs/crs.c.obj
+[ 26%] Building C object CMakeFiles/nlopt.dir/src/algs/mlsl/mlsl.c.obj
+[ 28%] Building C object CMakeFiles/nlopt.dir/src/algs/mma/mma.c.obj
+[ 30%] Building C object CMakeFiles/nlopt.dir/src/algs/mma/ccsa_quadratic.c.obj
+[ 32%] Building C object CMakeFiles/nlopt.dir/src/algs/cobyla/cobyla.c.obj
+[ 33%] Building C object CMakeFiles/nlopt.dir/src/algs/newuoa/newuoa.c.obj
+[ 35%] Building C object CMakeFiles/nlopt.dir/src/algs/neldermead/nldrmd.c.obj
+[ 37%] Building C object CMakeFiles/nlopt.dir/src/algs/neldermead/sbplx.c.obj
+[ 39%] Building C object CMakeFiles/nlopt.dir/src/algs/auglag/auglag.c.obj
+[ 41%] Building C object CMakeFiles/nlopt.dir/src/algs/bobyqa/bobyqa.c.obj
+[ 43%] Building C object CMakeFiles/nlopt.dir/src/algs/isres/isres.c.obj
+[ 45%] Building C object CMakeFiles/nlopt.dir/src/algs/slsqp/slsqp.c.obj
+[ 47%] Building C object CMakeFiles/nlopt.dir/src/algs/esch/esch.c.obj
+[ 49%] Building C object CMakeFiles/nlopt.dir/src/api/general.c.obj
+[ 50%] Building C object CMakeFiles/nlopt.dir/src/api/options.c.obj
+[ 52%] Building C object CMakeFiles/nlopt.dir/src/api/optimize.c.obj
+[ 54%] Building C object CMakeFiles/nlopt.dir/src/api/deprecated.c.obj
+[ 56%] Building C object CMakeFiles/nlopt.dir/src/api/f77api.c.obj
+[ 58%] Building C object CMakeFiles/nlopt.dir/src/util/mt19937ar.c.obj
+[ 60%] Building C object CMakeFiles/nlopt.dir/src/util/sobolseq.c.obj
+[ 62%] Building C object CMakeFiles/nlopt.dir/src/util/timer.c.obj
+[ 64%] Building C object CMakeFiles/nlopt.dir/src/util/stop.c.obj
+[ 66%] Building C object CMakeFiles/nlopt.dir/src/util/redblack.c.obj
+[ 67%] Building C object CMakeFiles/nlopt.dir/src/util/qsort_r.c.obj
+[ 69%] Building C object CMakeFiles/nlopt.dir/src/util/rescale.c.obj
+[ 71%] Building CXX object CMakeFiles/nlopt.dir/src/algs/stogo/global.cc.obj
+[ 73%] Building CXX object CMakeFiles/nlopt.dir/src/algs/stogo/linalg.cc.obj
+[ 75%] Building CXX object CMakeFiles/nlopt.dir/src/algs/stogo/local.cc.obj
+[ 77%] Building CXX object CMakeFiles/nlopt.dir/src/algs/stogo/stogo.cc.obj
+[ 79%] Building CXX object CMakeFiles/nlopt.dir/src/algs/stogo/tools.cc.obj
+[ 81%] Building CXX object CMakeFiles/nlopt.dir/src/algs/ags/evolvent.cc.obj
+[ 83%] Building CXX object CMakeFiles/nlopt.dir/src/algs/ags/solver.cc.obj
+[ 84%] Building CXX object CMakeFiles/nlopt.dir/src/algs/ags/local_optimizer.cc.obj
+[ 86%] Building CXX object CMakeFiles/nlopt.dir/src/algs/ags/ags.cc.obj
+[ 88%] Linking CXX shared library libnlopt.dll
+[ 88%] Built target nlopt
+Scanning dependencies of target testopt
+[ 90%] Building C object test/CMakeFiles/testopt.dir/testfuncs.c.obj
+[ 92%] Building C object test/CMakeFiles/testopt.dir/testopt.c.obj
+[ 94%] Building C object test/CMakeFiles/testopt.dir/__/src/util/timer.c.obj
+[ 96%] Building C object test/CMakeFiles/testopt.dir/__/src/util/mt19937ar.c.obj
+[ 98%] Building C object test/CMakeFiles/testopt.dir/__/src/util/nlopt-getopt.c.obj
+[100%] Linking CXX executable testopt.exe
+[100%] Built target testopt
+[ 88%] Built target nlopt
+[100%] Built target testopt
+Install the project...
+-- Install configuration: "Release"
+-- Installing: /workspace/destdir/lib/pkgconfig/nlopt.pc
+-- Installing: /workspace/destdir/include/nlopt.h
+-- Installing: /workspace/destdir/include/nlopt.hpp
+-- Installing: /workspace/destdir/include/nlopt.f
+-- Installing: /workspace/destdir/lib/libnlopt.dll.a
+-- Installing: /workspace/destdir/bin/libnlopt.dll
+-- Installing: /workspace/destdir/lib/cmake/nlopt/NLoptLibraryDepends.cmake
+-- Installing: /workspace/destdir/lib/cmake/nlopt/NLoptLibraryDepends-release.cmake
+-- Installing: /workspace/destdir/lib/cmake/nlopt/NLoptConfig.cmake
+-- Installing: /workspace/destdir/lib/cmake/nlopt/NLoptConfigVersion.cmake

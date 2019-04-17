@@ -4,7 +4,7 @@ function best_q0_index = find_closet_joint_configuration(x_shoulder, xe_target, 
 
 %% Parameters
 num_samples = length(xe_dataset);
-N_s_e = 50; N_e_w = 50; % interpolation points
+N_s_e = 10; N_e_w = 10; % interpolation points; don't set too large, or it could be really slow
 
 %% Interpolate the points of the line crossing x_shoulder, xe_target and xw_target for later use
 X_target_interp = zeros(3, N_s_e + N_e_w); % lose the middle point
@@ -43,6 +43,7 @@ for i_sample = 1 : num_samples
         X_demo_interp = [X_demo_interp(:, 1:N_s_e), X_demo_interp(:, 2:end)]; % lose the duplicating middle point
         
         % display the interpolation line
+        %{
         figure;
         plot3(X_demo_interp(1, :), X_demo_interp(2, :), X_demo_interp(3, :), 'b.'); hold on;
         plot3(x_shoulder(1), x_shoulder(2), x_shoulder(3), 'go');
@@ -52,6 +53,7 @@ for i_sample = 1 : num_samples
         title('Demo: shoulder --> elbow --> wrist');
         xlabel('x'); ylabel('y'); zlabel('z');
         pause;
+        %}
         
         % compute the Frechet distance between a sample and the goal
         [tmp_Frechet_dist, ~] = DiscreteFrechetDist(X_demo_interp', X_target_interp'); % use L2 norm as default
