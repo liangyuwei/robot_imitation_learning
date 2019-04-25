@@ -391,7 +391,6 @@ end
 disp('Done.');
 
 % Joint trajectory generation using sequential quadratic programming
-%{
 disp('==========Employ SQP to generate joint trajectory==========');
 global P_lb P_ub V_lb V_ub A_lb A_ub
 global q_last_seq q_last q_vel_last
@@ -411,11 +410,11 @@ q_seq = generate_joint_trajectory(new_wrist_traj, new_elbow_traj, cov_xe_t, q0_s
 
 % save the result
 save q_seq_result.mat q_seq 
-%}
 
 
-% Joint trajectory generation using sequential quadratic programming -- using NLopt   
-disp('==========Employ SQP using NLopt to generate joint trajectory==========');
+% Joint trajectory generation using sequential quadratic programming --
+% using NL
+disp('==========Employ SQP to generate joint trajectory==========');
 global P_lb P_ub V_lb V_ub A_lb A_ub
 global q_last_seq q_last q_vel_last
 P_lb = [-pi, -pi, -pi, -pi, -pi, -pi]'; P_ub = [pi, pi, pi, pi, pi, pi];

@@ -1,6 +1,7 @@
-function loss = gen_joint_traj_loss(q)
-%% This function computes the cost function for generating the joint trajectory
+function [val, gradient] = gen_joint_traj_loss_nlopt(q)
+%% This function is used in calling NLopt library to perform SQP method.
 
+%% Prepare variables
 global exp_xw_seq exp_xe_seq 
 global cov_xe_t
 
@@ -13,6 +14,8 @@ q_reshape = q_reshape'; % 1000 x 6
 q_reshape_vel = [diff(q_reshape, 1, 1); zeros(1, 6)];
 [xe_seq, xw_seq] = obtain_robot_traj(q_reshape); % seqs are 1000 x 3
 
+
+%% Compute the cost function value
 % Compute three components of the total cost function
 J_wrist = 0;
 J_elbow = 0;
@@ -25,7 +28,10 @@ for t = 1 : T
 end
 
 % Total cost function
-loss = J_wrist + J_elbow + J_smooth;
+val = J_wrist + J_elbow + J_smooth;
 
+
+%% Compute the cost function's gradient
+gradient = 
 
 end

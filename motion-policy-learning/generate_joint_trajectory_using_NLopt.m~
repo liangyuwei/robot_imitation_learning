@@ -11,20 +11,16 @@ global q_last q_vel_last %dt  % used to specify vel and acc bound of the joint a
 global q_vel_last_seq
 
 %% Prepare variables for later use
-q0 = reshape(q0_seq', [6000, 1])'; % 1 x 6000, row vector
-
+q0 = reshape(q0_seq', [6000, 1]); % 6000 x 1
 
 % lower and upper bound
-LB = repmat(P_lb, size(exp_xw, 2), 1)'; % 1 x 6000
-UB = repmat(P_ub, size(exp_xw, 2), 1)'; % 1 x 6000
+LB = repmat(P_lb, size(exp_xw, 2), 1); % 6000 x 1
+UB = repmat(P_ub, size(exp_xw, 2), 1); % 6000 x 1
 
 
 
 %% Use NLopt to employ SQP
-stop = struct();
-
-[q_seq, ~, ~] = nlopt_minimize_constrained(algorithm, @gen_joint_traj_loss_nlopt, f_data, fc, fc_data, LB, UB, q0, stop);
-
+[] = nlopt_minimize_constrained(algorithm, f, f_data, fc, fc_data, lb, ub, xinit, stop)
 
 
 

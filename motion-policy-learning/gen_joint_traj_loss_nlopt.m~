@@ -1,0 +1,4 @@
+function [val, gradient] = gen_joint_traj_loss_nlopt(q)
+%% This function is used in calling NLopt library to perform SQP me
+
+end

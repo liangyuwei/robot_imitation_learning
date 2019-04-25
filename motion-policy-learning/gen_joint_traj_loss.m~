@@ -1,7 +1,7 @@
 function loss = gen_joint_traj_loss(q)
 %% This function computes the cost function for generating the joint trajectory
 
-global exp_xw_seq exp_xe_seq 
+global exp_xw_seq exp_xe_seq  V_ub
 global cov_xe_t
 
 % Get the length of the sequence(could be 1)
@@ -16,13 +16,13 @@ q_reshape_vel = [diff(q_reshape, 1, 1); zeros(1, 6)];
 % Compute three components of the total cost function
 J_wrist = 0;
 J_elbow = 0;
-J_smooth = 0;
-W = diag([1,1,1,1,1,1]); % set equal weights on the joints
 for t = 1 : T
     J_wrist = J_wrist + (exp_xw_seq(t, :) - xw_seq(t, :)) * (exp_xw_seq(t, :) - xw_seq(t, :))';
     J_elbow = J_elbow + (exp_xe_seq(t, :) - xe_seq(t, :)) * cov_xe_t(:, :, t) * (exp_xe_seq(t, :) - xe_seq(t, :))';
-    J_smooth = J_smooth + q_reshape_vel(t, :) * W * q_reshape_vel(t, :)';
 end
+k = 1; W = eye(7) * k ./ V_ub; % diagonal matrix, where each element is in inverse proportion to the corresponding joint's maximum angular velocity
+global q_vel_last_seq
+J_smooth = sum()
 
 % Total cost function
 loss = J_wrist + J_elbow + J_smooth;
