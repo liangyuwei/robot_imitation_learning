@@ -439,6 +439,7 @@ save q_seq_result.mat q_seq
 
 
 % Joint trajectory generation using sequential quadratic programming, step by step    
+%{
 disp('==========Generating joint trajectory==========');
 global P_lb P_ub V_lb V_ub A_lb A_ub
 % global q_last_seq q_last q_vel_last
@@ -453,6 +454,39 @@ dt = 1 / 200;
 global exp_xe_seq exp_xw_seq % used for defining the loss function in the following optimization procedure.
 exp_xe_seq = new_elbow_traj'; 
 exp_xw_seq = new_wrist_traj';
+q_seq = generate_joint_trajectory_stepbystep(new_wrist_traj, new_elbow_traj, cov_xe_t, q0_seq', dt);
+%clear global exp_xw_seq exp_xe_seq cov_xe_at_xw_seq
+
+% save the result
+h5create('generated_joint_trajectory.h5', '/q_seq', size(q_seq)); % create before writing
+h5write('generated_joint_trajectory.h5', '/q_seq', q_seq);
+
+% display the result
+[xe_display, xw_display] = obtain_robot_traj(q_seq');
+figure;
+plot3(xw_display(:, 1), xw_display(:, 2), xw_display(:, 3),'b.'); hold on;
+plot3(new_wrist_traj(1, :), new_wrist_traj(2, :), new_wrist_traj(3, :), 'r.');
+grid on;
+title('The corresponding wrist trajectory, based on the newly generated joint trajectory');
+xlabel('x'); ylabel('y'); zlabel('z');
+%}
+
+% Joint trajectory generation by numerical solution
+disp('==========Generating joint trajectory==========');
+global P_lb P_ub V_lb V_ub A_lb A_ub
+% global q_last_seq q_last q_vel_last
+P_lb = [-pi, -pi, -pi, -pi, -pi, -pi]'; P_ub = [pi, pi, pi, pi, pi, pi]';
+V_lb = [-pi, -pi, -pi, -pi, -pi, -pi]'; V_ub = [pi, pi, pi, pi, pi, pi]';
+A_lb = [-1, -1, -1, -1, -1, -1]'; A_ub = [1, 1, 1, 1, 1, 1]';
+% q_last_seq = [];
+% q_last = []; % initial position???
+% q_vel_last = [0, 0, 0, 0, 0, 0, 0]'; % the starting velocity should be zero, i.e. static 
+dt = 1 / 200;
+% what about q_last and q_last_vel at the start???
+global exp_xe_seq exp_xw_seq % used for defining the loss function in the following optimization procedure.
+exp_xe_seq = new_elbow_traj'; 
+exp_xw_seq = new_wrist_traj';
+q_seq = inverse_kinematics_numerical(new_wrist_traj, p_start, w_start);
 q_seq = generate_joint_trajectory_stepbystep(new_wrist_traj, new_elbow_traj, cov_xe_t, q0_seq', dt);
 %clear global exp_xw_seq exp_xe_seq cov_xe_at_xw_seq
 
