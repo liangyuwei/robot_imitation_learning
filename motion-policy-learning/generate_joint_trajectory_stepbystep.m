@@ -7,7 +7,7 @@ function q_seq = generate_joint_trajectory_stepbystep(exp_xw, exp_xe, cov_xe, q0
 % Output: q_seq - the sequence of the generated joint angle
 
 % Used for storing the joint trajectory
-q_seq = zeros(6, size(q0_seq, 2));
+q_seq = zeros(6, 1000);
 
 % load global joint limits
 global P_lb P_ub V_lb V_ub A_lb A_ub
@@ -42,7 +42,7 @@ for t = 1 : T
 
     % start optimization
     cur_exp_xw = exp_xw(:, t);
-    [q, fval] = fmincon(@gen_joint_traj_loss_stepbystep, [0, 0, 0, 0, 0, 0]', A, B, Aeq, Beq, P_lb, P_ub);  % q0_seq(:, t); q_last
+    [q, ~] = fmincon(@gen_joint_traj_loss_stepbystep, [0, 0, 0, 0, 0, 0]', A, B, Aeq, Beq, P_lb, P_ub);  % q0_seq(:, t); q_last
     % use q0_seq as the initial? or maybe use q_last?
     
     % record results and store temporary variables

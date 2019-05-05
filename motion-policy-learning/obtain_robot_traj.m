@@ -23,7 +23,7 @@ for m = 1:n
     ForwardKinematics(2);
     
     % record trajectory points
-    end_traj_points(m, :) = uLINK(7).p';
+    end_traj_points(m, :) = uLINK(7).p'; %uLINK(7).p';
     elbow_traj_points(m, :) = uLINK(4).p';
     
 end
