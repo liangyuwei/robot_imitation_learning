@@ -12,7 +12,7 @@ uLINK(3) = struct('name', 'shoulder_lift_joint', 'mom', 2, 'child', 4, 'b', [0  
 uLINK(4) = struct('name', 'elbow_joint', 'mom', 3, 'child', 5, 'b', [0.425 -0.1197 0]', 'a', UY,'q', th(3));
 uLINK(5) = struct('name', 'wrist_1_joint', 'mom', 4, 'child', 6, 'b', [0.39225 0 0]' , 'a', UY, 'q', th(4));
 uLINK(6) = struct('name', 'wrist_2_joint', 'mom', 5, 'child', 7, 'b', [0 0.093 0]' ,'a', -UZ, 'q', th(5));
-uLINK(7) = struct('name', 'wrist_3_joint', 'mom', 6, 'child', 0, 'b', [0 0 -0.09465]' ,'a', UY, 'q', th(6)); % child = 0 indicates that the calculation of forward kinematics should stop here
+uLINK(7) = struct('name', 'wrist_3_joint', 'mom', 6, 'child', 8, 'b', [0 0 -0.09465]' ,'a', UY, 'q', th(6)); % child = 0 indicates that the calculation of forward kinematics should stop here
 uLINK(8) = struct('name', 'ee_fixed_joint', 'mom', 7, 'child', 0, 'b', [0 0.09465 0]', 'a', UZ, 'q', 0); % eef, if necessary
 % if more are needed, e.g. the panda hand's position and pose, then add more uLINK   
 
@@ -252,7 +252,7 @@ save q_seq_result.mat q_seq
 %}
 
 % Joint trajectory generation using sequential quadratic programming, step by step    
-%
+%{
 disp('==========Generating joint trajectory==========');
 global P_lb P_ub V_lb V_ub A_lb A_ub
 % global q_last_seq q_last q_vel_last
@@ -285,15 +285,17 @@ xlabel('x'); ylabel('y'); zlabel('z');
 %}
 
 % Joint trajectory generation by numerical solution
-%{
+%
 disp('==========Generating joint trajectory==========');
-p_start = [0.5, 0.35, 0.3973]'; %[0, 0, 0]'; 
-w_start = [-1.2561, -1.1366, 1.1343]'; %[0, 0, -1]';
-q_seq = inverse_kinematics_numerical(new_wrist_traj, [], p_start, w_start);
-%clear global exp_xw_seq exp_xe_seq cov_xe_at_xw_seq
-%}
+p_start = [0.5, 0.35, 1.3973]'; %[0, 0, 0]'; 
+w_start = rot2omega(eye(3)); %[-1.2561, -1.1366, 1.1343]'; %[0, 0, -1]'; % rot2omega(R_start)
+R_fixed = [0, 0, -1; 1, 0, 0; 0, -1, 0]; % - Rx(-pi/2)*Ry(-pi/2) 
+        % [0, 0, 1; 0, 1, 0; -1, 0, 0]; % - R_y(pi/2) 
+        % eye(3); - stay initial state
+wrist_pose_traj = repmat(R_fixed, 1, 1, len_samples); %zeros(3, len_samples);
+q_seq = inverse_kinematics_numerical(new_wrist_traj, wrist_pose_traj, p_start, w_start);
 
-%% Save the result
+% Save the result
 h5create('generated_joint_trajectory.h5', '/q_seq', size(q_seq)); % create before writing
 h5write('generated_joint_trajectory.h5', '/q_seq', q_seq);
 
@@ -305,5 +307,5 @@ plot3(new_wrist_traj(1, :), new_wrist_traj(2, :), new_wrist_traj(3, :), 'r.');
 grid on;
 title('The corresponding wrist trajectory, based on the newly generated joint trajectory');
 xlabel('x'); ylabel('y'); zlabel('z');
-
+%}
 

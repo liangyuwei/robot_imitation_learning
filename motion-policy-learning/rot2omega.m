@@ -1,7 +1,7 @@
 function w = rot2omega(R)
-%% This function transforms rotation matrix to rotation vector.
+%% This function transforms rotation matrix error to rotation vector error (is it rotation velocity? is it rotation vector?).
 
-if R == eye(3)
+if norm(R - eye(3)) < 1e-6 %R == eye(3)
     w = [0, 0, 0]';
     
 else

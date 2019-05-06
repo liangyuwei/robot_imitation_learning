@@ -11,8 +11,8 @@ if j == 0 % nothing
 end
 if j ~= 1 % if not the root link, then it has a parent link
     mom = uLINK(j).mom; % get its parent link's index
-    uLINK(j).p = uLINK(mom).R * uLINK(j).b + uLINK(mom).p; % compute current link's p using its parent's R and p
-    uLINK(j).R = uLINK(mom).R * Rodrigues(uLINK(j).a, uLINK(j).q); % q is the angle of rotation
+    uLINK(j).p = uLINK(mom).R * uLINK(j).b + uLINK(mom).p; % compute current link's p using its parent's R and p; p is relative to world frame?
+    uLINK(j).R = uLINK(mom).R * Rodrigues(uLINK(j).a, uLINK(j).q); % q is the angle of rotation; R is relative to world frame?
 end
 
 ForwardKinematics(uLINK(j).child); % compute its child's R and p

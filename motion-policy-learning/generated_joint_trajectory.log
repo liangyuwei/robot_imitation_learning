@@ -1,0 +1,9 @@
+generated_joint_trajectory{*}.h5:
+
+1,2 - using MATLAB built-in fmincon, default method or SQP probably
+
+3 - using Jacobian pseudoinverse method(iteractive), not processing pose constraint(i.e. dp_dw = [x, y, z, 0, 0, 0]).
+
+4- same as above, Ry(pi/2)
+
+5- same as above, Rx(-pi/2)*Ry(-pi/2)

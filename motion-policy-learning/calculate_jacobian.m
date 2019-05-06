@@ -14,12 +14,10 @@ ForwardKinematics(2);
 
 % Calculation
 target = uLINK(7).p; % target wrist position
-for n = 1 : 6
+for n = 2 : 7 % don't make mistake!!
    z = uLINK(n).R * uLINK(n).a;  % joint axis in world frame
-   J(:, n) = [cross(z, target-uLINK(n).p); z];
+   J(:, n-1) = [cross(z, target-uLINK(n).p); z];
 end
-
-
 
 
 end
