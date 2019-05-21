@@ -30,40 +30,59 @@ uLINK(8) = struct('name', 'ee_fixed_joint', 'mom', 7, 'child', 0, 'b', [0 0.0946
 
 % Way 2: Use the joint trajectory data collected from RViz simulation directly
 disp('==========Import the joint trajectories collected from RViz simulation==========');
-file_name = 'imi_joint_traj_dataset.h5';
-Q_dataset = read_hdf5_imi_data(file_name);
-t_series = Q_dataset(:, 2);
+file_name = 'dual_ur5_joint_trajectory.h5';
+[Q_dataset_l, Q_dataset_r] = read_hdf5_imi_data(file_name);
+% t_series_l = Q_dataset_l(:, 2);
+% t_series_r = Q_dataset_r(:, 2);
+
+% Inspect the raw data
+%{
+[~, tmp_l] = obtain_robot_traj(Q_dataset_l{5, 1}, true);
+[~, tmp_r] = obtain_robot_traj(Q_dataset_r{5, 1}, false);
+figure; 
+plot3(tmp_l(:, 1), tmp_l(:, 2), tmp_l(:, 3), 'b.'); hold on; grid on;
+plot3(tmp_r(:, 1), tmp_r(:, 2), tmp_r(:, 3), 'r.');
+title('Blue for left arm, Red for right arm');
+xlabel('x'); ylabel('y'); zlabel('z');
+%}
+
 disp('Done');
+
+% post-processing for dual arm imitation data: merge into one Q_dataset and t_series   
+Q_dataset = merge_two_trajs(Q_dataset_l, Q_dataset_r);
+t_series = Q_dataset(:, 3);
 
 %% Modeling of robot's elbow and wrist trajectories
 % robot joint trajectory -> robot elbow & wrist trajectories 
 n_samples = size(Q_dataset, 1);
 % elbow_traj_dataset = cell(n_samples, 1);
-wrist_traj_dataset = cell(n_samples, 1);
+wrist_traj_dataset = cell(n_samples, 2);
 disp('==========Obtain the elbow and wrist trajectories==========');
 for n = 1:n_samples
     % display some messages
     disp(['Processing the trajectory ', num2str(n), '/', num2str(n_samples), '...']);
     
     % update the robot's state and obtain the elbow and wrist trajectories
-    [elbow_traj_points, wrist_traj_points] = obtain_robot_traj(Q_dataset{n, 1});
+    [~, wrist_traj_points_l] = obtain_robot_traj(Q_dataset{n, 1}, true);
+    [~, wrist_traj_points_r] = obtain_robot_traj(Q_dataset{n, 2}, false);
 
     % Inspect the trajectories one by one
-    %{
+    %
     figure;
-    plot3(wrist_traj_points(:, 1), wrist_traj_points(:, 2), wrist_traj_points(:, 3), 'b.'); hold on;
-    plot3(elbow_traj_points(:, 1), elbow_traj_points(:, 2), elbow_traj_points(:, 3), 'b.');
+    plot3(wrist_traj_points_l(:, 1), wrist_traj_points_l(:, 2), wrist_traj_points_l(:, 3), 'b.'); hold on;
+    plot3(wrist_traj_points_r(:, 1), wrist_traj_points_r(:, 2), wrist_traj_points_r(:, 3), 'r.');
     plot3(0, 0, 0, 'rx');
     grid on;
     xlabel('x'); ylabel('y'); zlabel('z');
-    axis([0, 0.8, -0.4, 0.4, 0, 0.7]);
+%     axis([0.4, 0.6, 0.2, 0.4, 0.3, 0.6]);
     view(135, 45);
-    pause;
     %}
     
     % record the elbow and wrist trajectories
 %     elbow_traj_dataset{n, 1} = elbow_traj_points;
-    wrist_traj_dataset{n, 1} = wrist_traj_points;
+%     wrist_traj_dataset{n, 1} = wrist_traj_points;
+    wrist_traj_dataset{n, 1} = wrist_traj_points_l;
+    wrist_traj_dataset{n, 2} = wrist_traj_points_r;
     
 end
 disp('Done.');
@@ -81,6 +100,7 @@ title('elbow trajectories');
 xlabel('x'); ylabel('y'); zlabel('z');
 view(140, 45);
 %}
+
 
 % GTW(Generalized Time Warping) pre-processing
 disp('==========Perform GTW on the trajectories==========');
