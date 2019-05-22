@@ -152,16 +152,17 @@ end
 disp('Done.');
 
 % perform GMM and GMR(using PbDlib)
+%{
 disp('==========Perform GMM and GMR using PbDlib==========');
 disp('Compute the expected xw trajectory...');
-Data = zeros(6+6+1, len_samples * length(wrist_traj_dataset));
+Data = zeros(6+1, len_samples * length(wrist_traj_dataset));
 Data(1, :) = repmat((1:1000)/200, 1, length(wrist_traj_dataset));
 for i = 1 : length(wrist_traj_dataset)
    Data(2:7, (i-1) * len_samples + 1 : i * len_samples) = wrist_traj_dataset_aligned{i, 1}'; 
-   Data(8:end, (i-1) * len_samples + 1 : i * len_samples) = wrist_traj_dataset_aligned{i, 2}'; 
+%    Data(8:end, (i-1) * len_samples + 1 : i * len_samples) = wrist_traj_dataset_aligned{i, 2}'; 
 end
 nbStates = 5; % number of states in GMM
-nbVar = 6+6+1; % number of variables, e.g. [t, x, y, z]
+nbVar = 6+1; % number of variables, e.g. [t, x, y, z]
 dt = 1/200; % time step duration
 nbData = len_samples; % length of each trajectory; in our case, length of the GTW-aligned trajectory
 nbSamples = 10; % number of samples
@@ -170,6 +171,7 @@ expected_wrist_traj = perform_GMM_GMR_xw(Data, nbStates, nbVar, dt, nbData, nbSa
 toc;
 expected_wrist_traj = expected_wrist_traj'; % now 1000 x 3
 disp('Done.');
+%}
 
 % display the 3 dimensional trajectory of the imitation data
 %{
@@ -205,6 +207,7 @@ subplot(3, 1, 2), plot(1:length(expected_wrist_traj), expected_wrist_traj(:, 2),
 subplot(3, 1, 3), plot(1:length(expected_wrist_traj), expected_wrist_traj(:, 3), 'g.'); hold on; grid on; xlabel('z');
 %}
 
+
 %% Generalization using Dynamic Motion Primitive
 % Generate NEW wrist trajectory with NEW target position by Dynamic Motion Primitive   
 % Perform DMP using PbDlib
@@ -212,42 +215,50 @@ disp('===========Perform DMP using PbDlib==========');
 disp('Generate new wrist trajectory based on the given new start and new goal...');
 nbStates = 3; % number of states/activation functions
 nbVar = 1; % number of the variables for the radial basis function
-nbVarPos = 6+6;%3; % number of motion variables [x, y, z]
-kP = 80;%50; % stiffness gain
-kV = 50;%40;%(2*50)^.5; %(2*kP)^.5; % damping gain (with ideal underdamped damping ratio)
+nbVarPos = 6;%3; % number of motion variables [x, y, z]
+kP = 2;%50; % stiffness gain
+kV = 7;%40;%(2*50)^.5; %(2*kP)^.5; % damping gain (with ideal underdamped damping ratio)
 alpha = 1; % decay factor
 dt = 1/200; % duration of time step
 nbData = len_samples; % length of each trajectory(which is why they need to be GTW-aligned for use here)
 nbSamples = 10; % number of samples
 % be careful with the goal and initial state, don't swap them...
-new_goal = [0.4, 0.13, 0.3, -1.5708, 0, 0, 0.4, -0.13, 0.3, 1.5708, 0, 0]';%[wrist_traj_dataset_aligned{1, 1}(end, :), wrist_traj_dataset_aligned{1, 2}(end, :)]';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal
-new_start = [0.4, 0.35, 0.4, -1.5708, 0, 0, 0.4, -0.35, 0.4, 1.5708, 0, 0]'; 
+new_goal = [0.4, 0.13, 0.3, -1.5708, 0, 0]'; %, 0.4, -0.13, 0.3, 1.5708, 0, 0]';%[wrist_traj_dataset_aligned{1, 1}(end, :), wrist_traj_dataset_aligned{1, 2}(end, :)]';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal
+new_start = [0.4, 0.35, 0.4, -1.5708, 0, 0]'; %, 0.4, -0.35, 0.4, 1.5708, 0, 0]'; 
             %[wrist_traj_dataset_aligned{1, 1}(1, :), wrist_traj_dataset_aligned{1, 2}(1, :)]';% + [0, 0.1, 0]';  % move down 0.1 in y direction; % new initial position
-wrist_traj_dataset_combined = cell(length(wrist_traj_dataset), 1);
-for c = 1:length(wrist_traj_dataset)
-    wrist_traj_dataset_combined{c} = [wrist_traj_dataset_aligned{c, 1}, wrist_traj_dataset_aligned{c, 2}];
-end
+% perform DMP on the left arm's imitation data
 tic;
-new_wrist_traj = perform_DMP(wrist_traj_dataset_combined, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbData, nbSamples, new_goal, new_start);
+new_wrist_traj_l = perform_DMP(wrist_traj_dataset_aligned(:, 1), nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbData, nbSamples, new_goal, new_start);
 toc;
-new_wrist_traj = new_wrist_traj.Data;
+new_wrist_traj_l = new_wrist_traj_l.Data;
 % plot the newly generated trajectory
 %{
 figure;
 traj_plot = new_wrist_traj(1:3, :); %new_wrist_traj(1:3, :);
-for p = 1 : 2
+traj_plot = wrist_traj_dataset_aligned{i, 2}';% wrist_traj_dataset_aligned{i, 1}';
+% for p = 1 : 2
     plot3(traj_plot(1, :), traj_plot(2, :), traj_plot(3, :), 'b.'); hold on; grid on;
     plot3(traj_plot(1, 1), traj_plot(2, 1), traj_plot(3, 1), 'go');
     plot3(traj_plot(1, end), traj_plot(2, end), traj_plot(3, end), 'ro');
-    traj_plot = new_wrist_traj(7:9, :);
-end
+%     traj_plot = new_wrist_traj(7:9, :);
+% end
 title(['kP = ', num2str(kP), ', kV = ', num2str(kV)]);
 view(120, 60);
 xlabel('x'); ylabel('y'); zlabel('z');
 %}
-
 disp('Done.');
 
+
+%% Generate trajectory of the right arm
+wrist_traj_dataset_combined = zeros(12, 10*1000);%cell(length(wrist_traj_dataset_aligned), 1);
+for c = 1 : length(wrist_traj_dataset_aligned)
+    wrist_traj_dataset_combined(:, (c-1)*1000+1 : c*1000) = [wrist_traj_dataset_aligned{c, 1}, wrist_traj_dataset_aligned{c, 2}]';
+end
+nbStates = 5;
+nbData = len_samples;
+nbVar = 6;
+nbSamples = 10;
+new_wrist_traj_r = perform_GMM_GMR_xe(wrist_traj_dataset_combined', nbStates, nbVar, dt, nbData, nbSamples, new_wrist_traj);
 
 %% Generation of joint trajectories(converted from Euclidean trajectory)
 % Joint trajectory generation using sequential quadratic programming
@@ -332,17 +343,26 @@ xlabel('x'); ylabel('y'); zlabel('z');
 % Joint trajectory generation by numerical solution
 %{
 disp('==========Generating joint trajectory==========');
-p_start = [0.5, 0.35, 1.3973]'; %[0, 0, 0]'; 
-w_start = rot2omega(eye(3)); %[-1.2561, -1.1366, 1.1343]'; %[0, 0, -1]'; % rot2omega(R_start)
-R_fixed = [0, 0, -1; 1, 0, 0; 0, -1, 0]; % - Rx(-pi/2)*Ry(-pi/2) 
-        % [0, 0, 1; 0, 1, 0; -1, 0, 0]; % - R_y(pi/2) 
-        % eye(3); - stay initial state
-wrist_pose_traj = repmat(R_fixed, 1, 1, len_samples); %zeros(3, len_samples);
-q_seq = inverse_kinematics_numerical(new_wrist_traj, wrist_pose_traj, p_start, w_start);
+target_traj_l = new_wrist_traj(1:3, :);
+target_traj_r = new_wrist_traj(7:9, :);
+p_start_l = target_traj_l(:, 1); %[0.5, 0.35, 1.3973]'; %[0, 0, 0]';
+p_start_r = target_traj_r(:, 1); %[0.5, 0.35, 1.3973]'; %[0, 0, 0]';
+
+w_start_l = quat2axang(eul2quat(new_wrist_traj(4:6, 1))); %rot2omega(eye(3)); %[-1.2561, -1.1366, 1.1343]'; %[0, 0, -1]'; % rot2omega(R_start)
+w_start_r = quat2axang(eul2quat(new_wrist_traj(10:12, 1))); %rot2omega(eye(3)); %[-1.2561, -1.1366, 1.1343]'; %[0, 0, -1]'; % rot2omega(R_start)
+
+R_fixed_l = eul2rotm(new_wrist_traj(4:6, 1)); %[0, 0, -1; 1, 0, 0; 0, -1, 0]; % - Rx(-pi/2)*Ry(-pi/2)
+R_fixed_r = eul2rotm(new_wrist_traj(10:12, 1)); %[0, 0, -1; 1, 0, 0; 0, -1, 0]; % - Rx(-pi/2)*Ry(-pi/2)
+
+wrist_pose_traj_l = repmat(R_fixed_l, 1, 1, len_samples); %zeros(3, len_samples);
+wrist_pose_traj_r = repmat(R_fixed_r, 1, 1, len_samples); %zeros(3, len_samples);
+
+q_seq_l = inverse_kinematics_numerical(target_traj_l, wrist_pose_traj_l, p_start_l, w_start_l, true);
+q_seq_r = inverse_kinematics_numerical(target_traj_r, wrist_pose_traj_r, p_start_r, w_start_r, false);
 
 % Save the result
-h5create('generated_joint_trajectory.h5', '/q_seq', size(q_seq)); % create before writing
-h5write('generated_joint_trajectory.h5', '/q_seq', q_seq);
+h5create('generated_joint_trajectory_dual.h5', '/q_seq', size(q_seq)); % create before writing
+h5write('generated_joint_trajectory_dual.h5', '/q_seq', q_seq);
 
 % display the result
 [xe_display, xw_display] = obtain_robot_traj(q_seq');

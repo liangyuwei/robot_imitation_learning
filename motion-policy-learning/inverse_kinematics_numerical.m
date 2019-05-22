@@ -1,4 +1,4 @@
-function q_seq = inverse_kinematics_numerical(traj_pos, traj_pose, p_start, w_start)
+function q_seq = inverse_kinematics_numerical(traj_pos, traj_pose, p_start, w_start, left_or_right_arm)
 %% This function employs numerical method to compute the joint angles of a trajectory.
 % traj_pos - 3 x len_samples
 % traj_pose - 3 x 3 x len_samples (rotation matrices)
@@ -59,11 +59,11 @@ for t = 1 : size(traj_pos, 2)
     for n = 1 : 100 % try 1000 times to get to the target position and pose
                 
         % jacobian under configuration th (will update robot's state based on th)
-        J = calculate_jacobian(th);
+        J = calculate_jacobian(th, left_or_right_arm);
         
         % position and pose under configuration th
-        p_now = uLINK(7).p;
-        R_now = uLINK(7).R; % position and pose from the last point    
+        p_now = uLINK(8).p;
+        R_now = uLINK(8).R; % position and pose from the last point    
     
         % generalized velocity error
         dp_dw = calculate_dp_dw(p_goal, R_goal, p_now, R_now);

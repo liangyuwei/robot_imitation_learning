@@ -74,7 +74,7 @@ model = init_GMM_kmeans(Data, model);
 % model = init_GMM_timeBased(Data, model);
 model = EM_GMM(Data, model);
 % 1:3 is xw_dataset_aligned, 4:6 is xe_dataset_aligned, xw_in is the input to GMR     
-[DataOut, SigmaOut] = GMR(model, xw_in, 1:3, 4:6); % 1:3 is xw_dataset, 4:6 is xe_dataset %see Eq. (17)-(19)
+[DataOut, SigmaOut] = GMR(model, xw_in, 1:6, 7:12); % 1:3 is xw_dataset, 4:6 is xe_dataset %see Eq. (17)-(19)
 
 
 %% Plots

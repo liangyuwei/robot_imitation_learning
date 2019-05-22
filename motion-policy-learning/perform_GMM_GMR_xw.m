@@ -73,7 +73,7 @@ model = EM_GMM(Data, model);
 
 
 %% Plots
-%{
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Display figure (can take some time)...');
 figure('position',[10,10,1000,500]); 
