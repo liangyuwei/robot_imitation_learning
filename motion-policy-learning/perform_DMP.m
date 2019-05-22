@@ -69,8 +69,8 @@ for n=1:nbSamples
 	s(n).Data = spline(1:size(traj_dataset{n}, 1), traj_dataset{n}', linspace(1, size(traj_dataset{n}, 1), nbData)); %Resampling
 	s(n).Data = [s(n).Data; gradient(s(n).Data)/model.dt]; %Velocity computation	
 	s(n).Data = [s(n).Data; gradient(s(n).Data(end-model.nbVarPos+1:end,:))/model.dt]; %Acceleration computation
-	Data = [Data s(n).Data]; %Concatenation of the multiple demonstrations
-	%Nonlinear forcing term
+	Data = [Data s(n).Data]; %Concatenation of the multiple demonstrations	
+    %Nonlinear forcing term
 	DataDMP = [DataDMP, (s(n).Data(accId,:) - ...
 		(repmat(xTar,1,nbData)-s(n).Data(posId,:))*model.kP + s(n).Data(velId,:)*model.kV) ./ repmat(sIn,model.nbVarPos,1)];
 end

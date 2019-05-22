@@ -232,7 +232,7 @@ new_wrist_traj = perform_DMP(wrist_traj_dataset_combined, nbStates, nbVar, nbVar
 toc;
 new_wrist_traj = new_wrist_traj.Data;
 % plot the newly generated trajectory
-%{
+%
 figure;
 traj_plot = new_wrist_traj(1:3, :); %new_wrist_traj(1:3, :);
 for p = 1 : 2

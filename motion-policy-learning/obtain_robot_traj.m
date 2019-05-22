@@ -7,9 +7,11 @@ global uLINK
 if (left_or_right_arm)
     uLINK(1).R = eul2rotm([0, 0, -pi/4]);%eye(3);    
     uLINK(1).p = [-0.06, 0.235, 0.395]';
+    eul = quat2eul([0.707, 0, 0, -0.707]); % rotation about z axis by -90 deg
 else
     uLINK(1).R = eul2rotm([0, 0, pi/4]);
     uLINK(1).p = [-0.06, -0.235, 0.395]';
+    eul = quat2eul([0.707, 0, 0, 0.707]); % rotation about z axis by  90 deg
 end
 
 % Set up needed parameters
@@ -29,7 +31,8 @@ for m = 1:n
     ForwardKinematics(2);
     
     % record trajectory points
-    end_traj_points(m, :) = [uLINK(8).p', rotm2eul(uLINK(8).R)]; % add in the information about pose
+    
+    end_traj_points(m, :) = [uLINK(8).p', eul]; % add in the information about pose
 %     elbow_traj_points(m, :) = uLINK(4).p';
 
     % plot the robot

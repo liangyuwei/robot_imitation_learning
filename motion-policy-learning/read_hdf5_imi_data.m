@@ -3,7 +3,7 @@ function [Q_l, Q_r] = read_hdf5_imi_data(file_name)
 
 %% Read .h5 file
 info = h5info(file_name);
-n_samples = length(info.Groups)/2;
+n_samples = 10;%length(info.Groups)/2;
 Q_l = cell(n_samples, 2); % initialization, inconsistent time ==> must use cell  
 Q_r = cell(n_samples, 2);
 for i = 1:n_samples
