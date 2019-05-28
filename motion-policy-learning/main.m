@@ -237,7 +237,7 @@ for c = 1 : length(wrist_traj_dataset_aligned)
     wrist_traj_dataset_combined{c} = [wrist_traj_dataset_aligned{c, 1}, wrist_traj_dataset_aligned{c, 2}];
 end
 tic;
-new_wrist_traj_l = perform_DMP(wrist_traj_dataset_aligned(:, 1), nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
+new_wrist_traj_l = perform_DMP_LQR(wrist_traj_dataset_aligned(:, 1), nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 toc;
 new_wrist_traj_l = new_wrist_traj_l.Data;
 tic;
@@ -258,8 +258,21 @@ for p = 1 : 2
 end
 % title(['kP = ', num2str(kP), ', kV = ', num2str(kV)]);
 title(['kP_l = ', num2str(kP_l), ', kV_l = ', num2str(kV_l), '; kP_r = ', num2str(kP_r), ', kV_r = ', num2str(kV_r)]);
+axis([0, 0.5, -0.3, 0.3, 0, 0.5]);
 view(120, 60);
 xlabel('x'); ylabel('y'); zlabel('z');
+
+% plot the 3 dimensions
+figure;
+traj_plot_l = new_wrist_traj_l;
+traj_plot_r = new_wrist_traj_r;
+subplot(3, 2, 1); plot(1:1000, traj_plot_l(1, :), 'b.'); title('Left arm traj - x'); grid on;
+subplot(3, 2, 2); plot(1:1000, traj_plot_r(1, :), 'b.'); title('Right arm traj - x'); grid on;
+subplot(3, 2, 3); plot(1:1000, traj_plot_l(2, :), 'b.'); title('Left arm traj - y'); grid on;
+subplot(3, 2, 4); plot(1:1000, traj_plot_r(2, :), 'b.'); title('Right arm traj - y'); grid on;
+subplot(3, 2, 5); plot(1:1000, traj_plot_l(3, :), 'b.'); title('Left arm traj - z'); grid on;
+subplot(3, 2, 6); plot(1:1000, traj_plot_r(3, :), 'b.'); title('Right arm traj - z'); grid on;
+
 %}
 disp('Done.');
 
