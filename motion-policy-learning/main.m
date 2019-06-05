@@ -30,7 +30,7 @@ uLINK(8) = struct('name', 'ee_fixed_joint', 'mom', 7, 'child', 0, 'b', [0 0.0946
 
 % Way 2: Use the joint trajectory data collected from RViz simulation directly
 disp('==========Import the joint trajectories collected from RViz simulation==========');
-file_name = 'dual_ur5_joint_trajectory_same_start_diff_goal.h5'; %'dual_ur5_joint_trajectory.h5';
+file_name = 'dual_ur5_joint_trajectory_diff_start_same_goal.h5'; %'dual_ur5_joint_trajectory.h5';
 [Q_dataset_l, Q_dataset_r] = read_hdf5_imi_data(file_name);
 
 % t_series_l = Q_dataset_l(:, 2);
@@ -87,6 +87,18 @@ for n = 1:n_samples
     
 end
 disp('Done.');
+
+% post processing: set all the z to 0.3
+%
+for i = 1 : n_samples
+    for j = 1 : 2
+        tmp = wrist_traj_dataset{i, j};
+        tmp(:, 3) = ones(size(tmp, 1), 1) * 0.3;
+        wrist_traj_dataset{i, j} = tmp;
+    end
+end
+%}
+
 % display the imitation data
 %{
 figure;
@@ -162,11 +174,11 @@ for i = 1 : length(wrist_traj_dataset)
    Data(2:7, (i-1) * len_samples + 1 : i * len_samples) = wrist_traj_dataset_aligned{i, 1}'; 
 %    Data(8:end, (i-1) * len_samples + 1 : i * len_samples) = wrist_traj_dataset_aligned{i, 2}'; 
 end
-nbStates = 5; % number of states in GMM
+nbStates = 3; % number of states in GMM
 nbVar = 6+1; % number of variables, e.g. [t, x, y, z]
 dt = 1/200; % time step duration
 nbData = len_samples; % length of each trajectory; in our case, length of the GTW-aligned trajectory
-nbSamples = 10; % number of samples
+nbSamples = 8; % number of samples
 tic;
 expected_wrist_traj = perform_GMM_GMR_xw(Data, nbStates, nbVar, dt, nbData, nbSamples); % 3 x 1000
 toc;
@@ -194,6 +206,8 @@ for i = 1 : length(display_traj_dataset)
     end
 end
 xlabel('x'); ylabel('y'); zlabel('z');
+axis([0.4, 0.6, -0.4, 0.4, 0.1, 0.5]);
+view(45, 30);
 %}
 
 % display the result, 3-dim plot and split-view
@@ -214,22 +228,24 @@ subplot(3, 1, 3), plot(1:length(expected_wrist_traj), expected_wrist_traj(:, 3),
 % Perform DMP using PbDlib
 disp('===========Perform DMP using PbDlib==========');
 disp('Generate new wrist trajectory based on the given new start and new goal...');
-nbStates = 10; % number of states/activation functions
+nbStates = 20; % number of states/activation functions
 nbVar = 1; % number of the variables for the radial basis function
 nbVarPos = 6;%12;%3; % number of motion variables [x, y, z]
-kP_l = 1000;%1000;%50; % stiffness gain
-kV_l = 125;%40;%(2*50)^.5; %(2*kP)^.5; % damping gain (with ideal underdamped damping ratio)
-kP_r = 1000;%50; % stiffness gain
-kV_r = 125;
+kP_l = 400;%1000;%50; % stiffness gain
+kV_l = 35;%40;%(2*50)^.5; %(2*kP)^.5; % damping gain (with ideal underdamped damping ratio)
+kosi_l = kV_l / (2 * sqrt(kP_l))
+kP_r = 400;%50; % stiffness gain
+kV_r = 40;
+kosi_r = kV_r / (2 * sqrt(kP_r))
 alpha = 1; % decay factor
 dt = 1/200; % duration of time step
 nbData = len_samples; % length of each trajectory(which is why they need to be GTW-aligned for use here)
 nbSamples = length(t_series_aligned); %10; % number of samples
 % be careful with the goal and initial state, don't swap them...
-new_goal_l = [0.4, 0.13, 0.3, -1.5708, 0, 0]'; %[0.4, 0.13, 0.3, -1.5708, 0, 0]';%[wrist_traj_dataset_aligned{1, 1}(end, :), wrist_traj_dataset_aligned{1, 2}(end, :)]';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal
-new_start_l = [0.5, 0.3, 0.35, -1.5708, 0, 0]'; 
-new_goal_r = [0.4, -0.13, 0.3, 1.5708, 0, 0]'; %[0.4, -0.13, 0.3, 1.5708, 0, 0]';%[wrist_traj_dataset_aligned{1, 1}(end, :), wrist_traj_dataset_aligned{1, 2}(end, :)]';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal
-new_start_r = [0.5, -0.3, 0.35, 1.5708, 0, 0]'; 
+new_goal_l = [0.5, 0.16, 0.3, -1.5708, 0, 0]'; %[0.4, 0.13, 0.3, -1.5708, 0, 0]';%[wrist_traj_dataset_aligned{1, 1}(end, :), wrist_traj_dataset_aligned{1, 2}(end, :)]';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal
+new_start_l = [0.6, 0.3, 0.3, -1.5708, 0, 0]';  %wrist_traj_dataset_aligned{1, 1}(1, :)'; %
+new_goal_r = [0.4, -0.16, 0.3, 1.5708, 0, 0]'; %[0.4, -0.13, 0.3, 1.5708, 0, 0]';%[wrist_traj_dataset_aligned{1, 1}(end, :), wrist_traj_dataset_aligned{1, 2}(end, :)]';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal
+new_start_r = [0.6, -0.3, 0.3, 1.5708, 0, 0]'; %wrist_traj_dataset_aligned{1, 2}(1, :)'; %[0.5, -0.35, 0.4, 1.5708, 0, 0]'; 
             %[wrist_traj_dataset_aligned{1, 1}(1, :), wrist_traj_dataset_aligned{1, 2}(1, :)]';% + [0, 0.1, 0]';  % move down 0.1 in y direction; % new initial position
 % perform DMP on the left arm's imitation data
 wrist_traj_dataset_combined = cell(length(wrist_traj_dataset_aligned), 1);
@@ -237,11 +253,13 @@ for c = 1 : length(wrist_traj_dataset_aligned)
     wrist_traj_dataset_combined{c} = [wrist_traj_dataset_aligned{c, 1}, wrist_traj_dataset_aligned{c, 2}];
 end
 tic;
-new_wrist_traj_l = perform_DMP_LQR(wrist_traj_dataset_aligned(:, 1), nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
+% new_wrist_traj_l = perform_DMP(wrist_traj_dataset_aligned(:, 1), nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
+new_wrist_traj_l = perform_DMP_GMR01(wrist_traj_dataset_aligned(:, 1), nbStates, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 toc;
 new_wrist_traj_l = new_wrist_traj_l.Data;
 tic;
-new_wrist_traj_r = perform_DMP(wrist_traj_dataset_aligned(:, 2), nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
+% new_wrist_traj_r = perform_DMP(wrist_traj_dataset_aligned(:, 2), nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
+new_wrist_traj_r = perform_DMP_GMR01(wrist_traj_dataset_aligned(:, 2), nbStates, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
 toc;
 new_wrist_traj_r = new_wrist_traj_r.Data;
 
@@ -258,7 +276,7 @@ for p = 1 : 2
 end
 % title(['kP = ', num2str(kP), ', kV = ', num2str(kV)]);
 title(['kP_l = ', num2str(kP_l), ', kV_l = ', num2str(kV_l), '; kP_r = ', num2str(kP_r), ', kV_r = ', num2str(kV_r)]);
-axis([0, 0.5, -0.3, 0.3, 0, 0.5]);
+% axis([0, 0.5, -0.3, 0.3, 0, 0.5]);
 view(120, 60);
 xlabel('x'); ylabel('y'); zlabel('z');
 

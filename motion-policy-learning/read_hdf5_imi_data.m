@@ -3,10 +3,10 @@ function [Q_l, Q_r] = read_hdf5_imi_data(file_name)
 
 %% Read .h5 file
 info = h5info(file_name);
-n_samples = 10;%length(info.Groups)/2;
+n_samples = 4;%8;%length(info.Groups)/2;
 Q_l = cell(n_samples, 2); % initialization, inconsistent time ==> must use cell  
 Q_r = cell(n_samples, 2);
-id = 1:n_samples; %[6,9];
+id = [1,2,6,8]; %1:n_samples; %[6,9];
 for i = 1:n_samples
    % Access the ith sample 
    %info.Groups(i).Datasets(2) % the 2nd data item is 'pos'
