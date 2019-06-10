@@ -231,8 +231,8 @@ disp('Generate new wrist trajectory based on the given new start and new goal...
 nbStates = 8;  % number of states/activation functions
 nbVar = 1; % number of the variables for the radial basis function
 nbVarPos = 6;%12;%3; % number of motion variables [x, y, z]
-kP_l = 64; % stiffness gain
-kV_l = 20; % damping gain (with ideal underdamped damping ratio)
+kP_l = 64;%1000;%50; % stiffness gain
+kV_l = 20;%40;%(2*50)^.5; %(2*kP)^.5; % damping gain (with ideal underdamped damping ratio)
 kosi_l = kV_l / (2 * sqrt(kP_l))
 kP_r = 400;%50; % stiffness gain
 kV_r = 35;

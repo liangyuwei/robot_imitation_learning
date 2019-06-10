@@ -65,6 +65,8 @@ Data=[];
 DataDMP=[];
 %traj_dataset = ...; % {i} 1000 x 3
 for n=1:nbSamples
+    xTar = traj_dataset{n}';
+    xTar = xTar(:, end);
 	%Demonstration data as [x;dx;ddx]
 	s(n).Data = spline(1:size(traj_dataset{n}, 1), traj_dataset{n}', linspace(1, size(traj_dataset{n}, 1), nbData)); %Resampling
 	s(n).Data = [s(n).Data; gradient(s(n).Data)/model.dt]; %Velocity computation	
@@ -74,7 +76,7 @@ for n=1:nbSamples
 	DataDMP = [DataDMP, (s(n).Data(accId,:) - ...
 		(repmat(xTar,1,nbData)-s(n).Data(posId,:))*model.kP + s(n).Data(velId,:)*model.kV) ./ repmat(sIn,model.nbVarPos,1)];
 end
-
+xTar = new_goal; 
 
 %% Setting of the basis functions and reproduction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -122,6 +124,32 @@ end
 
 %% Plots
 %
+% plot DataDMP(force profile) and currF(retrieved force)
+% trajId = 8;
+% figure;
+% plot3(0, 0, 0, 'ro'); hold on; grid on;
+% xlabel('x'); ylabel('y'); zlabel('z');
+% title(['Imi Traj ', num2str(trajId)]);
+% for i = trajId : trajId%nbSamples
+%     for j = 1 : nbData
+%         plot3(DataDMP(1, (i-1)*nbData+j), DataDMP(2, (i-1)*nbData+j), DataDMP(3, (i-1)*nbData+j), 'b.');
+%         pause(0.01);
+%     end
+% end
+% DMP
+figure;
+plot3(0, 0, 0, 'ro'); hold on; grid on;
+xlabel('x'); ylabel('y'); zlabel('z');
+title('CurrF');
+for j = 1 : nbData
+    plot3(currF(1, j), currF(2, j), currF(3, j), 'b.');
+    pause(0.01);
+end
+% plot Data
+% figure;
+% plot3(Data(1, :), Data(2, :), Data(3, :), 'b.'); grid on;
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 figure('PaperPosition',[0 0 16 4],'position',[10,10,1300,500],'color',[1 1 1]); 
 xx = round(linspace(1,64,model.nbStates));
