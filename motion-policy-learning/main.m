@@ -6,7 +6,7 @@ len_samples = 1000;
 global uLINK th
 th = zeros(6, 1);
 UX = [1 0 0]'; UY = [0 1 0]'; UZ = [0 0 1]';
-uLINK = struct('name','body', 'mom', 0, 'child', 2, 'b', [0 0 0]', 'a', UZ, 'q', 0);
+uLINK = struct('name','bo1dy', 'mom', 0, 'child', 2, 'b', [0 0 0]', 'a', UZ, 'q', 0);
 uLINK(2) = struct('name', 'shoulder_pan_joint', 'mom', 1, 'child', 3, 'b', [0 0 0.089159]', 'a', UZ, 'q', th(1));
 uLINK(3) = struct('name', 'shoulder_lift_joint', 'mom', 2, 'child', 4, 'b', [0  0.13585 0]',  'a', UY, 'q', th(2));
 uLINK(4) = struct('name', 'elbow_joint', 'mom', 3, 'child', 5, 'b', [0.425 -0.1197 0]', 'a', UY,'q', th(3));
@@ -164,17 +164,95 @@ for i = 1 : length(traj_dataset)
 end
 disp('Done.');
 
+
 % modify left arm imitation traj 1,3,4 by hand
-tmp = wrist_traj_dataset_aligned{1, 1};
-tmp(:, 1:3) = [linspace(0.55, 0.5, 800)', linspace(0.4, 0.3, 800)', linspace(0.2, 0.3, 800)';...
+%
+tmp = wrist_traj_dataset_aligned{1, 1}; 
+tmp(:, 1:3) = [linspace(0.53, 0.5, 800)', linspace(0.4, 0.3, 800)', linspace(0.25, 0.3, 800)';...
                linspace(0.5, 0.5, 200)', linspace(0.3, 0.16, 200)', linspace(0.3, 0.3, 200)'];
-wrist_traj_dataset_aligned{1, 1} = tmp;           
+wrist_traj_dataset_aligned{1, 1} = tmp;  % // traj 1          
 tmp1 = wrist_traj_dataset_aligned{3, 1};
 tmp1(:, 1:3) = [linspace(0.45, 0.5, 800)', linspace(0.35, 0.3, 800)', linspace(0.22, 0.3, 800)';...
                 linspace(0.5, 0.5, 200)', linspace(0.3, 0.16, 200)', linspace(0.3, 0.3, 200)'];
-wrist_traj_dataset_aligned{3, 1} = tmp1;
+wrist_traj_dataset_aligned{3, 1} = tmp1; % // traj 3
+tmp2 = wrist_traj_dataset_aligned{4, 1};
+tmp2(:, 1:3) = [linspace(0.48, 0.5, 800)', linspace(0.4, 0.3, 800)', linspace(0.25, 0.3, 800)';...
+                linspace(0.5, 0.5, 200)', linspace(0.3, 0.16, 200)', linspace(0.3, 0.3, 200)'];
+wrist_traj_dataset_aligned{4, 1} = tmp2; % // traj 4
+%}
 
-           
+
+% generate fake imitation trajectories(randomly)
+%{
+left_pose = repmat([-1.5708, 0, 0], len_samples, 1);
+right_pose = repmat([1.5708, 0, 0], len_samples, 1);
+left_goal = [0.5, 0.16, 0.3];
+right_goal = [0.5, -0.16, 0.3];
+num = 32;
+wrist_traj_dataset_aligned = cell(num, 2);
+for n = 1 : num
+    left_start = unifrnd([0.3, 0.25, 0.2], [0.6, 0.4, 0.6], 1, 3);
+    right_start = unifrnd([0.3, -0.4, 0.2], [0.6, -0.25, 0.6], 1, 3); 
+    offset = [(left_goal(2)+0.1 - left_start(2)) * unifrnd(0.75, 1) + left_start(2), ...
+              (right_goal(2)-0.1 - right_start(2)) * unifrnd(0.75, 1) + right_start(2)];
+    % generate left and right fake trajectories
+    wrist_traj_dataset_aligned{n, 1} = [gen_fake_traj(left_start, left_goal, offset(1)), left_pose];
+    wrist_traj_dataset_aligned{n, 2} = [gen_fake_traj(right_start, right_goal, offset(2)), right_pose];    
+end
+tmp = t_series_aligned;
+t_series_aligned = cell(num, 1);
+for j = 1 : num
+    t_series_aligned{j, 1} = tmp{randi(8), 1};
+end
+%}
+
+% generate fake imitation trajectories(predefine)
+%{
+left_pose = repmat([-1.5708, 0, 0], len_samples, 1);
+right_pose = repmat([1.5708, 0, 0], len_samples, 1);
+left_goal = [0.5, 0.16, 0.3];
+right_goal = [0.5, -0.16, 0.3];
+l_start = [0.55, 0.4, 0.4; ...
+           0.57, 0.38, 0.28; ...
+           0.52, 0.32, 0.2; ...
+           0.45, 0.4, 0.22; ...
+           0.4, 0.35, 0.35; ...
+           0.47, 0.35, 0.45];
+l_via = [0.5, 0.26, 0.3; ...
+         0.5, 0.26, 0.3; ...
+         0.5, 0.25, 0.3; ...
+         0.5, 0.3, 0.3; ...
+         0.5, 0.28, 0.3; ...
+         0.5, 0.3, 0.3];
+r_start = [0.45, -0.4, 0.25; ...
+           0.55, -0.35, 0.32; ...
+           0.48, -0.4, 0.4; ...
+           0.57, -0.3, 0.28; ...
+           0.55, -0.38, 0.25; ...
+           0.48, -0.35, 0.2];
+r_via = [0.5, -0.26, 0.3; ...
+         0.5, -0.26, 0.3; ...
+         0.5, -0.3, 0.3; ...
+         0.5, -0.25, 0.3; ...
+         0.5, -0.28, 0.3; ...
+         0.5, -0.26, 0.3];
+num = size(l_start, 1);
+wrist_traj_dataset_aligned = cell(num, 2);
+for n = 1 : num
+    left_start = l_start(n, :);
+    right_start = r_start(n, :);
+    offset = [l_via(n, 2), r_via(n, 2)];
+    % generate left and right fake trajectories
+    wrist_traj_dataset_aligned{n, 1} = [gen_fake_traj(left_start, left_goal, offset(1)), left_pose];
+    wrist_traj_dataset_aligned{n, 2} = [gen_fake_traj(right_start, right_goal, offset(2)), right_pose];    
+end
+tmp = t_series_aligned;
+t_series_aligned = cell(num, 1);
+for j = 1 : num
+    t_series_aligned{j, 1} = tmp{randi(8), 1};
+end
+%}
+
 % perform GMM and GMR(using PbDlib)
 %{
 disp('==========Perform GMM and GMR using PbDlib==========');
@@ -198,7 +276,7 @@ disp('Done.');
 %}
 
 % display the 3 dimensional trajectory of the imitation data
-%{
+%
 figure;
 display_traj_dataset = wrist_traj_dataset_aligned;
 display_t = t_series_aligned;
@@ -240,7 +318,7 @@ subplot(3, 1, 3), plot(1:length(expected_wrist_traj), expected_wrist_traj(:, 3),
 % Perform DMP using PbDlib
 disp('===========Perform DMP using PbDlib==========');
 disp('Generate new wrist trajectory based on the given new start and new goal...');
-nbStates = 8;  % number of states/activation functions
+nbStates = 10;  % number of states/activation functions
 nbVar = 1; % number of the variables for the radial basis function
 nbVarPos = 6;%12;%3; % number of motion variables [x, y, z]
 kP_l = 64; %64; % stiffness gain
@@ -255,7 +333,7 @@ nbData = len_samples; % length of each trajectory(which is why they need to be G
 nbSamples = length(t_series_aligned); %10; % number of samples
 % be careful with the goal and initial state, don't swap them...
 new_start_l = [0.4, 0.4, 0.35, -1.5708, 0, 0]'; %[0.6, 0.3, 0.35, -1.5708, 0, 0]';  %wrist_traj_dataset_aligned{1, 1}(1, :)'; 
-new_goal_l = [0.5, 0.16, 0.3, -1.5708, 0, 0]'; %[0.5, 0.16, 0.3, -1.5708, 0, 0]'; %[wrist_traj_dataset_aligned{1, 1}(end, :), wrist_traj_dataset_aligned{1, 2}(end, :)]';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal
+new_goal_l = [0.45, 0.16, 0.3, -1.5708, 0, 0]'; %[0.5, 0.16, 0.3, -1.5708, 0, 0]'; %[wrist_traj_dataset_aligned{1, 1}(end, :), wrist_traj_dataset_aligned{1, 2}(end, :)]';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal
 
 new_start_r = [0.4, -0.4, 0.25, 1.5708, 0, 0]'; %[0.6, -0.3, 0.35, 1.5708, 0, 0]'; %wrist_traj_dataset_aligned{1, 2}(1, :)'; %[0.5, -0.35, 0.4, 1.5708, 0, 0]'; 
 new_goal_r = [0.55, -0.16, 0.3, 1.5708, 0, 0]'; %[0.5, -0.16, 0.3, 1.5708, 0, 0]'; %[wrist_traj_dataset_aligned{1, 1}(end, :), wrist_traj_dataset_aligned{1, 2}(end, :)]';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal

@@ -66,7 +66,7 @@ DataDMP=[];
 %traj_dataset = ...; % {i} 1000 x 3
 for n=1:nbSamples
     xTar = traj_dataset{n}';
-    xTar = xTar(:, end);
+    xTar = xTar(:, end); % modified by LYW
 	%Demonstration data as [x;dx;ddx]
 	s(n).Data = spline(1:size(traj_dataset{n}, 1), traj_dataset{n}', linspace(1, size(traj_dataset{n}, 1), nbData)); %Resampling
 	s(n).Data = [s(n).Data; gradient(s(n).Data)/model.dt]; %Velocity computation	
@@ -76,7 +76,7 @@ for n=1:nbSamples
 	DataDMP = [DataDMP, (s(n).Data(accId,:) - ...
 		(repmat(xTar,1,nbData)-s(n).Data(posId,:))*model.kP + s(n).Data(velId,:)*model.kV) ./ repmat(sIn,model.nbVarPos,1)];
 end
-xTar = new_goal; 
+xTar = new_goal;  % modified by LYW
 
 %% Setting of the basis functions and reproduction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
