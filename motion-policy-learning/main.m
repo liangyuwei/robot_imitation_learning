@@ -164,6 +164,17 @@ for i = 1 : length(traj_dataset)
 end
 disp('Done.');
 
+% modify left arm imitation traj 1,3,4 by hand
+tmp = wrist_traj_dataset_aligned{1, 1};
+tmp(:, 1:3) = [linspace(0.55, 0.5, 800)', linspace(0.4, 0.3, 800)', linspace(0.2, 0.3, 800)';...
+               linspace(0.5, 0.5, 200)', linspace(0.3, 0.16, 200)', linspace(0.3, 0.3, 200)'];
+wrist_traj_dataset_aligned{1, 1} = tmp;           
+tmp1 = wrist_traj_dataset_aligned{3, 1};
+tmp1(:, 1:3) = [linspace(0.45, 0.5, 800)', linspace(0.35, 0.3, 800)', linspace(0.22, 0.3, 800)';...
+                linspace(0.5, 0.5, 200)', linspace(0.3, 0.16, 200)', linspace(0.3, 0.3, 200)'];
+wrist_traj_dataset_aligned{3, 1} = tmp1;
+
+           
 % perform GMM and GMR(using PbDlib)
 %{
 disp('==========Perform GMM and GMR using PbDlib==========');
@@ -203,9 +214,10 @@ for i = 1 : length(display_traj_dataset)
         plot3(display_traj_dataset{i, j}(:, 1), display_traj_dataset{i, j}(:, 2), display_traj_dataset{i, j}(:, 3), 'b-'); hold on; grid on;     
         plot3(display_traj_dataset{i, j}(1, 1), display_traj_dataset{i, j}(1, 2), display_traj_dataset{i, j}(1, 3), 'go'); 
         plot3(display_traj_dataset{i, j}(end, 1), display_traj_dataset{i, j}(end, 2), display_traj_dataset{i, j}(end, 3), 'ro'); 
+        xlabel('x'); ylabel('y'); zlabel('z');
     end
+%     pause;
 end
-xlabel('x'); ylabel('y'); zlabel('z');
 axis([0.4, 0.6, -0.4, 0.4, 0.1, 0.5]);
 view(45, 30);
 %}
@@ -231,8 +243,8 @@ disp('Generate new wrist trajectory based on the given new start and new goal...
 nbStates = 8;  % number of states/activation functions
 nbVar = 1; % number of the variables for the radial basis function
 nbVarPos = 6;%12;%3; % number of motion variables [x, y, z]
-kP_l = 64; % stiffness gain
-kV_l = 20; % damping gain (with ideal underdamped damping ratio)
+kP_l = 64; %64; % stiffness gain
+kV_l = 20; %20; % damping gain (with ideal underdamped damping ratio)
 kosi_l = kV_l / (2 * sqrt(kP_l))
 kP_r = 400;%50; % stiffness gain
 kV_r = 35;
@@ -242,7 +254,7 @@ dt = 1/200; % duration of time step
 nbData = len_samples; % length of each trajectory(which is why they need to be GTW-aligned for use here)
 nbSamples = length(t_series_aligned); %10; % number of samples
 % be careful with the goal and initial state, don't swap them...
-new_start_l = [0.45, 0.4, 0.35, -1.5708, 0, 0]'; %[0.6, 0.3, 0.35, -1.5708, 0, 0]';  %wrist_traj_dataset_aligned{1, 1}(1, :)'; 
+new_start_l = [0.4, 0.4, 0.35, -1.5708, 0, 0]'; %[0.6, 0.3, 0.35, -1.5708, 0, 0]';  %wrist_traj_dataset_aligned{1, 1}(1, :)'; 
 new_goal_l = [0.5, 0.16, 0.3, -1.5708, 0, 0]'; %[0.5, 0.16, 0.3, -1.5708, 0, 0]'; %[wrist_traj_dataset_aligned{1, 1}(end, :), wrist_traj_dataset_aligned{1, 2}(end, :)]';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal
 
 new_start_r = [0.4, -0.4, 0.25, 1.5708, 0, 0]'; %[0.6, -0.3, 0.35, 1.5708, 0, 0]'; %wrist_traj_dataset_aligned{1, 2}(1, :)'; %[0.5, -0.35, 0.4, 1.5708, 0, 0]'; 
@@ -279,7 +291,7 @@ for p = 1 : 2
 end
 % title(['kP = ', num2str(kP), ', kV = ', num2str(kV)]);
 title(['kP_l = ', num2str(kP_l), ', kV_l = ', num2str(kV_l), '; kP_r = ', num2str(kP_r), ', kV_r = ', num2str(kV_r)]);
-% axis([0, 0.5, -0.3, 0.3, 0, 0.5]);
+axis([0.4, 0.6, -0.4, 0.4, 0.1, 0.5]);
 view(120, 60);
 xlabel('x'); ylabel('y'); zlabel('z');
 
