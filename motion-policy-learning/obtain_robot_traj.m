@@ -31,8 +31,8 @@ for m = 1:n
     ForwardKinematics(2);
     
     % record trajectory points
-    
-    end_traj_points(m, :) = [uLINK(8).p', eul]; % add in the information about pose
+    cur_eul = rotm2eul(uLINK(8).R);
+    end_traj_points(m, :) = [uLINK(8).p', cur_eul]; %eul]; % add in the information about pose
 %     elbow_traj_points(m, :) = uLINK(4).p';
 
     % plot the robot

@@ -61,7 +61,7 @@ sIn(1) = 1; %Initialization of decay term
 for t=2:nbData
 	sIn(t) = sIn(t-1) - model.alpha * sIn(t-1) * model.dt; %Update of decay term (ds/dt=-alpha s)
 end
-xTar = demos{1}.pos(:,end);
+xTar = demos{1}.pos(:,end) + [0, -0.5]';
 Data=[];
 DataDMP=[];
 for n=1:nbSamples
@@ -119,6 +119,21 @@ end
 
 
 %% Plots
+%{
+% Added by LYW at 10:55 am, on 2019/06/12
+figure;
+data = r(1).Data;
+for n = 1 : nbSamples
+    plot(demos{n}.pos(1, :), demos{n}.pos(2, :), '.', 'markersize', 8, 'color', [.7, .7, .7]); hold on; grid on;
+end
+plot(data(1, :), data(2, :), '-', 'linewidth', 3, 'color', [.8, 0, 0]); 
+xlabel('x');
+ylabel('y');
+axis([-10, 10, -10, 10]);
+% title('Using the goal of a demonstrated trajectory');
+title('Using the goal of a demonstrated trajectory, shifted -0.5 in y-dir');
+%}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 figure('PaperPosition',[0 0 16 4],'position',[10,10,1300,500],'color',[1 1 1]); 
 xx = round(linspace(1,64,model.nbStates));

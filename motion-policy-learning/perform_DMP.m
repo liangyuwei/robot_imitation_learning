@@ -123,7 +123,7 @@ end
 
 
 %% Plots
-%
+%{
 % plot DataDMP(force profile) and currF(retrieved force)
 % trajId = 8;
 % figure;
