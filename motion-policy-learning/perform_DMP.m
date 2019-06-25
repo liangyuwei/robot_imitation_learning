@@ -125,31 +125,31 @@ end
 %% Plots
 %{
 % plot DataDMP(force profile) and currF(retrieved force)
-% trajId = 8;
-% figure;
-% plot3(0, 0, 0, 'ro'); hold on; grid on;
-% xlabel('x'); ylabel('y'); zlabel('z');
-% title(['Imi Traj ', num2str(trajId)]);
-% for i = trajId : trajId%nbSamples
-%     for j = 1 : nbData
-%         plot3(DataDMP(1, (i-1)*nbData+j), DataDMP(2, (i-1)*nbData+j), DataDMP(3, (i-1)*nbData+j), 'b.');
-%         pause(0.01);
-%     end
-% end
+trajId = 7;
+figure;
+plot3(0, 0, 0, 'ro'); hold on; grid on;
+xlabel('x'); ylabel('y'); zlabel('z');
+title(['Imi Traj ', num2str(trajId)]);
+for i = trajId : trajId%nbSamples
+    for j = 1 : nbData
+        plot3(DataDMP(1, (i-1)*nbData+j), DataDMP(2, (i-1)*nbData+j), DataDMP(3, (i-1)*nbData+j), 'b.');
+        pause(0.01);
+    end
+end
 % DMP
-% figure;
-% plot3(0, 0, 0, 'ro'); hold on; grid on;
-% xlabel('x'); ylabel('y'); zlabel('z');
-% title('CurrF');
-% plot3(currF(1, 1), currF(2, 1), currF(3, 1), 'go');
-% plot3(currF(1, end), currF(2, end), currF(3, end), 'ro');
-% for j = 2 : nbData-1
-%     plot3(currF(1, j), currF(2, j), currF(3, j), 'b.');
-%     pause(0.01);
-% end
+figure;
+plot3(0, 0, 0, 'ro'); hold on; grid on;
+xlabel('x'); ylabel('y'); zlabel('z');
+title('CurrF');
+plot3(currF(1, 1), currF(2, 1), currF(3, 1), 'go');
+plot3(currF(1, end), currF(2, end), currF(3, end), 'ro');
+for j = 2 : nbData-1
+    plot3(currF(1, j), currF(2, j), currF(3, j), 'b.');
+    pause(0.01);
+end
 % plot Data
-% figure;
-% plot3(Data(1, :), Data(2, :), Data(3, :), 'b.'); grid on;
+figure;
+plot3(Data(1, :), Data(2, :), Data(3, :), 'b.'); grid on;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

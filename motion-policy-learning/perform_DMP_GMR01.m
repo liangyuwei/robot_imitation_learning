@@ -66,7 +66,7 @@ xTar = new_goal; %demos{1}.pos(:,end);
 Data=[];
 DataDMP=[];
 for n=1:nbSamples
-    xTar = traj_dataset{1}';
+    xTar = traj_dataset{n}';
     xTar = xTar(:, end); % modified by LYW
 	%Demonstration data as [x;dx;ddx]
 	s(n).Data = spline(1:size(traj_dataset{n}, 1), traj_dataset{n}', linspace(1,size(traj_dataset{n}, 1),nbData)); %Resampling
