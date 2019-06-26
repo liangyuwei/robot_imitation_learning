@@ -381,9 +381,9 @@ end
 figure;
 for i = 1 : length(display_traj_dataset)
     for j = 1 : 2
-        plot3(display_traj_dataset{i, j}(:, 1), display_traj_dataset{i, j}(:, 2), display_traj_dataset{i, j}(:, 3), 'b-'); hold on; grid on;     
-        plot3(display_traj_dataset{i, j}(1, 1), display_traj_dataset{i, j}(1, 2), display_traj_dataset{i, j}(1, 3), 'go'); 
-        plot3(display_traj_dataset{i, j}(end, 1), display_traj_dataset{i, j}(end, 2), display_traj_dataset{i, j}(end, 3), 'ro'); 
+        plot3(display_traj_dataset{i, j}(:, 4), display_traj_dataset{i, j}(:, 5), display_traj_dataset{i, j}(:, 6), 'b-'); hold on; grid on;     
+        plot3(display_traj_dataset{i, j}(1, 4), display_traj_dataset{i, j}(1, 5), display_traj_dataset{i, j}(1, 6), 'go'); 
+        plot3(display_traj_dataset{i, j}(end, 4), display_traj_dataset{i, j}(end, 5), display_traj_dataset{i, j}(end, 6), 'ro'); 
         xlabel('x'); ylabel('y'); zlabel('z');
     end
 %     pause;
@@ -425,14 +425,15 @@ nbData = len_samples; % length of each trajectory(which is why they need to be G
 nbSamples = length(t_series_aligned); %10; % number of samples
 % be careful with the goal and initial state, don't swap them...
 new_start_l = [0.55, 0.4, 0.4, 0.15*pi, 0.2*pi, -0.75*pi]'; %[0.6, 0.3, 0.35, -1.5708, 0, 0]';  %wrist_traj_dataset_aligned{1, 1}(1, :)'; 
-% new_goal_l = [0.5, 0.12, 0.35, 0, 0, -0.5*pi]'; %[0.5, 0.16, 0.3, -1.5708, 0, 0]'; %[wrist_traj_dataset_aligned{1, 1}(end, :), wrist_traj_dataset_aligned{1, 2}(end, :)]';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal
+% new_goal_l = [0.5, 0.12, 0.35, 0, 0, -0.25*pi]'; %[0.5, 0.16, 0.3, -1.5708, 0, 0]'; %[wrist_traj_dataset_aligned{1, 1}(end, :), wrist_traj_dataset_aligned{1, 2}(end, :)]';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal
 
 new_start_r = [0.4, -0.35, 0.25, -0.25*pi, -0.3*pi, 0.25*pi]'; %[0.6, -0.3, 0.35, 1.5708, 0, 0]'; %wrist_traj_dataset_aligned{1, 2}(1, :)'; %[0.5, -0.35, 0.4, 1.5708, 0, 0]'; 
-% new_goal_r = [0.5, -0.19, 0.35, 0, 0, 0.5*pi]'; %[0.5, -0.16, 0.3, 1.5708, 0, 0]'; %[wrist_traj_dataset_aligned{1, 1}(end, :), wrist_traj_dataset_aligned{1, 2}(end, :)]';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal
+% new_goal_r = [0.5, -0.19, 0.35, 0, 0, 0.25*pi]'; %[0.5, -0.16, 0.3, 1.5708, 0, 0]'; %[wrist_traj_dataset_aligned{1, 1}(end, :), wrist_traj_dataset_aligned{1, 2}(end, :)]';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal
             %[wrist_traj_dataset_aligned{1, 1}(1, :), wrist_traj_dataset_aligned{1, 2}(1, :)]';% + [0, 0.1, 0]';  % move down 0.1 in y direction; % new initial position
+
 % new way of generating goals(non-horizontal goal)
 x_contact_origin = [0.5, 0, 0.35];
-l_euler_final = [0, 0, -0.25*pi]; %[0, 0, -0.5*pi]; % xyz, for RViz
+l_euler_final = [0, 0, -0.5*pi]; %[0, 0, -0.5*pi]; % xyz, for RViz
 [new_goal_l, new_goal_r] = generate_two_goals(x_contact_origin, l_euler_final);
 new_goal_l = new_goal_l';
 new_goal_r = new_goal_r';
@@ -442,21 +443,28 @@ wrist_traj_dataset_combined = cell(length(wrist_traj_dataset_aligned), 1);
 for c = 1 : length(wrist_traj_dataset_aligned)
     wrist_traj_dataset_combined{c} = [wrist_traj_dataset_aligned{c, 1}, wrist_traj_dataset_aligned{c, 2}];
 end
+% wrist_traj_dataset_only_eul = cell(length(wrist_traj_dataset_aligned), 2);
+% for c = 1 : length(wrist_traj_dataset_aligned)
+%     wrist_traj_dataset_only_eul{c, 1} = wrist_traj_dataset_aligned{c, 1}(:, 4:6);
+%     wrist_traj_dataset_only_eul{c, 2} = wrist_traj_dataset_aligned{c, 2}(:, 4:6);
+% end
 tic;
 new_wrist_traj_l = perform_DMP(wrist_traj_dataset_aligned(:, 1), nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 % new_wrist_traj_l = perform_DMP_GMR01(wrist_traj_dataset_aligned(:, 1), nbStates, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 % new_wrist_traj_l = perform_DMP_GMR02(wrist_traj_dataset_aligned(:, 1), nbStates, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
+% new_wrist_traj_l = perform_DMP02(wrist_traj_dataset_aligned(:, 1), nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 toc;
 new_wrist_traj_l = new_wrist_traj_l.Data;
 tic;
 new_wrist_traj_r = perform_DMP(wrist_traj_dataset_aligned(:, 2), nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
 % new_wrist_traj_r = perform_DMP_GMR01(wrist_traj_dataset_aligned(:, 2), nbStates, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
 % new_wrist_traj_r = perform_DMP_GMR02(wrist_traj_dataset_aligned(:, 2), nbStates, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
+% new_wrist_traj_r = perform_DMP02(wrist_traj_dataset_aligned(:, 2), nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
 toc;
 new_wrist_traj_r = new_wrist_traj_r.Data;
 
 % display the change of local frame
-display_frame_change(new_wrist_traj_l, new_wrist_traj_r);
+% display_frame_change(new_wrist_traj_l, new_wrist_traj_r);
 
 % plot the newly generated trajectory
 %
