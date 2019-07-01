@@ -127,7 +127,7 @@ end
 %% Plots
 %{
 % plot DataDMP(force profile) and currF(retrieved force)
-trajId = 7;
+trajId = 1;
 figure;
 plot3(0, 0, 0, 'ro'); hold on; grid on;
 xlabel('x'); ylabel('y'); zlabel('z');
@@ -138,6 +138,21 @@ for i = trajId : trajId%nbSamples
         pause(0.01);
     end
 end
+
+% plot velocity component of the imitation trajectory
+figure;
+plot3(0, 0, 0, 'ro'); hold on; grid on;
+xlabel('x'); ylabel('y'); zlabel('z');
+title('Vel component of imitation trajectory');
+plot3(s(n).Data(7, :), s(n).Data(8, :), s(n).Data(9, :), 'b-');
+
+% plot acceleration component of the imitation trajectory
+figure;
+plot3(0, 0, 0, 'ro'); hold on; grid on;
+xlabel('x'); ylabel('y'); zlabel('z');
+title('Acc component of imitation trajectory');
+plot3(s(n).Data(13, :), s(n).Data(14, :), s(n).Data(15, :), 'b-');
+
 % DMP
 figure;
 plot3(0, 0, 0, 'ro'); hold on; grid on;

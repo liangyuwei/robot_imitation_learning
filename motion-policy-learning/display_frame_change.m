@@ -7,7 +7,7 @@ len_samples = size(traj_l, 2);
 
 % 
 figure;
-scale = 0.5; % scale of the length of arrow
+scale = 0.2; % scale of the length of arrow
 id = round(linspace(1, len_samples, 100));
 for n = 1 : length(id)
     l_pos = traj_l(1:3, id(n)); % position of one point

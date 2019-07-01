@@ -130,7 +130,7 @@ l_x_start = [0.55, 0.35, 0.4;...
              0.44, 0.4, 0.25; ...
              0.48, 0.33, 0.28; ...
              ];
-l_eul_start = [0, 0, -0.75*pi;...
+l_eul_start = [0, 0, -0.25*pi;... %-0.75*pi;...% modified by LYW, 2019/07/01 to show generalization of DMP
                0, 0.15*pi, -0.5*pi;...
                0.1*pi, 0.2*pi, -0.25*pi; ...
                -0.25*pi, -0.1*pi, -0.6*pi; ...
@@ -139,7 +139,7 @@ l_eul_start = [0, 0, -0.75*pi;...
                -0.1*pi, -0.1*pi, -0.4*pi; ...
                ];
 l_x_final = [0.5, 0.1, 0.35]; % set fixed final position
-l_eul_final = [0, 0, -0.5*pi; ...
+l_eul_final = [0, 0, -0.75*pi; ...%-0.5*pi; ... % modified by LYW, 2019/07/01 to show generalization of DMP
                0, 0.25*pi, -0.5*pi; ...
                0.15*pi, 0.1*pi, -0.25*pi; ...
               -0.1*pi, -0.1*pi, -0.55*pi; ...
@@ -161,7 +161,7 @@ r_x_start = [0.45, -0.35, 0.3;...
              0.55, -0.36, 0.45; ...
              0.52, -0.38, 0.38; ...
              0.48, -0.34, 0.27];
-r_eul_start = [0, 0, 0.25*pi;...
+r_eul_start = [0, 0, -0.25*pi;... % 0.25*pi;... % modified by LYW, 2019/07/01 to show generalization of DMP
                0, -0.2*pi, 0.25*pi; ...
                0.15*pi, -0.1*pi, 0.75*pi; ...
                -0.15*pi, 0.15*pi, 0.35*pi; ...
@@ -169,7 +169,7 @@ r_eul_start = [0, 0, 0.25*pi;...
                0.15*pi, -0.15*pi, 0.6*pi; ...
                0.1*pi, -0.12*pi, 0.48*pi];
 r_x_final = [0.5, -0.1, 0.35]; % set fixed final position
-r_eul_final = [0, 0, 0.5*pi; ...
+r_eul_final = [0, 0, 0.25*pi; ... %0.5*pi; ... % modified by LYW, 2019/07/01 to show generalization of DMP
              0, -0.25*pi, 0.5*pi; ...
              -0.15*pi, -0.1*pi, 0.75*pi;...
              0.1*pi, 0.1*pi, 0.45*pi; ...
@@ -179,7 +179,7 @@ r_eul_final = [0, 0, 0.5*pi; ...
 r_x_mid = zeros(size(r_x_start));
 for i = 1 : size(r_x_start, 1)
     rotm = eul2rotm([r_eul_final(i, 3), r_eul_final(i, 2), r_eul_final(i, 1)]); % xyz for RViz, zyx for Matlab
-    tmp = r_x_final' + rotm * [-0.1, 0, 0]';
+    tmp = r_x_final' + rotm * [-0.1, 0, 0]'; %[-0.1, 0, 0]';
     r_x_mid(i, :) = tmp';
 end
 r_eul_mid = r_eul_final;
@@ -201,8 +201,6 @@ for n = 1 : n_samples
 
 end
 disp('Done.');
-
-
 
 
 %% GTW(Generalized Time Warping) pre-processing
@@ -343,8 +341,6 @@ end
 %}
 
 
-
-
 % perform GMM and GMR(using PbDlib)
 %{
 disp('==========Perform GMM and GMR using PbDlib==========');
@@ -372,18 +368,19 @@ disp('Done.');
 figure;
 display_traj_dataset = wrist_traj_dataset_aligned;
 display_t = t_series_aligned;
-for i = 1:length(display_traj_dataset)
+trajId = 1;
+for i = trajId:trajId%1:length(display_traj_dataset)
     subplot(3, 1, 1), plot((1:1000)/200, display_traj_dataset{i}(:, 1), 'b-'); hold on; grid on; title('x'); xlabel('t');
     subplot(3, 1, 2), plot((1:1000)/200, display_traj_dataset{i}(:, 2), 'r-'); hold on; grid on; title('y'); xlabel('t');
     subplot(3, 1, 3), plot((1:1000)/200, display_traj_dataset{i}(:, 3), 'g-'); hold on; grid on; title('z'); xlabel('t');
 end
 % display the euclidean trajectory; without the time information, xx_traj_dataset and xx_traj_dataset_aligned should look the same    
 figure;
-for i = 1 : length(display_traj_dataset)
+for i = trajId:trajId %1 : length(display_traj_dataset)
     for j = 1 : 2
-        plot3(display_traj_dataset{i, j}(:, 4), display_traj_dataset{i, j}(:, 5), display_traj_dataset{i, j}(:, 6), 'b-'); hold on; grid on;     
-        plot3(display_traj_dataset{i, j}(1, 4), display_traj_dataset{i, j}(1, 5), display_traj_dataset{i, j}(1, 6), 'go'); 
-        plot3(display_traj_dataset{i, j}(end, 4), display_traj_dataset{i, j}(end, 5), display_traj_dataset{i, j}(end, 6), 'ro'); 
+        plot3(display_traj_dataset{i, j}(:, 1), display_traj_dataset{i, j}(:, 2), display_traj_dataset{i, j}(:, 3), 'b-'); hold on; grid on;     
+        plot3(display_traj_dataset{i, j}(1, 1), display_traj_dataset{i, j}(1, 2), display_traj_dataset{i, j}(1, 3), 'go'); 
+        plot3(display_traj_dataset{i, j}(end, 1), display_traj_dataset{i, j}(end, 2), display_traj_dataset{i, j}(end, 3), 'ro'); 
         xlabel('x'); ylabel('y'); zlabel('z');
     end
 %     pause;
@@ -414,49 +411,54 @@ nbStates = 10;  % number of states/activation functions
 nbVar = 1; % number of the variables for the radial basis function
 nbVarPos = 6;%12;%3; % number of motion variables [x, y, z]
 kP_l = 64; %64; % stiffness gain
-kV_l = 20; %20; % damping gain (with ideal underdamped damping ratio)
+kV_l = 16; %20; % damping gain (with ideal underdamped damping ratio)
 kosi_l = kV_l / (2 * sqrt(kP_l))
 kP_r = 400;%50; % stiffness gain
-kV_r = 35;
+kV_r = 40;
 kosi_r = kV_r / (2 * sqrt(kP_r))
 alpha = 1; % decay factor
 dt = 1/200; % duration of time step
 nbData = len_samples; % length of each trajectory(which is why they need to be GTW-aligned for use here)
-nbSamples = length(t_series_aligned); %10; % number of samples
-% be careful with the goal and initial state, don't swap them...
-new_start_l = [0.55, 0.4, 0.4, 0.15*pi, 0.2*pi, -0.75*pi]'; %[0.6, 0.3, 0.35, -1.5708, 0, 0]';  %wrist_traj_dataset_aligned{1, 1}(1, :)'; 
-% new_goal_l = [0.5, 0.12, 0.35, 0, 0, -0.25*pi]'; %[0.5, 0.16, 0.3, -1.5708, 0, 0]'; %[wrist_traj_dataset_aligned{1, 1}(end, :), wrist_traj_dataset_aligned{1, 2}(end, :)]';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal
+nbSamples = 1; %length(t_series_aligned); %10; % number of samples
 
-new_start_r = [0.4, -0.35, 0.25, -0.25*pi, -0.3*pi, 0.25*pi]'; %[0.6, -0.3, 0.35, 1.5708, 0, 0]'; %wrist_traj_dataset_aligned{1, 2}(1, :)'; %[0.5, -0.35, 0.4, 1.5708, 0, 0]'; 
-% new_goal_r = [0.5, -0.19, 0.35, 0, 0, 0.25*pi]'; %[0.5, -0.16, 0.3, 1.5708, 0, 0]'; %[wrist_traj_dataset_aligned{1, 1}(end, :), wrist_traj_dataset_aligned{1, 2}(end, :)]';% + [0, 0.1, 0]'; % why is z=0.315 changed to 0.4 after forward kinematics????? % move up 0.1 in y direction; % new goal
-            %[wrist_traj_dataset_aligned{1, 1}(1, :), wrist_traj_dataset_aligned{1, 2}(1, :)]';% + [0, 0.1, 0]';  % move down 0.1 in y direction; % new initial position
+trajId = 1; 
+new_start_l = wrist_traj_dataset_aligned{trajId, 1}(1, :)';% + [0.1, 0.1, -0.1, 0, -1.5708, 0]' ; 
+new_goal_l = wrist_traj_dataset_aligned{trajId, 1}(end, :)' + [0.1, 0, -0.1, 0, 0, 0]';
+
+new_start_r = wrist_traj_dataset_aligned{trajId, 2}(1, :)';% + [-0.1, -0.1, 0.1, 0, 1.5708, 0]'; 
+new_goal_r = wrist_traj_dataset_aligned{trajId, 2}(end, :)' + [-0.1, 0, 0.1, 0, 0, 0]';
 
 % new way of generating goals(non-horizontal goal)
+%{
 x_contact_origin = [0.5, 0, 0.35];
 l_euler_final = [0, 0, -0.5*pi]; %[0, 0, -0.5*pi]; % xyz, for RViz
 [new_goal_l, new_goal_r] = generate_two_goals(x_contact_origin, l_euler_final);
 new_goal_l = new_goal_l';
 new_goal_r = new_goal_r';
+%}
             
 % perform DMP on the left arm's imitation data
+%{
 wrist_traj_dataset_combined = cell(length(wrist_traj_dataset_aligned), 1);
 for c = 1 : length(wrist_traj_dataset_aligned)
     wrist_traj_dataset_combined{c} = [wrist_traj_dataset_aligned{c, 1}, wrist_traj_dataset_aligned{c, 2}];
 end
-% wrist_traj_dataset_only_eul = cell(length(wrist_traj_dataset_aligned), 2);
-% for c = 1 : length(wrist_traj_dataset_aligned)
-%     wrist_traj_dataset_only_eul{c, 1} = wrist_traj_dataset_aligned{c, 1}(:, 4:6);
-%     wrist_traj_dataset_only_eul{c, 2} = wrist_traj_dataset_aligned{c, 2}(:, 4:6);
-% end
+wrist_traj_dataset_only_eul = cell(length(wrist_traj_dataset_aligned), 2);
+for c = 1 : length(wrist_traj_dataset_aligned)
+    wrist_traj_dataset_only_eul{c, 1} = wrist_traj_dataset_aligned{c, 1}(:, 4:6);
+    wrist_traj_dataset_only_eul{c, 2} = wrist_traj_dataset_aligned{c, 2}(:, 4:6);
+end
+%}
+
 tic;
-new_wrist_traj_l = perform_DMP(wrist_traj_dataset_aligned(:, 1), nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
+new_wrist_traj_l = perform_DMP(wrist_traj_dataset_aligned(1, 1), nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 % new_wrist_traj_l = perform_DMP_GMR01(wrist_traj_dataset_aligned(:, 1), nbStates, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 % new_wrist_traj_l = perform_DMP_GMR02(wrist_traj_dataset_aligned(:, 1), nbStates, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 % new_wrist_traj_l = perform_DMP02(wrist_traj_dataset_aligned(:, 1), nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 toc;
 new_wrist_traj_l = new_wrist_traj_l.Data;
 tic;
-new_wrist_traj_r = perform_DMP(wrist_traj_dataset_aligned(:, 2), nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
+new_wrist_traj_r = perform_DMP(wrist_traj_dataset_aligned(1, 2), nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
 % new_wrist_traj_r = perform_DMP_GMR01(wrist_traj_dataset_aligned(:, 2), nbStates, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
 % new_wrist_traj_r = perform_DMP_GMR02(wrist_traj_dataset_aligned(:, 2), nbStates, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
 % new_wrist_traj_r = perform_DMP02(wrist_traj_dataset_aligned(:, 2), nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
@@ -470,12 +472,31 @@ new_wrist_traj_r = new_wrist_traj_r.Data;
 %
 figure;
 traj_plot = new_wrist_traj_l(1:3, :); %new_wrist_traj(1:3, :); %new_wrist_traj(1:3, :);
+ori_traj_plot = wrist_traj_dataset_aligned{trajId, 1}'; ori_traj_plot = ori_traj_plot(1:3, :);
+rotm_l = eul2rotm([new_goal_l(6), new_goal_l(5), new_goal_l(4)]); % xyz for RViz, zyx for Matlab
+tmp_l = new_goal_l(1:3) + rotm_l * [-0.1, 0, 0]'; % offset from the goal
+new_mid_l = [tmp_l; new_goal_l(4:6)];
+exp_new_traj_plot = generate_fake_eef_traj(new_start_l', new_mid_l', new_goal_l', 500); 
+exp_new_traj_plot = exp_new_traj_plot'; exp_new_traj_plot = exp_new_traj_plot(1:3, :);
 % traj_plot = wrist_traj_dataset_aligned{i, 2}';% wrist_traj_dataset_aligned{i, 1}';
 for p = 1 : 2
     plot3(traj_plot(1, :), traj_plot(2, :), traj_plot(3, :), 'b.'); hold on; grid on;
     plot3(traj_plot(1, 1), traj_plot(2, 1), traj_plot(3, 1), 'go');
     plot3(traj_plot(1, end), traj_plot(2, end), traj_plot(3, end), 'ro');
+    plot3(ori_traj_plot(1, :), ori_traj_plot(2, :), ori_traj_plot(3, :), 'b--'); 
+    plot3(ori_traj_plot(1, 1), ori_traj_plot(2, 1), ori_traj_plot(3, 1), 'go');
+    plot3(ori_traj_plot(1, end), ori_traj_plot(2, end), ori_traj_plot(3, end), 'ro');
+    plot3(exp_new_traj_plot(1, :), exp_new_traj_plot(2, :), exp_new_traj_plot(3, :), 'm--'); 
+    plot3(exp_new_traj_plot(1, 1), exp_new_traj_plot(2, 1), exp_new_traj_plot(3, 1), 'go');
+    plot3(exp_new_traj_plot(1, end), exp_new_traj_plot(2, end), exp_new_traj_plot(3, end), 'ro');
+    % draw right arm's traj
     traj_plot = new_wrist_traj_r(1:3, :); %new_wrist_traj(7:9, :);
+    ori_traj_plot = wrist_traj_dataset_aligned{trajId, 2}'; ori_traj_plot = ori_traj_plot(1:3, :);
+    rotm_r = eul2rotm([new_goal_r(6), new_goal_r(5), new_goal_r(4)]); % xyz for RViz, zyx for Matlab
+    tmp_r = new_goal_r(1:3) + rotm_r * [-0.1, 0, 0]'; % offset from the goal
+    new_mid_r = [tmp_r; new_goal_r(4:6)];
+    exp_new_traj_plot = generate_fake_eef_traj(new_start_r', new_mid_r', new_goal_r', 500);
+    exp_new_traj_plot = exp_new_traj_plot'; exp_new_traj_plot = exp_new_traj_plot(1:3, :);
 end
 % title(['kP = ', num2str(kP), ', kV = ', num2str(kV)]);
 title(['kP_l = ', num2str(kP_l), ', kV_l = ', num2str(kV_l), '; kP_r = ', num2str(kP_r), ', kV_r = ', num2str(kV_r)]);

@@ -4,7 +4,7 @@ function traj = generate_fake_eef_traj(start, via, goal, T)
 % output traj is (T * 6).
 
 % randomly set the number of points for each stage
-n_first = round(unifrnd(0.7, 0.9) * T);
+n_first = round(unifrnd(0.5, 0.6) * T);
 n_second = T - n_first;
 
 % generate fake traj
