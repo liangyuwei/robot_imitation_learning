@@ -437,11 +437,13 @@ new_start_r = wrist_traj_dataset_aligned{trajId, 2}(1, :)';% + [-0.1, -0.1, 0.1,
 % new_goal_r = wrist_traj_dataset_aligned{trajId, 2}(end, :)' + [-0.1, 0, 0.1, 0, 0, 0]';
 
 % new way of generating goals(non-horizontal goal)
-new_x_contact_origin = x_contact_origin + [0.0, 0.0, 0.1]; % new contact goal
+%
+new_x_contact_origin = x_contact_origin;
 l_euler_final = wrist_traj_dataset_aligned{trajId, 1}(end, 4:6); %[0, 0, -0.5*pi]; %[0, 0, -0.5*pi]; % xyz, for RViz
-[new_goal_l, new_goal_r] = generate_two_goals(new_x_contact_origin, l_euler_final);
+[new_goal_l, new_goal_r] = generate_two_goals(x_contact_origin, l_euler_final);
 new_goal_l = new_goal_l';
 new_goal_r = new_goal_r';
+%}
             
 % perform DMP on the left arm's imitation data
 %{
