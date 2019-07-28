@@ -1,4 +1,4 @@
-function traj = generate_fake_eef_traj(start, via, goal, T)
+function [traj, n_first] = generate_fake_eef_traj(start, via, goal, T)
 %% This function generates straight-line trajectory through via-points.
 % input start/mid/final should be of size (1 * 6).
 % output traj is (T * 6).
