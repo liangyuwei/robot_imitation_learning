@@ -421,23 +421,23 @@ nbVarPos = 6;%12;%3; % number of motion variables [x, y, z]
 kP_l = 64; %64; % stiffness gain
 kV_l = 16; %20; % damping gain (with ideal underdamped damping ratio)
 kosi_l = kV_l / (2 * sqrt(kP_l))
-kP_r = 400;%50; % stiffness gain
-kV_r = 40;
+kP_r = 64; %400;%50; % stiffness gain
+kV_r = 16;%40;
 kosi_r = kV_r / (2 * sqrt(kP_r))
 alpha = 1; % decay factor
 dt = 1/200; % duration of time step
 nbData = len_samples; % length of each trajectory(which is why they need to be GTW-aligned for use here)
 nbSamples = 1; %length(t_series_aligned); %10; % number of samples
 
-trajId = 1; 
+trajId = 3; 
 new_start_l = wrist_traj_dataset_aligned{trajId, 1}(1, :)';% + [0.1, 0.1, -0.1, 0, -1.5708, 0]' ; 
 % new_goal_l = wrist_traj_dataset_aligned{trajId, 1}(end, :)' + [0.1, 0, -0.1, 0, 0, 0]';
-
+ 
 new_start_r = wrist_traj_dataset_aligned{trajId, 2}(1, :)';% + [-0.1, -0.1, 0.1, 0, 1.5708, 0]'; 
 % new_goal_r = wrist_traj_dataset_aligned{trajId, 2}(end, :)' + [-0.1, 0, 0.1, 0, 0, 0]';
 
 % new way of generating goals(non-horizontal goal)
-new_x_contact_origin = x_contact_origin + [0.0, 0.0, 0.1]; % new contact goal
+new_x_contact_origin = x_contact_origin + [0.0, 0.0, 0.05]; % new contact goal
 l_euler_final = wrist_traj_dataset_aligned{trajId, 1}(end, 4:6); %[0, 0, -0.5*pi]; %[0, 0, -0.5*pi]; % xyz, for RViz
 [new_goal_l, new_goal_r] = generate_two_goals(new_x_contact_origin, l_euler_final);
 new_goal_l = new_goal_l';
@@ -457,14 +457,14 @@ end
 %}
 
 tic;
-new_wrist_traj_l = perform_DMP(wrist_traj_dataset_aligned(1, 1), nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
+new_wrist_traj_l = perform_DMP(wrist_traj_dataset_aligned(trajId, 1), nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 % new_wrist_traj_l = perform_DMP_GMR01(wrist_traj_dataset_aligned(:, 1), nbStates, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 % new_wrist_traj_l = perform_DMP_GMR02(wrist_traj_dataset_aligned(:, 1), nbStates, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 % new_wrist_traj_l = perform_DMP02(wrist_traj_dataset_aligned(:, 1), nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 toc;
 new_wrist_traj_l = new_wrist_traj_l.Data;
 tic;
-new_wrist_traj_r = perform_DMP(wrist_traj_dataset_aligned(1, 2), nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
+new_wrist_traj_r = perform_DMP(wrist_traj_dataset_aligned(trajId, 2), nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
 % new_wrist_traj_r = perform_DMP_GMR01(wrist_traj_dataset_aligned(:, 2), nbStates, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
 % new_wrist_traj_r = perform_DMP_GMR02(wrist_traj_dataset_aligned(:, 2), nbStates, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
 % new_wrist_traj_r = perform_DMP02(wrist_traj_dataset_aligned(:, 2), nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
@@ -486,13 +486,13 @@ exp_new_traj_plot = generate_fake_eef_traj(new_start_l', new_mid_l', new_goal_l'
 exp_new_traj_plot = exp_new_traj_plot'; exp_new_traj_plot = exp_new_traj_plot(1:3, :);
 % traj_plot = wrist_traj_dataset_aligned{i, 2}';% wrist_traj_dataset_aligned{i, 1}';
 for p = 1 : 2
-    plot3(traj_plot(1, :), traj_plot(2, :), traj_plot(3, :), 'b.'); hold on; grid on;
+    plot3(traj_plot(1, :), traj_plot(2, :), traj_plot(3, :), 'b-'); hold on; grid on;
     plot3(traj_plot(1, 1), traj_plot(2, 1), traj_plot(3, 1), 'go');
     plot3(traj_plot(1, end), traj_plot(2, end), traj_plot(3, end), 'ro');
     plot3(ori_traj_plot(1, :), ori_traj_plot(2, :), ori_traj_plot(3, :), 'b--'); 
     plot3(ori_traj_plot(1, 1), ori_traj_plot(2, 1), ori_traj_plot(3, 1), 'go');
     plot3(ori_traj_plot(1, end), ori_traj_plot(2, end), ori_traj_plot(3, end), 'ro');
-    plot3(exp_new_traj_plot(1, :), exp_new_traj_plot(2, :), exp_new_traj_plot(3, :), 'm--'); 
+    plot3(exp_new_traj_plot(1, :), exp_new_traj_plot(2, :), exp_new_traj_plot(3, :), 'm--');%'m--'); 
     plot3(exp_new_traj_plot(1, 1), exp_new_traj_plot(2, 1), exp_new_traj_plot(3, 1), 'go');
     plot3(exp_new_traj_plot(1, end), exp_new_traj_plot(2, end), exp_new_traj_plot(3, end), 'ro');
     % draw right arm's traj
@@ -506,8 +506,9 @@ for p = 1 : 2
 end
 % title(['kP = ', num2str(kP), ', kV = ', num2str(kV)]);
 title(['kP_l = ', num2str(kP_l), ', kV_l = ', num2str(kV_l), '; kP_r = ', num2str(kP_r), ', kV_r = ', num2str(kV_r)]);
-% axis([0.4, 0.6, -0.4, 0.4, 0.1, 0.5]);
+axis([0.4, 0.6, -0.4, 0.4, 0.2, 0.5]);
 % view(120, 60);
+view(120, 45);
 % For PPT demonstration purpose:
 % set(gca, 'FontSize', 16);
 % view(135, 38); % 3d view
