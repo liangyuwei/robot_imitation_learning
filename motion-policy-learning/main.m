@@ -197,6 +197,8 @@ wrist_traj_dataset = cell(n_samples, 2);
 n_first_l = []; 
 n_first_r = []; % record the division point
 t_series = cell(n_samples, 1);
+global fake_traj_left_or_right
+fake_traj_left_or_right = true;
 for n = 1 : n_samples
     disp(['Generating fake trajectory ', num2str(n), '/', num2str(n_samples), '...']);
     [wrist_traj_dataset{n, 1}, tmp] = generate_fake_eef_traj([l_x_start(n, :), l_eul_start(n, :)], ...
@@ -204,11 +206,15 @@ for n = 1 : n_samples
                                                       [l_x_final(n, :), l_eul_final(n, :)], ...
                                                       1000); % 500);
     n_first_l = [n_first_l, tmp]; % record the division point
+    fake_traj_left_or_right = false; % for the right arm
+    
     [wrist_traj_dataset{n, 2}, tmp] = generate_fake_eef_traj([r_x_start(n, :), r_eul_start(n, :)], ...
                                                       [r_x_mid(n, :), r_eul_mid(n, :)], ...
                                                       [r_x_final(n, :), r_eul_final(n, :)], ...
                                                       1000); % 500);
     n_first_r = [n_first_r, tmp]; 
+    fake_traj_left_or_right = true;
+
     t_series{n, 1} = linspace(0, 3, 1000); %500); % 3 seconds
 
 end
@@ -463,9 +469,10 @@ end
 %}
 
 %{
+% for learning DMP parameters
 tic; %wrist_traj_dataset_aligned(1, 1) --------------\\
-new_wrist_traj_l = perform_DMP('l_approach_1', {wrist_traj_dataset{1, 1}(1:n_first_l(1), :)}, nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
-new_wrist_traj_l = perform_DMP('l_insert_1', {wrist_traj_dataset{1, 1}((n_first_l(1)+1):end, :)}, nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
+new_wrist_traj_l = perform_DMP('l_approach_2', {wrist_traj_dataset{1, 1}(1:n_first_l(1), :)}, nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
+new_wrist_traj_l = perform_DMP('l_insert_2', {wrist_traj_dataset{1, 1}((n_first_l(1)+1):end, :)}, nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 
 % new_wrist_traj_l = perform_DMP_using_learned_params('l_test', ...
 %                                                      nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, ...
@@ -478,8 +485,8 @@ new_wrist_traj_l = new_wrist_traj_l.Data;
 
 
 tic; % wrist_traj_dataset_aligned(1, 2) ---------------------- \\
-new_wrist_traj_r = perform_DMP('r_approach_1', {wrist_traj_dataset{1, 2}(1:n_first_r(1), :)}, nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
-new_wrist_traj_r = perform_DMP('r_insert_1', {wrist_traj_dataset{1, 2}((n_first_r(1)+1):end, :)}, nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
+new_wrist_traj_r = perform_DMP('r_approach_2', {wrist_traj_dataset{1, 2}(1:n_first_r(1), :)}, nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
+new_wrist_traj_r = perform_DMP('r_insert_2', {wrist_traj_dataset{1, 2}((n_first_r(1)+1):end, :)}, nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
 % new_wrist_traj_r = perform_DMP_using_learned_params('r_test', ...
 %                                                      nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, ...
 %                                                      nbData, nbSamples, new_goal_r, new_start_r);
@@ -516,11 +523,14 @@ new_wrist_traj_l = [new_wrist_traj_l_approach, new_wrist_traj_l_insert];
 new_wrist_traj_r = [new_wrist_traj_r_approach, new_wrist_traj_r_insert];
 %}
 % simple joining of DMP sequences using new script(a more reasonable implementation, no synchronization)
-[new_wrist_traj_l, new_wrist_traj_r] = perform_biDMP_joining({'l_approach_1', 'l_insert_1'}, {'r_approach_1', 'r_insert_1'}, ...
+exp_rotm_l = eul2rotm([new_mid_l(6), new_mid_l(5), new_mid_l(4)]);
+exp_rotm_r = eul2rotm([new_mid_r(6), new_mid_r(5), new_mid_r(4)]);
+[new_wrist_traj_l, new_wrist_traj_r] = perform_biDMP_joining({'l_approach_2', 'l_insert_2'}, {'r_approach_2', 'r_insert_2'}, ...
                                                      nbStates, nbVar, nbVarPos, ...
                                                      kP_l, kV_l, kP_r, kV_r, alpha, dt, ...
                                                      [new_mid_l, new_goal_l], [new_start_l, new_mid_l], ...
-                                                     [new_mid_r, new_goal_r], [new_start_r, new_mid_r]);
+                                                     [new_mid_r, new_goal_r], [new_start_r, new_mid_r], ...
+                                                     exp_rotm_l, exp_rotm_r);
 new_wrist_traj_l = new_wrist_traj_l.Data;
 new_wrist_traj_r = new_wrist_traj_r.Data; % concatenated DMP sequence
 

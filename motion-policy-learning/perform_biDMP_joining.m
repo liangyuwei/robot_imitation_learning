@@ -1,4 +1,4 @@
-function [r_l, r_r] = perform_biDMP_joining(DMP_name_l, DMP_name_r, nbStates, nbVar, nbVarPos, kP_l, kV_l, kP_r, kV_r, alpha, dt, new_goal_l, new_start_l, new_goal_r, new_start_r)
+function [r_l, r_r] = perform_biDMP_joining(DMP_name_l, DMP_name_r, nbStates, nbVar, nbVarPos, kP_l, kV_l, kP_r, kV_r, alpha, dt, new_goal_l, new_start_l, new_goal_r, new_start_r, exp_rotm_l, exp_rotm_r)
 % Dynamical movement primitive (DMP) with locally weighted regression (LWR). 
 %
 % Writing code takes time. Polishing it and making it available to others takes longer! 
@@ -132,12 +132,42 @@ while (sIn_tmp_l >= threshold || sIn_tmp_r >= threshold) % wait until both DMP s
         r_r.Data = [r_r.Data, r_r.Data(:, end)];
     end
     
-    % record timestamps; 
-    % set the next time stamp and add coupling terms!!!
+    % compute difference between two eef's poses
+    rotm_l = eul2rotm([r_l.Data(6, end), r_l.Data(5, end), r_l.Data(4, end)]);
+    rotm_r = eul2rotm([r_r.Data(6, end), r_r.Data(5, end), r_r.Data(4, end)]);
+    rel_rotm_l = rotm_l' * exp_rotm_l; 
+    rel_rotm_r = rotm_r' * exp_rotm_r;
+    if(id_DMP_l == 1)
+        dist_l = norm(rotm2eul(rel_rotm_l)) * 30; % lag of the left arm
+    else
+        dist_l = 0; % should disable constraint checking for the last DMP...
+        % if more DMPs are concatenated, constraint switching should be added and exp_rel_rotm should be a cell   
+    end
+    if(id_DMP_r == 1)
+        dist_r = norm(rotm2eul(rel_rotm_r)) * 30;
+    else
+        dist_r = 0;
+    end
+    
+    % record timestamps and set the next time stamp and add coupling terms!!!
     sIn_l = [sIn_l, sIn_tmp_l];
     sIn_r = [sIn_r, sIn_tmp_r];
-    sIn_tmp_l = sIn_tmp_l - 2 * model_l.alpha * sIn_tmp_l * model_l.dt; %%%%% make the clock of the left arm faster!!! %%%%
-    sIn_tmp_r = sIn_tmp_r - model_r.alpha * sIn_tmp_r * model_r.dt;     
+    percent = 0.95; % start constraint checking after finishing 95% of the whole path
+    slow_threshold = 1-percent; 
+    if(sIn_tmp_l > slow_threshold) %(1+percent)*threshold) 
+        sIn_tmp_l = sIn_tmp_l - 2 * model_l.alpha * sIn_tmp_l * model_l.dt; %%%%% make the clock of the left arm faster!!! %%%%    
+    else
+        sIn_tmp_l = sIn_tmp_l - 2 * model_l.alpha * sIn_tmp_l * model_l.dt / (1+dist_r); % add coupling when approaching threshold       
+    end
+    % The problem resides in the same time evolution induced by using two canonical systems with the same settings(parameter alpha)  
+    % as well as the same dt(discretization)
+    % model_l.alpha * sIn_tmp_l * model_l.dt; %% try to modify the imitation traj instead of changing the internal clock;..... useless... the problem is not here %%
+    %   %2 * model_l.alpha * sIn_tmp_l * model_l.dt; %%%%% make the clock of the left arm faster!!! %%%%
+    if(sIn_tmp_r > slow_threshold) %(1+percent)*threshold) 
+        sIn_tmp_r = sIn_tmp_r - model_r.alpha * sIn_tmp_r * model_r.dt; 
+    else
+        sIn_tmp_r = sIn_tmp_r - model_r.alpha * sIn_tmp_r * model_r.dt / (1+dist_l); % add coupling when approaching threshold         
+    end
     
     % switch to next DMP, for left arm
     if(sIn_tmp_l<threshold) % if the left arm's DMP reached the end        
