@@ -1,4 +1,4 @@
-function r = perform_DMP(DMP_name, traj_dataset, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbData, nbSamples, new_goal, new_start)
+function r = perform_DMP_using_learned_params(DMP_name, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbData, nbSamples, new_goal, new_start)
 % Dynamical movement primitive (DMP) with locally weighted regression (LWR). 
 %
 % Writing code takes time. Polishing it and making it available to others takes longer! 
@@ -50,46 +50,26 @@ nbData = nbData; %200; %Length of each trajectory
 nbSamples = nbSamples; %4; %Number of demonstrations
 L = [eye(model.nbVarPos)*model.kP, eye(model.nbVarPos)*model.kV]; %Feedback term
 
+% try other settings
+% nbData = 500; % doesn't work since sIn is not enough... and in that Mu and Sigma are still away       
 
-%% Load handwriting data
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-posId=[1:model.nbVarPos]; velId=[model.nbVarPos+1:2*model.nbVarPos]; accId=[2*model.nbVarPos+1:3*model.nbVarPos]; 
-% demos=[];
-% load('data/2Dletters/G.mat');
+%% Pre-setup
 sIn(1) = 1; %Initialization of decay term
 for t=2:nbData
 	sIn(t) = sIn(t-1) - model.alpha * sIn(t-1) * model.dt; %Update of decay term (ds/dt=-alpha s)
 end
-xTar = new_goal; %demos{1}.pos(:,end);
-Data=[];
-DataDMP=[];
-%traj_dataset = ...; % {i} 1000 x 3
-for n=1:nbSamples
-    tmp = traj_dataset{n}';
-%     xStart = tmp(:, 1); 
-    xTar = tmp(:, end); % modified by LYW
-	%Demonstration data as [x;dx;ddx]
-	s(n).Data = spline(1:size(traj_dataset{n}, 1), traj_dataset{n}', linspace(1, size(traj_dataset{n}, 1), nbData)); %Resampling
-	s(n).Data = [s(n).Data; gradient(s(n).Data)/model.dt]; %Velocity computation	
-	s(n).Data = [s(n).Data; gradient(s(n).Data(end-model.nbVarPos+1:end,:))/model.dt]; %Acceleration computation
-	Data = [Data s(n).Data]; %Concatenation of the multiple demonstrations	
-    %Nonlinear forcing term
-	DataDMP = [DataDMP, (s(n).Data(accId,:) - ...
-		(repmat(xTar,1,nbData)-s(n).Data(posId,:))*model.kP + s(n).Data(velId,:)*model.kV) ...
-            ./ repmat(sIn,model.nbVarPos,1) ]; %./ repmat(xTar-xStart, 1, nbData)];
-end
 xTar = new_goal;  % modified by LYW
 
-%% Setting of the basis functions and reproduction
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-model = init_GMM_timeBased(sIn, model);
 
-%model = init_GMM_logBased(sIn, model); %Log-spread in s <-> equal spread in t
-%model = init_GMM_kmeans(sIn, model);
-
-%Set Sigma as diagonal matrices (i.e., inpedendent systems synchronized by the s variable)
-for i=1:model.nbStates
-	model.Sigma(:,:,i) = 2E-3; %Setting of covariance
+%% Load the learned parameters for generating new trajectory
+% load the params from recorded mat file
+load learned_DMP_params.mat
+for j = 1 : length(DMP_params)
+    if DMP_params(j).name == DMP_name
+        model.Sigma = DMP_params(j).Sigma;
+        model.Mu = DMP_params(j).Mu;
+        MuF = DMP_params(j).Weights;
+    end 
 end
 
 %Compute activation
@@ -98,18 +78,6 @@ for i=1:model.nbStates
 	H(i,:) = gaussPDF(sIn, model.Mu(:,i), model.Sigma(:,:,i));
 end
 H = H ./ repmat(sum(H),model.nbStates,1);
-H2 = repmat(H,1,nbSamples);
-
-% %Nonlinear force profile retrieval (as in RBFN)
-% MuF = DataDMP * pinv(H2);
-
-%Nonlinear force profile retrieval (as in LWR)
-X = ones(nbSamples*nbData,1);
-Y = DataDMP';
-for i=1:model.nbStates
-	W = diag(H2(i,:));
-	MuF(:,i) = (X'*W*X \ X'*W * Y)';
-end
 
 %Motion retrieval with DMP
 currF = MuF * H; 
@@ -122,19 +90,6 @@ for t=1:nbData
 	x = x + dx * model.dt;
 	r(1).Data(:,t) = x;
 end
-
-% save the parameters of the DMP
-tmp = struct('name', DMP_name, 'Mu', model.Mu, 'Sigma', model.Sigma, 'Weights', MuF);
-if exist('learned_DMP_params.mat', 'file')
-    % the file exists, load it
-    load learned_DMP_params
-    nn = length(DMP_params);
-    DMP_params(nn + 1) = tmp;
-else
-    % the file doesn't exist
-    DMP_params = tmp;
-end
-save learned_DMP_params.mat DMP_params
 
 
 %% Plots

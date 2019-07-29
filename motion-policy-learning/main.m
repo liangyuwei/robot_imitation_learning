@@ -6,7 +6,7 @@ len_samples = 1000;
 global uLINK th
 th = zeros(6, 1);
 UX = [1 0 0]'; UY = [0 1 0]'; UZ = [0 0 1]';
-uLINK = struct('name','bo1dy', 'mom', 0, 'child', 2, 'b', [0 0 0]', 'a', UZ, 'q', 0);
+uLINK = struct('name','body', 'mom', 0, 'child', 2, 'b', [0 0 0]', 'a', UZ, 'q', 0);
 uLINK(2) = struct('name', 'shoulder_pan_joint', 'mom', 1, 'child', 3, 'b', [0 0 0.089159]', 'a', UZ, 'q', th(1));
 uLINK(3) = struct('name', 'shoulder_lift_joint', 'mom', 2, 'child', 4, 'b', [0  0.13585 0]',  'a', UY, 'q', th(2));
 uLINK(4) = struct('name', 'elbow_joint', 'mom', 3, 'child', 5, 'b', [0.425 -0.1197 0]', 'a', UY,'q', th(3));
@@ -194,18 +194,22 @@ end
 % generate
 n_samples = size(l_x_start, 1);
 wrist_traj_dataset = cell(n_samples, 2);
+n_first_l = []; 
+n_first_r = []; % record the division point
 t_series = cell(n_samples, 1);
 for n = 1 : n_samples
     disp(['Generating fake trajectory ', num2str(n), '/', num2str(n_samples), '...']);
-    wrist_traj_dataset{n, 1} = generate_fake_eef_traj([l_x_start(n, :), l_eul_start(n, :)], ...
+    [wrist_traj_dataset{n, 1}, tmp] = generate_fake_eef_traj([l_x_start(n, :), l_eul_start(n, :)], ...
                                                       [l_x_mid(n, :), l_eul_mid(n, :)], ...
                                                       [l_x_final(n, :), l_eul_final(n, :)], ...
-                                                      500);
-    wrist_traj_dataset{n, 2} = generate_fake_eef_traj([r_x_start(n, :), r_eul_start(n, :)], ...
+                                                      1000); % 500);
+    n_first_l = [n_first_l, tmp]; % record the division point
+    [wrist_traj_dataset{n, 2}, tmp] = generate_fake_eef_traj([r_x_start(n, :), r_eul_start(n, :)], ...
                                                       [r_x_mid(n, :), r_eul_mid(n, :)], ...
                                                       [r_x_final(n, :), r_eul_final(n, :)], ...
-                                                      500);
-    t_series{n, 1} = linspace(0, 3, 500); % 3 seconds
+                                                      1000); % 500);
+    n_first_r = [n_first_r, tmp]; 
+    t_series{n, 1} = linspace(0, 3, 1000); %500); % 3 seconds
 
 end
 disp('Done.');
@@ -429,8 +433,10 @@ dt = 1/200; % duration of time step
 nbData = len_samples; % length of each trajectory(which is why they need to be GTW-aligned for use here)
 nbSamples = 1; %length(t_series_aligned); %10; % number of samples
 
-trajId = 3; 
+trajId = 1;  
 new_start_l = wrist_traj_dataset_aligned{trajId, 1}(1, :)';% + [0.1, 0.1, -0.1, 0, -1.5708, 0]' ; 
+% new_start_l(1:3) = [0.52, 0.1, 0.42]';
+% new_start_l(4:6) = [-0.7854, -0.7854, -0.7854]';
 % new_goal_l = wrist_traj_dataset_aligned{trajId, 1}(end, :)' + [0.1, 0, -0.1, 0, 0, 0]';
  
 new_start_r = wrist_traj_dataset_aligned{trajId, 2}(1, :)';% + [-0.1, -0.1, 0.1, 0, 1.5708, 0]'; 
@@ -456,23 +462,72 @@ for c = 1 : length(wrist_traj_dataset_aligned)
 end
 %}
 
-tic;
-new_wrist_traj_l = perform_DMP(wrist_traj_dataset_aligned(trajId, 1), nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
+%{
+tic; %wrist_traj_dataset_aligned(1, 1) --------------\\
+new_wrist_traj_l = perform_DMP('l_approach_1', {wrist_traj_dataset{1, 1}(1:n_first_l(1), :)}, nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
+new_wrist_traj_l = perform_DMP('l_insert_1', {wrist_traj_dataset{1, 1}((n_first_l(1)+1):end, :)}, nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
+
+% new_wrist_traj_l = perform_DMP_using_learned_params('l_test', ...
+%                                                      nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, ...
+%                                                      nbData, nbSamples, new_goal_l, new_start_l);
 % new_wrist_traj_l = perform_DMP_GMR01(wrist_traj_dataset_aligned(:, 1), nbStates, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 % new_wrist_traj_l = perform_DMP_GMR02(wrist_traj_dataset_aligned(:, 1), nbStates, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 % new_wrist_traj_l = perform_DMP02(wrist_traj_dataset_aligned(:, 1), nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 toc;
 new_wrist_traj_l = new_wrist_traj_l.Data;
-tic;
-new_wrist_traj_r = perform_DMP(wrist_traj_dataset_aligned(trajId, 2), nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
+
+
+tic; % wrist_traj_dataset_aligned(1, 2) ---------------------- \\
+new_wrist_traj_r = perform_DMP('r_approach_1', {wrist_traj_dataset{1, 2}(1:n_first_r(1), :)}, nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
+new_wrist_traj_r = perform_DMP('r_insert_1', {wrist_traj_dataset{1, 2}((n_first_r(1)+1):end, :)}, nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
+% new_wrist_traj_r = perform_DMP_using_learned_params('r_test', ...
+%                                                      nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, ...
+%                                                      nbData, nbSamples, new_goal_r, new_start_r);
 % new_wrist_traj_r = perform_DMP_GMR01(wrist_traj_dataset_aligned(:, 2), nbStates, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
 % new_wrist_traj_r = perform_DMP_GMR02(wrist_traj_dataset_aligned(:, 2), nbStates, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
 % new_wrist_traj_r = perform_DMP02(wrist_traj_dataset_aligned(:, 2), nbStates, nbVar, nbVarPos, kP_r, kV_r, alpha, dt, nbData, nbSamples, new_goal_r, new_start_r);
 toc;
 new_wrist_traj_r = new_wrist_traj_r.Data;
+%}
+
+% generate coordinated path
+rotm_l = eul2rotm([new_goal_l(6), new_goal_l(5), new_goal_l(4)]); % xyz for RViz, zyx for Matlab
+tmp_l = new_goal_l(1:3) + rotm_l * [-0.1, 0, 0]'; % offset from the goal
+new_mid_l = [tmp_l; new_goal_l(4:6)];
+rotm_r = eul2rotm([new_goal_r(6), new_goal_r(5), new_goal_r(4)]); % xyz for RViz, zyx for Matlab
+tmp_r = new_goal_r(1:3) + rotm_r * [-0.1, 0, 0]'; % offset from the goal
+new_mid_r = [tmp_r; new_goal_r(4:6)];
+%{
+[new_wrist_traj_l_approach, new_wrist_traj_r_approach] = perform_biDMP('l_approach_1', 'r_approach_1', nbStates, nbVar, nbVarPos, ...
+                                                     kP_l, kV_l, kP_r, kV_r, alpha, dt, ...
+                                                     new_mid_l, new_start_l, new_mid_r, new_start_r);
+%                                                      new_goal_l, new_start_l, new_goal_r, new_start_r);
+new_wrist_traj_l_approach = new_wrist_traj_l_approach.Data;
+new_wrist_traj_r_approach = new_wrist_traj_r_approach.Data;
+
+[new_wrist_traj_l_insert, new_wrist_traj_r_insert] = perform_biDMP('l_insert_1', 'r_insert_1', nbStates, nbVar, nbVarPos, ...
+                                                     kP_l, kV_l, kP_r, kV_r, alpha, dt, ...
+                                                     new_goal_l, new_mid_l, new_goal_r, new_mid_r);
+new_wrist_traj_l_insert = new_wrist_traj_l_insert.Data;
+new_wrist_traj_r_insert = new_wrist_traj_r_insert.Data;
+
+% combination of two DMPs
+new_wrist_traj_l = [new_wrist_traj_l_approach, new_wrist_traj_l_insert];
+new_wrist_traj_r = [new_wrist_traj_r_approach, new_wrist_traj_r_insert];
+%}
+% simple joining of DMP sequences using new script(a more reasonable implementation, no synchronization)
+[new_wrist_traj_l, new_wrist_traj_r] = perform_biDMP_joining({'l_approach_1', 'l_insert_1'}, {'r_approach_1', 'r_insert_1'}, ...
+                                                     nbStates, nbVar, nbVarPos, ...
+                                                     kP_l, kV_l, kP_r, kV_r, alpha, dt, ...
+                                                     [new_mid_l, new_goal_l], [new_start_l, new_mid_l], ...
+                                                     [new_mid_r, new_goal_r], [new_start_r, new_mid_r]);
+new_wrist_traj_l = new_wrist_traj_l.Data;
+new_wrist_traj_r = new_wrist_traj_r.Data; % concatenated DMP sequence
+
 
 % display the change of local frame
-% display_frame_change(new_wrist_traj_l, new_wrist_traj_r);
+display_frame_change(new_wrist_traj_l, new_wrist_traj_r);
+% display_frame_change(combined_new_wrist_traj_l, combined_new_wrist_traj_r);
 
 % plot the newly generated trajectory
 %
@@ -506,9 +561,8 @@ for p = 1 : 2
 end
 % title(['kP = ', num2str(kP), ', kV = ', num2str(kV)]);
 title(['kP_l = ', num2str(kP_l), ', kV_l = ', num2str(kV_l), '; kP_r = ', num2str(kP_r), ', kV_r = ', num2str(kV_r)]);
-axis([0.4, 0.6, -0.4, 0.4, 0.2, 0.5]);
-% view(120, 60);
-view(120, 45);
+% axis([0.4, 0.6, -0.4, 0.4, 0.1, 0.5]);
+view(120, 60);
 % For PPT demonstration purpose:
 % set(gca, 'FontSize', 16);
 % view(135, 38); % 3d view
