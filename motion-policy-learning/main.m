@@ -536,7 +536,9 @@ new_wrist_traj_r = new_wrist_traj_r.Data; % concatenated DMP sequence
 
 
 % display the change of local frame
-display_frame_change(new_wrist_traj_l, new_wrist_traj_r);
+record = false;
+gif_name = 'joining_DMP.gif'; %'joining_DMP_with_constraint_checking.gif';
+display_frame_change(new_wrist_traj_l, new_wrist_traj_r, record, gif_name);
 % display_frame_change(combined_new_wrist_traj_l, combined_new_wrist_traj_r);
 
 % plot the newly generated trajectory

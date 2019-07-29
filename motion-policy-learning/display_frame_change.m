@@ -1,4 +1,4 @@
-function display_frame_change(traj_l, traj_r)
+function display_frame_change(traj_l, traj_r, record, gif_name)
 %% This function displays the changing process of dual-arms' end-effectors' frames.
 % traj_{l/r} is of size (6, len_samples)
 
@@ -41,7 +41,26 @@ for n = 1 : length(id)
     xlabel('x'); ylabel('y'); zlabel('z');
 
     hold off;
+    
+    % store the frames for making gif later
+    if record
+        f = getframe;
+        im = frame2im(f);
+        [I, map] = rgb2ind(im, 256);
+        % set Loopcount as Inf for the animation to play forever
+        if n==1
+            imwrite(I, map, gif_name, 'gif', 'Loopcount', Inf, 'DelayTime', 0.01);
+        else
+            imwrite(I, map, gif_name, 'gif', 'WriteMode', 'append', 'DelayTime', 0.01);
+        end
+    end
+    
+    % pause
+    if n == 1
+        pause; % pause for video recording...
+    end
     pause(0.01);
+
 end
 
 

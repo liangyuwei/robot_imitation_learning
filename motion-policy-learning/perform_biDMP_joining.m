@@ -149,6 +149,10 @@ while (sIn_tmp_l >= threshold || sIn_tmp_r >= threshold) % wait until both DMP s
         dist_r = 0;
     end
     
+    % for display of the original movement
+%     dist_l = 0;
+%     dist_r = 0;
+    
     % record timestamps and set the next time stamp and add coupling terms!!!
     sIn_l = [sIn_l, sIn_tmp_l];
     sIn_r = [sIn_r, sIn_tmp_r];
