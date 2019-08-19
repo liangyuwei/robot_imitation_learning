@@ -27,7 +27,12 @@ end
 
 %% Motion retrieval with DMP
 % reset the clock
-sIn_tmp = 1; sIn = [];
+% sIn_tmp = 1; sIn = [];
+sIn(1) = 1; %Initialization of decay term
+nbData = 1000;
+for t = 2:nbData
+	sIn(t) = sIn(t-1) - model.alpha * sIn(t-1) * model.dt; %Update of decay term (ds/dt=-alpha s)
+end
 % set the start and goal
 x = new_start; xTar = new_goal;
 % set initial velocity
@@ -38,7 +43,11 @@ H = zeros(model.nbStates, 1);
 r.Data = [];
 % start iteration to generate new path
 threshold = 0.001;
-while (sIn_tmp >= threshold) % wait until both DMP sequences reach the end 
+% while (sIn_tmp >= threshold) % wait until both DMP sequences reach the end 
+for t = 1 : nbData
+    
+    sIn_tmp = sIn(t);
+    
     % update H, activation
     for i = 1:model.nbStates
         H(i,:) = gaussPDF(sIn_tmp, model.Mu(:,i), model.Sigma(:,:,i));
@@ -53,8 +62,8 @@ while (sIn_tmp >= threshold) % wait until both DMP sequences reach the end
     r.Data = [r.Data, x]; 
 
     % record timestamps and set the next time stamp and add coupling terms!!!
-    sIn = [sIn, sIn_tmp];
-    sIn_tmp = sIn_tmp - model.alpha * sIn_tmp * model.dt; %%%%% make the clock of the left arm faster!!! %%%%    
+%     sIn = [sIn, sIn_tmp];
+%     sIn_tmp = sIn_tmp - model.alpha * sIn_tmp * model.dt; %%%%% make the clock of the left arm faster!!! %%%%    
     
 end
 
