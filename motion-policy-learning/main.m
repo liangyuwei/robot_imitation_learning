@@ -469,7 +469,7 @@ end
 %}
 
 %{
-% for learning DMP parameters
+%% for learning DMP parameters
 tic; %wrist_traj_dataset_aligned(1, 1) --------------\\
 new_wrist_traj_l = perform_DMP('l_approach_2', {wrist_traj_dataset{1, 1}(1:n_first_l(1), :)}, nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
 new_wrist_traj_l = perform_DMP('l_insert_2', {wrist_traj_dataset{1, 1}((n_first_l(1)+1):end, :)}, nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);
@@ -533,6 +533,18 @@ exp_rotm_r = eul2rotm([new_mid_r(6), new_mid_r(5), new_mid_r(4)]);
                                                      exp_rotm_l, exp_rotm_r);
 new_wrist_traj_l = new_wrist_traj_l.Data;
 new_wrist_traj_r = new_wrist_traj_r.Data; % concatenated DMP sequence
+
+% % generate new paths using motion primitives from the library
+DMPs_to_gen = {'l_approach_2', 'l_insert_2', 'r_approach_2', 'r_insert_2'};
+new_starts = [new_start_l, new_mid_l, new_start_r, new_mid_r];
+new_goals = [new_mid_l, new_goal_l, new_mid_r, new_goal_r];
+for id = 1 : length(DMPs_to_gen)
+    r = generate_path_using_primitives(DMPs_to_gen{id}, nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, new_starts(:, id), new_goals(:, id));
+    h5create('tmp_new_paths_from_primitives.h5', [ '/', DMPs_to_gen{id}, '_tmp' ], size(r.Data)); % create before writing
+    h5write('tmp_new_paths_from_primitives.h5', [ '/', DMPs_to_gen{id}, '_tmp' ], r.Data);
+end
+% check out the result using the following command
+h5disp('tmp_new_paths_from_primitives.h5');
 
 
 % display the change of local frame
