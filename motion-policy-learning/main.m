@@ -550,6 +550,8 @@ h5disp('tmp_new_paths_from_primitives.h5');
 % display the change of local frame
 record = false;
 gif_name = 'joining_DMP.gif'; %'joining_DMP_with_constraint_checking.gif';
+% new_wrist_traj_l = h5read('tmp_new_paths_from_primitives.h5', '/l_insert_2_tmp'); %'/l_approach_2_tmp');
+% new_wrist_traj_r = h5read('tmp_new_paths_from_primitives.h5', '/r_insert_2_tmp'); %'/r_approach_2_tmp');
 display_frame_change(new_wrist_traj_l, new_wrist_traj_r, record, gif_name);
 % display_frame_change(combined_new_wrist_traj_l, combined_new_wrist_traj_r);
 
