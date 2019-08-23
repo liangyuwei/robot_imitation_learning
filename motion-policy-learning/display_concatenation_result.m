@@ -25,9 +25,7 @@ xlabel('x'); ylabel('y'); zlabel('z');
 % display the change of local frame
 record = false;
 gif_name = 'whole_traj_concat_2.gif'; %'joining_DMP_with_constraint_checking.gif';
-display_frame_change(wrist_traj_points_l, wrist_traj_points_r, record, gif_name);
+display_frame_change([wrist_traj_points_l(:, 1:3), wrist_traj_points_l(:, 6), wrist_traj_points_l(:, 5), wrist_traj_points_l(:, 4)]', ...
+                     [wrist_traj_points_r(:, 1:3), wrist_traj_points_r(:, 6), wrist_traj_points_r(:, 5), wrist_traj_points_r(:, 4)]', record, gif_name);
+% (wrist_traj_points_l', wrist_traj_points_r', record, gif_name);
 
-
-
-
-end
