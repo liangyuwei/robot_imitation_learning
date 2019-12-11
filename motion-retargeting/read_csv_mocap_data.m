@@ -123,6 +123,6 @@ end
 % h5write('mocap_paths.h5', 'left_upperarm_path_1', [left_upperarm.pos, left_upperarm.quat]);
 % h5write('mocap_paths.h5', 'left_forearm_path_1', [left_forearm.pos, left_forearm.quat]);
 % h5write('mocap_paths.h5', 'left_hand_path_1', [left_hand.pos, left_hand.quat]);
-h5create('mocap_paths.h5', '/left_up_fr_hd_rot_path_1', size(left_up_fr_hd_rot_path_1));
-h5write('mocap_paths.h5', '/left_up_fr_hd_rot_path_1', left_up_fr_hd_rot_path_1);
+h5create('mocap_paths.h5', '/left_up_fr_hd_rot_path_1', size(left_up_fr_hd_rot_path_1'));
+h5write('mocap_paths.h5', '/left_up_fr_hd_rot_path_1', left_up_fr_hd_rot_path_1');
 
