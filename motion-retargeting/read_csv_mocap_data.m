@@ -5,7 +5,7 @@
 
 
 %% Read .csv mocap data
-file_name = 'point_motion.csv'; %'LeftHandInitState.csv';
+file_name = 'sweep_motion.csv'; %'circle_motion.csv'; %'sweep_motion.csv'; %'pull_motion.csv'; %'point_motion.csv'; %'LeftHandInitState.csv';
 L_UP_ID = 3; % upperarm
 L_FR_ID = 23; % forearm
 L_HD_ID = 47; % hand
@@ -26,7 +26,7 @@ for i = 1 : size(data, 1)
     if(sum(left_upperarm.quat(i, :))==0 || sum(left_upperarm.pos(i, :))==0 || ...
        sum(left_forearm.quat(i, :))==0 || sum(left_forearm.pos(i, :))==0 || ...
        sum(left_hand.quat(i, :))==0 || sum(left_hand.pos(i, :))==0)
-        empty_id = [empty_id, i];
+       empty_id = [empty_id, i];
     end
 end
 disp(['The frame that has lost information: ', num2str(empty_id)]);
@@ -41,6 +41,7 @@ data(empty_id, :) = [];
 
 
 % convert from y-up frame to z-up frame
+%{
 quat_shift = eul2quat([pi, -pi/2, -pi/2], 'ZYZ'); % (w,x,y,z)
 for i = 1 : size(data, 1)
     % prepare
@@ -50,37 +51,53 @@ for i = 1 : size(data, 1)
     l_up_pos = (quat2rotm(quat_shift)*left_upperarm.pos(i, :)')';
     l_fr_pos = (quat2rotm(quat_shift)*left_forearm.pos(i, :)')';
     l_hd_pos = (quat2rotm(quat_shift)*left_hand.pos(i, :)')';
+    % convert to RViz UR5 frame of reference
+    quat_up_shift_rviz = eul2quat([pi/2, 0, 0], 'ZYZ');
+    quat_fr_shift_rviz = eul2quat([pi/2, 0, 0], 'ZYZ');
+    quat_hd_shift_rviz = eul2quat([pi/2, pi/2, pi], 'ZYZ');
+    l_up_quat_rviz = quatmultiply(quat_up_shift_rviz, l_up_quat);
+    l_fr_quat_rviz = quatmultiply(quat_fr_shift_rviz, l_fr_quat);
+    l_hd_quat_rviz = quatmultiply(quat_hd_shift_rviz, l_hd_quat);
     % replace
-    left_upperarm.quat(i, :) = l_up_quat;
+    left_upperarm.quat(i, :) = l_up_quat_rviz; %l_up_quat;
     left_upperarm.pos(i, :) = l_up_pos;
-    left_forearm.quat(i, :) = l_fr_quat;
+    left_forearm.quat(i, :) = l_fr_quat_rviz; %l_fr_quat;
     left_forearm.pos(i, :) = l_fr_pos;    
-    left_hand.quat(i, :) = l_hd_quat;
+    left_hand.quat(i, :) = l_hd_quat_rviz; %l_hd_quat;
     left_hand.pos(i, :) = l_hd_pos;  
 end
-
+%}
 
 % Kalmann Filter smoothing
 
 
 
 %% Visualization(consists of transformation to z-up frame)
-%{
+%
 figure;
 grid on;
 quat_ori = [1, 0, 0, 0]; % [w,x,y,z]
 pos_ori = [0, 0, 0];
+record = false; %true;
+gif_name = 'sweep_motion.gif';
 
-for i = 1:round(size(data, 1))
+for i = 1:floor(size(data, 1)/10)
 
     % prepare parameters
     quat_shift = eul2quat([pi, -pi/2, -pi/2], 'ZYZ'); % (w,x,y,z)
-    l_up_quat = quatmultiply(quat_shift, left_upperarm.quat(i, :));
-    l_fr_quat = quatmultiply(quat_shift, left_forearm.quat(i, :));
-    l_hd_quat = quatmultiply(quat_shift, left_hand.quat(i, :)); 
-    l_up_pos = (quat2rotm(quat_shift)*left_upperarm.pos(i, :)')';
-    l_fr_pos = (quat2rotm(quat_shift)*left_forearm.pos(i, :)')';
-    l_hd_pos = (quat2rotm(quat_shift)*left_hand.pos(i, :)')';
+    l_up_quat = quatmultiply(quat_shift, left_upperarm.quat(i*10, :));
+    l_fr_quat = quatmultiply(quat_shift, left_forearm.quat(i*10, :));
+    l_hd_quat = quatmultiply(quat_shift, left_hand.quat(i*10, :)); 
+    l_up_pos = (quat2rotm(quat_shift)*left_upperarm.pos(i*10, :)')';
+    l_fr_pos = (quat2rotm(quat_shift)*left_forearm.pos(i*10, :)')';
+    l_hd_pos = (quat2rotm(quat_shift)*left_hand.pos(i*10, :)')';
+    
+    quat_up_shift_rviz = eul2quat([pi/2, 0, 0], 'ZYZ');
+    quat_fr_shift_rviz = eul2quat([pi/2, 0, 0], 'ZYZ');
+    quat_hd_shift_rviz = eul2quat([pi/2, pi/2, pi], 'ZYZ');
+    l_up_quat_rviz = quatmultiply(quat_up_shift_rviz, l_up_quat);
+    l_fr_quat_rviz = quatmultiply(quat_fr_shift_rviz, l_fr_quat);
+    l_hd_quat_rviz = quatmultiply(quat_hd_shift_rviz, l_hd_quat);
 
     % draw
     draw_segment(quat_ori, pos_ori); % orientation of origin
@@ -90,16 +107,36 @@ for i = 1:round(size(data, 1))
     view(60,25);
     hold on; % disable refreshing
     
-    draw_segment(l_up_quat, l_up_pos); % orientation of upper arm
+%     draw_segment(l_up_quat, l_up_pos); % orientation of upper arm
+%     plot3([l_up_pos(1), l_fr_pos(1)], [l_up_pos(2), l_fr_pos(2)], [l_up_pos(3), l_fr_pos(3)], 'k-'); % connect upper arm and forearm  
+%     draw_segment(l_fr_quat, l_fr_pos); % orientation of forearm
+%     plot3([l_fr_pos(1), l_hd_pos(1)], [l_fr_pos(2), l_hd_pos(2)], [l_fr_pos(3), l_hd_pos(3)], 'k-'); % connect forearm and hand
+%     draw_segment(l_hd_quat, l_hd_pos); % orientation of hand
+%     hold off; % enable refreshing
+    draw_segment(l_up_quat_rviz, l_up_pos); % orientation of upper arm
     plot3([l_up_pos(1), l_fr_pos(1)], [l_up_pos(2), l_fr_pos(2)], [l_up_pos(3), l_fr_pos(3)], 'k-'); % connect upper arm and forearm  
-    draw_segment(l_fr_quat, l_fr_pos); % orientation of forearm
+    draw_segment(l_fr_quat_rviz, l_fr_pos); % orientation of forearm
     plot3([l_fr_pos(1), l_hd_pos(1)], [l_fr_pos(2), l_hd_pos(2)], [l_fr_pos(3), l_hd_pos(3)], 'k-'); % connect forearm and hand
-    draw_segment(l_hd_quat, l_hd_pos); % orientation of hand
+    draw_segment(l_hd_quat_rviz, l_hd_pos); % orientation of hand
     hold off; % enable refreshing
-
+    
+    % store the frames for making gif later
+    if record
+        f = getframe;
+        im = frame2im(f);
+        [I, map] = rgb2ind(im, 256);
+        % set Loopcount as Inf for the animation to play forever
+        if i==1
+            imwrite(I, map, gif_name, 'gif', 'Loopcount', Inf, 'DelayTime', 0.01);
+        else
+            imwrite(I, map, gif_name, 'gif', 'WriteMode', 'append', 'DelayTime', 0.01);
+        end
+    end
+    
+    
     % pause
     pause(0.01);
-    
+     
 end
 %}
 
@@ -115,6 +152,17 @@ for i = 1 : size(data, 1)
     left_up_fr_hd_rot_path_1(i, 19:27) = reshape(rotm_hd', [1,9]);
 end
 
+%% Construct data array for wrist pos+ori and elbow pos
+left_wrist_pos_ori_elbow_pos_path_1 = zeros(floor(size(data, 1)/10), 15);
+left_base = [-0.06, 0.235, 0.395]; % the pos of the robot's shoulder in the RViz world
+for i = 1 : floor(size(data, 1)/10)
+    rotm_wrist = quat2rotm(left_hand.quat(i*10, :));
+    % Since the position of the world frame is not the same as that of RViz(UR5) world, the position of left hand and left elbow should be converted with offset.   
+    left_wrist_pos_ori_elbow_pos_path_1(i, 1:3) = left_hand.pos(i*10, :) - left_upperarm.pos(i*10, :) + left_base;
+    left_wrist_pos_ori_elbow_pos_path_1(i, 4:12) = reshape(rotm_wrist', [1,9]);
+    left_wrist_pos_ori_elbow_pos_path_1(i, 13:15) = left_forearm.pos(i*10, :) - left_upperarm.pos(i*10, :) + left_base;
+end
+
 
 %% Write data to .h5
 % h5create('mocap_paths.h5', 'left_upperarm_path_1', size([left_upperarm.pos, left_upperarm.quat])); % create before writing
@@ -123,6 +171,7 @@ end
 % h5write('mocap_paths.h5', 'left_upperarm_path_1', [left_upperarm.pos, left_upperarm.quat]);
 % h5write('mocap_paths.h5', 'left_forearm_path_1', [left_forearm.pos, left_forearm.quat]);
 % h5write('mocap_paths.h5', 'left_hand_path_1', [left_hand.pos, left_hand.quat]);
-h5create('mocap_paths.h5', '/left_up_fr_hd_rot_path_1', size(left_up_fr_hd_rot_path_1'));
-h5write('mocap_paths.h5', '/left_up_fr_hd_rot_path_1', left_up_fr_hd_rot_path_1');
-
+% h5create('mocap_paths.h5', '/left_up_fr_hd_rot_path_1', size(left_up_fr_hd_rot_path_1'));
+% h5write('mocap_paths.h5', '/left_up_fr_hd_rot_path_1', left_up_fr_hd_rot_path_1');
+h5create('mocap_wrist_pos_ori_elbow_pos_paths.h5', '/left_wrist_pos_ori_elbow_pos_wave_hand_motion', size(left_wrist_pos_ori_elbow_pos_path_1'));
+h5write('mocap_wrist_pos_ori_elbow_pos_paths.h5', '/left_wrist_pos_ori_elbow_pos_wave_hand_motion', left_wrist_pos_ori_elbow_pos_path_1');
