@@ -166,7 +166,8 @@ classdef UR5Display < handle
             obj.h_wrist1 = stlPlot(obj.v_wrist1, obj.f_wrist1, name, 'FaceColor', obj.body_color, 'Parent', obj.g_wrist1);
             obj.h_wrist2 = stlPlot(obj.v_wrist2, obj.f_wrist2, name, 'FaceColor', obj.body_color, 'Parent', obj.g_wrist2);
             obj.h_wrist3 = stlPlot(obj.v_wrist3, obj.f_wrist3, name, 'FaceColor', obj.body_color, 'Parent', obj.g_wrist3);
-            obj.h_tool = stlPlot(obj.v_tool, obj.f_tool, name, 'FaceColor', obj.body_color, 'Parent', obj.g_tool);
+            obj.h_tool = stlPlot(obj.v_tool, obj.f_tool, name, 'FaceColor', [1.000    0.8000    0.0000], 'Parent', obj.g_tool);
+            % stlPlot(obj.v_tool, obj.f_tool, name, 'FaceColor', obj.body_color, 'Parent', obj.g_tool);
             
             obj.h_all_links = [obj.h_base
                                obj.h_shoulder
@@ -196,9 +197,10 @@ classdef UR5Display < handle
             [obj.v_wrist1, obj.f_wrist1, obj.n_wrist1, ~] = stlReadBinary(fullfile(mesh_base_dir, 'wrist1.stl'));
             [obj.v_wrist2, obj.f_wrist2, obj.n_wrist2, ~] = stlReadBinary(fullfile(mesh_base_dir, 'wrist2.stl'));
             [obj.v_wrist3, obj.f_wrist3, obj.n_wrist3, ~] = stlReadBinary(fullfile(mesh_base_dir, 'wrist3.stl'));
-            [obj.v_tool, obj.f_tool, obj.n_tool, ~] = stlReadBinary(fullfile(mesh_base_dir, 'tool.stl'));
+            [obj.v_tool, obj.f_tool, obj.n_tool, ~] = stlReadBinary(fullfile(mesh_base_dir, 'cylinder.stl'));
+            %stlReadBinary(fullfile(mesh_base_dir, 'tool.stl'));
 
-            obj.ur5_kin = UR5Kinematics();
+%            obj.ur5_kin = UR5Kinematics();
             obj.offset_1 = 0.135;
             obj.offset_2 = 0.425;
             obj.offset_3 = 0.39225;
@@ -258,7 +260,7 @@ classdef UR5Display < handle
             obj.precomp_matrices{6} = makehgtform('xrotate', 0);% * makehgtform('translate', [0 0 0.2]);
             % done!
             %makehgtform('xrotate', pi/2) * makehgtform('translate', [0 -obj.offset_6 0]);
-            obj.precomp_matrices{7} = makehgtform('translate', [0 obj.offset_tool 0]);
+            obj.precomp_matrices{7} = makehgtform('translate', [-0.03 obj.offset_tool 0.03]) * makehgtform('xrotate', -pi/2);
             %makehgtform('translate', [0 obj.offset_tool 0]);
             
             obj.control_mode = UR5Display.JOINT_MODE;
@@ -288,9 +290,11 @@ classdef UR5Display < handle
         end
         %
         function draw_configuration(obj, q)
+            %{
             if true == any(abs(q) > pi)
                 warning('UR5 Display : q_new is overlimits');
             end
+            %}
             obj.q_display = q;
 %            result = obj.ur5_kin.collision_balls(q);
            
@@ -300,6 +304,12 @@ classdef UR5Display < handle
             th = q'; 
             for nq = 1 : 6
                 uLINK(nq+1).q = th(nq);
+%                 if nq == 2
+%                     uLINK(nq+1).q = th(nq) + pi;
+%                 end
+%                 if nq == 4
+%                     uLINK(nq+1).q = th(nq) + pi;
+%                 end
             end
             % update the robot's state
             ForwardKinematics(2);

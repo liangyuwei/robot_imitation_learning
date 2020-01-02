@@ -34,7 +34,7 @@ uLINK(7) = struct('name', 'wrist_3_link', 'mom', 6, 'child', 8, 'b', [0 0 -0.094
 uLINK(8) = struct('name', 'ee_link', 'mom', 7, 'child', 0, 'b', [0 0.0823 0]', 'a', UY, 'q', pi/2); % eef, if necessary
 
 uLINK(1).R = eye(3);    
-uLINK(1).p = [0, 0, 0.4]';
+uLINK(1).p = [0, 0, 0]';
 
 ur5_disp = UR5Display(f);
 
