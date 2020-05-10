@@ -3,7 +3,7 @@
 
 %% Load data from mocap data file
 file_name = 'test_imi_data_YuMi.h5';
-group_name = 'baozhu_1';
+group_name = 'fengren_1';
 info = h5info(file_name);
 l_shoulder_pos = h5read(file_name, ['/', group_name, '/l_shoulder_pos']); 
 l_elbow_pos = h5read(file_name, ['/', group_name, '/l_elbow_pos']); 
@@ -80,7 +80,7 @@ r_elbow_pos_kp_id_list = extract_pos_keypoints(r_elbow_pos, eps9, eps10, eps11, 
 
 
 %% Display the results
-target = 'r_glove_angle';
+target = 'r_wrist_pos';
 ori_path = eval(target); % l_wrist_ori
 kp_id_list = eval([target, '_kp_id_list']);
 
@@ -90,17 +90,18 @@ for i = 1 : size(kp_id_list, 2)
     plot3(ori_path(1, kp_id_list(i)), ori_path(2, kp_id_list(i)), ori_path(3, kp_id_list(i)), 'rx');
 end
 xlabel('x'); ylabel('y'); zlabel('z');
-title('Keypoints');
+title('Keypoints, extracted from pos/ori/angles separately.');
 
 
 %% Output constraints
+%
 kp_id_list = unique([l_wrist_pos_kp_id_list, r_wrist_pos_kp_id_list, ...
                      l_elbow_pos_kp_id_list, r_elbow_pos_kp_id_list, ...
                      l_wrist_ori_kp_id_list, r_wrist_ori_kp_id_list, ...
                      l_glove_angle_kp_id_list, r_glove_angle_kp_id_list]);
-
+%{
 h5create(file_name, ['/', group_name, '/kp_id_list'], size(kp_id_list)); % create before writing
 h5write(file_name, ['/', group_name, '/kp_id_list'], kp_id_list);
-
+%}
 
 
