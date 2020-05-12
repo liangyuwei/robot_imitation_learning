@@ -14,11 +14,15 @@ end
 if quat_or_not
     % quaternion data
     id = find(x < ele_traj_struct.floor, 1);
-    x0 = ele_traj_struc.floor(id-1);
-    x1 = ele_traj_struc.floor(id);
-    t = (x-x0) / (x1-x0);
-    h_x = quatinterp(ele_traj_struct.quat(id-1, :), ele_traj_struct.quat(id, :), t)';
-    
+    if isempty(id)
+        % came to the goal point
+        h_x = ele_traj_struct.quat(end, :)';
+    else
+        x0 = ele_traj_struct.floor(id-1);
+        x1 = ele_traj_struct.floor(id);
+        t = (x-x0) / (x1-x0);
+        h_x = quatinterp(ele_traj_struct.quat(id-1, :), ele_traj_struct.quat(id, :), t)';
+    end
 else
     % pos or angle data
     

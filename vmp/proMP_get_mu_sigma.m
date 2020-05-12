@@ -37,11 +37,16 @@ m.Psi = kron(m(1).phi, eye(nbVar)); %Eq.(27)
 m.w = (m.Psi' * m.Psi + eye(nbVar*nbStates).*1E-8) \ m.Psi' * x; %m(1).w = pinv(m(1).Psi) * x'; %Eq.(28)
 %Distribution in parameter space
 m.Mu_w = mean(m.w,2);
-m.Sigma_w = cov(m.w') + eye(nbVar*nbStates) * 1E0;  % only the diagonal blocks are non-zero, checked by sum()
+m.Sigma_w = cov(m.w') ;%+ eye(nbVar*nbStates) * 1E0;  % only the diagonal blocks are non-zero, checked by sum()
+% %%%%% here the +eye(...) part is commented out by LYW, 2020/05/12, since the diagonal terms are too huge, leading to huge w generated through mvnrnd
+% %%%%% If this doesn't work well, try uncommenting the above expression and use Mu_w for shape modulation instead(in shape_modulation_compute.m)    
+
+
 %Trajectory distribution
 % m(1).Mu = m(1).Psi * m(1).Mu_w; %Eq.(29)
 % m(1).Sigma = m(1).Psi * m(1).Sigma_w * m(1).Psi'; %Eq.(29)
 
+% Sigma is too hugh due to error during imitation
 
 
 

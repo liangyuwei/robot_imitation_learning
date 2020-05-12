@@ -1,7 +1,7 @@
 function ele_traj_struct = elementary_trajectory_add_viapoint(ele_traj_struct, x_via, y_via, y_seq, f_seq, x_seq)
 %% This function adds via-points to elementary trajectory, and fits fifth-order polynomials to the two newly added segments.    
 % x_seq - canonical time
-% y_seq - original imitation data, used for interpolating to obtain accurate values of y(x0) and y(x1)     
+% y_seq - NO!!!! we need the current y_seq here!!! derived by the current h(x) and f(x) before the modification ;;;;;;original imitation data, used for interpolating to obtain accurate values of y(x0) and y(x1)     
 % f_seq - shape modulation data, used for interpolation
 
 

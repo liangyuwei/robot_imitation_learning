@@ -23,7 +23,7 @@ end
 
 % extract target group's data
 target_group_name = 'fengren';
-num_imitation_data = eval(['group_name_dict.', group_name]);
+num_imitation_data = eval(['group_name_dict.', group_name]) - 1; % fengren: eliminate the first bad sample
 num_resampled_points = 100;
 
 l_wrist_pos_resampled = zeros(3, num_resampled_points);
@@ -39,9 +39,9 @@ DOF = 3 * 4 + 4 * 2 + 14 * 2; % 4 pos(3) + 2 quat(4) + 2 glove(14)
 original_traj = zeros(DOF, num_resampled_points, num_imitation_data);
 
 disp(['>>>> Extract data from Group: ', target_group_name, ' ...']);
-for traj_id = 1 : num_imitation_data
+for traj_id = 1 : num_imitation_data 
     %% Load original trajectory
-    group_name = [target_group_name, '_', num2str(traj_id)];
+    group_name = [target_group_name, '_', num2str(traj_id+1)];  % fengren: eliminate the first bad sample
     
     disp(['>>>> ---- processing ', group_name, ' ...']);
     
@@ -117,80 +117,195 @@ disp('done.');
 
 %% Learn VMP (adjusted from PbDlib, demo_proMP01.m)
 addpath('./m_fcts/');
-
-% calculate for 1-D trajectory, then iterate through all DOF
-% quaternion is a little special, h(x) should be 4-dim coupled(for SLERP), while f(x) is 3-dim(q_w is calculated from unit quaternion constraint)
+ele_traj_struct_all = cell(3*4+14*2+2, 1); % pos 3*4, glove 14*2, quat 2
+model_all = cell(3*4+14*2+2, 1); % pos 3*4, glove 14*2, quat 2(quat's model is 3-dim)
 time_range = linspace(0, 1, num_resampled_points); % canonical time, internal clock
+y_rep = zeros(size(original_traj, 1), size(original_traj, 2));
 
-y_seq = original_traj(pos_and_glove_id(1), :, :); % all samples of the same dimension % (quat_id(1:4), :, :); %
-% quat_id(1:4), quat_id(5:end)
-
-ele_traj_struct = struct;
-ele_traj_struct.floor = [0, 1]; % 1 is added for locating via-points closer to the end (by find function)
-% ele_traj_struct.start = y_seq(:, 1, 1); ele_traj_struct.goal = y_seq(:, end, 1); % set from the first imitation data, directly connects the start and the end
-% if pos/angle
-ele_traj_struct.coeff = zeros(1, 6); % coefficients of fifth-order polynomial
-% if quaternion
-%{
-ele_traj_struct.quat = zeros(2,4);
-ele_traj_struct.quat(1, :) = y_seq(:, 1, 1)'; 
-ele_traj_struct.quat(2, :) = y_seq(:, end, 1)';  % row vector
-%}
-
-% get shape modulation f(x) data for estimating the probability distribution of w (For pos, y(x) = h(x) + f(x); For quaternion, y(x) = h(x).*f(x))   
-h_seq = zeros(size(y_seq));
-f_seq = zeros(size(y_seq));
-% if pos or angle
-%
-for d = 1 : num_imitation_data
-    h_seq(:, :, d) = linspace(y_seq(1), y_seq(end), num_resampled_points); % since h(x) directly connects the start and end at the beginning, use linspace here as time_range does
-end
-f_seq = y_seq - h_seq;
-%}
-% if quaternion
-%{
-for d = 1 : num_imitation_data
-    % get the start and goal of the current sample
-    h_0 = y_seq(:, 1, d)'; h_1 = y_seq(:, end, d)';
-    % iterate to get h_seq
-    for t = 1 : size(time_range, 2)
-        % SLERP interpolation
-        h_seq(:, t, d) = quatinterp(h_0, h_1, time_range(t), 'slerp')';
-        f_seq(:, t, d) = quatmultiply(y_seq(:, t, d)', quatinv(h_seq(:, t, d)'))';
+% %%%%%%%%%%%%%%%%%%%%%% 1 - pos or angle %%%%%%%%%%%%%%%%%%%%%%
+for pg_id = 1 : size(pos_and_glove_id, 2)
+    % calculate for 1-D trajectory, then iterate through all DOF
+    % quaternion is a little special, h(x) should be 4-dim coupled(for SLERP), while f(x) is 3-dim(q_w is calculated from unit quaternion constraint)
+    
+    y_seq = original_traj(pos_and_glove_id(pg_id), :, :);
+    
+    ele_traj_struct = struct;
+    ele_traj_struct.floor = [0, 1]; % 1 is added for locating via-points closer to the end (by find function)
+    ele_traj_struct.start = y_seq(1, 1, 1); ele_traj_struct.goal = y_seq(1, end, 1); % set from the first imitation sample, directly connects the start and the end
+    ele_traj_struct.coeff = zeros(1, 6); % coefficients of fifth-order polynomial
+    
+    % get shape modulation f(x) data for estimating the probability distribution of w (For pos, y(x) = h(x) + f(x); For quaternion, y(x) = h(x).*f(x))
+    h_seq = zeros(size(y_seq));
+    f_seq = zeros(size(y_seq));
+    for d = 1 : num_imitation_data
+        h_seq(:, :, d) = linspace(y_seq(1, 1, d), y_seq(1, end, d), num_resampled_points); % since h(x) directly connects the start and end at the beginning, use linspace here as time_range does
     end
+    f_seq = y_seq - h_seq;
+    
+    % call function to estimate mu_w and sigma_w
+    nbStates = 8; % Number of basis functions
+    nbVar = size(f_seq, 1); % Dimension of position data (here: x1,x2), keep as 1 !!! % 1-dim for pos or angle data, 4-dim for quaternion
+    nbSamples = num_imitation_data; % Number of demonstrations
+    nbData = num_resampled_points; % Number of datapoints in a trajectory
+    traj_samples = f_seq; % All demonstration samples, should be of the size (DOF, nbData, nbSamples)
+    
+    % for pos/angle, m is 1-dim; for quaternion, m is 3-dim(the real part is calculated from unit quaternion constraint)
+    model = proMP_get_mu_sigma_combine(nbStates, nbVar, nbSamples, nbData, traj_samples, time_range);
+    
+    % reproduce the trajectory
+    sigma_y = 0;%0.00001; % for pos or angle data?
+    y_x = vmp_compute(ele_traj_struct, model, time_range, sigma_y, false);
+    
+    % store the meta-data
+    model_all{pg_id} = model;
+    ele_traj_struct_all{pg_id} = ele_traj_struct;
+    y_rep(pos_and_glove_id(pg_id), :) = y_x;
+    
 end
+
+% %%%%%%%%%%%%%%%%%%%%%% 2 - quaternion %%%%%%%%%%%%%%%%%%%%%%
+for q_id = 1:2
+    % extract 4-dim quaternion data
+    y_seq = original_traj(quat_id((q_id-1)*4+1 : q_id*4), :, :);
+    
+    ele_traj_struct = struct;
+    ele_traj_struct.floor = [0, 1]; % 1 is added for locating via-points closer to the end (by find function)
+    % ele_traj_struct.start = y_seq(:, 1, 1); ele_traj_struct.goal = y_seq(:, end, 1); % set from the first imitation data, directly connects the start and the end
+    % if quaternion, set initial data
+    ele_traj_struct.quat = zeros(2,4);
+    ele_traj_struct.quat(1, :) = y_seq(:, 1, 1)';
+    ele_traj_struct.quat(2, :) = y_seq(:, end, 1)';  % row vector
+    
+    % get shape modulation f(x) data for estimating the probability distribution of w (For pos, y(x) = h(x) + f(x); For quaternion, y(x) = h(x).*f(x))
+    h_seq = zeros(size(y_seq));
+    f_seq = zeros(size(y_seq));
+    
+    % if quaternion
+    for d = 1 : num_imitation_data
+        % get the start and goal of the current sample
+        h_0 = y_seq(:, 1, d)'; h_1 = y_seq(:, end, d)';
+        % iterate to get h_seq
+        for t = 1 : size(time_range, 2)
+            % SLERP interpolation
+            h_seq(:, t, d) = quatinterp(h_0, h_1, time_range(t), 'slerp')';
+            f_seq(:, t, d) = quatmultiply(y_seq(:, t, d)', quatinv(h_seq(:, t, d)'))';
+        end
+    end
+    
+    % call function to estimate mu_w and sigma_w
+    nbStates = 8; % Number of basis functions
+    nbVar = size(f_seq, 1); % Dimension of position data (here: x1,x2), keep as 1 !!! % 1-dim for pos or angle data, 4-dim for quaternion
+    nbSamples = num_imitation_data; % Number of demonstrations
+    nbData = num_resampled_points; % Number of datapoints in a trajectory
+    traj_samples = f_seq; % All demonstration samples, should be of the size (DOF, nbData, nbSamples)
+    
+    % for pos/angle, m is 1-dim; for quaternion, m is 3-dim(the real part is calculated from unit quaternion constraint)
+    model = proMP_get_mu_sigma_combine(nbStates, nbVar, nbSamples, nbData, traj_samples, time_range);
+    
+    % reproduce the data
+    sigma_y = 0;%0.00001; % for pos or angle data?
+    y_x = vmp_compute(ele_traj_struct, model, time_range, sigma_y, true);
+    
+    % store the meta-data
+    model_all{size(pos_and_glove_id, 2)+q_id} = model;
+    ele_traj_struct_all{size(pos_and_glove_id, 2)+q_id} = ele_traj_struct;
+    y_rep(quat_id((q_id-1)*4+1 : q_id*4), :) = y_x;
+    
+end
+
+% %%%%%%%%%%%%%%%%%%%%%% Save the results %%%%%%%%%%%%%%%%%%%%%%
+tmp_file_name = [target_group_name, '_initial.mat'];
+save(tmp_file_name, 'model_all', 'ele_traj_struct_all', 'y_rep');
+
+
+% display for debug
+%{
+figure;
+for i = 1 : nbSamples
+    plot3(original_traj(11, :, i), original_traj(12, :, i), original_traj(13, :, i), 'b-'); hold on; grid on;
+end
+plot3(y_rep(11,:), y_rep(12,:), y_rep(13,:), 'r.');
 %}
 
-% call function to estimate mu_w and sigma_w
-nbStates = 8; % Number of basis functions
-nbVar = size(f_seq, 1); % Dimension of position data (here: x1,x2), keep as 1 !!! % 1-dim for pos or angle data, 4-dim for quaternion
-nbSamples = num_imitation_data; % Number of demonstrations
-nbData = num_resampled_points; % Number of datapoints in a trajectory
-traj_samples = f_seq; % All demonstration samples, should be of the size (DOF, nbData, nbSamples)
-
-% for pos/angle, m is 1-dim; for quaternion, m is 3-dim(the real part is calculated from unit quaternion constraint)
-m = proMP_get_mu_sigma_combine(nbStates, nbVar, nbSamples, nbData, traj_samples, time_range);
-
-mu_w = m.Mu_w;
-sigma_w = m.Sigma_w;
-
-
-sigma_y = 0.005;
-f_seq = shape_modulation_compute(m, time_range, sigma_y, false);
-
-
-
-%% This function only computes f(x) values.
-
-%% Extract keypoints from the learned model
-% get the modeled trajectory
-
+%% Extract keypoints from the fisrt sample (the learned model doesn't look well, exact shape is not preserved)
+target_traj = original_traj(:, :, 1);
+l_wrist_pos = target_traj(1:3, :);
+l_wrist_quat = target_traj(4:7, :);
+l_elbow_pos = target_traj(8:10, :);
+r_wrist_pos = target_traj(11:13, :);
+r_wrist_quat = target_traj(14:17, :);
+r_elbow_pos = target_traj(18:20, :);
+l_glove_angle = target_traj(21:34, :) .* pi/180;
+r_glove_angle = target_traj(35:end, :) .* pi/180;
+kp_list = extract_keypoints_from_sample(l_wrist_pos, l_wrist_quat, l_elbow_pos, r_wrist_pos, r_wrist_quat, r_elbow_pos, l_glove_angle, r_glove_angle);
+% display for debug
+%{
+figure;
+plot3(original_traj(11, :, 1), original_traj(12, :, 1), original_traj(13, :, 1), 'b-'); hold on; grid on;
+for k = 1 : size(kp_list, 2)
+    plot3(original_traj(11, kp_list(k), 1), original_traj(12, kp_list(k), 1), original_traj(13, kp_list(k), 1), 'ro');
+end
+%}
 
 
 %% %%%%%%%%%%%% The following code better be included in reproduction phase
 %% Morph the trajectories according to the given via-points (the number of keypoints is fixed during optimization, but the values at keypoints will be changed)
+disp('Morph the trajectories...');
 % Get via-points
-
+via_points = original_traj(:, kp_list, 1); % get the keypoints' values from the first sample
+% copy the structure and initial trajectory for iteration  
+ele_traj_struct_adjust = ele_traj_struct_all;
+model_adjust = model_all;
+y_seq_adjust = y_rep;   
+threshold_prob = 0.5;
+% iterate to add via-points (update function structure according to the given via-points)
+for v = 1 : size(kp_list, 2)
+    disp(['Processing via-point ', num2str(v), '...']);
+    % common time 
+    x_via = time_range(kp_list(v));
+    % pos/angle via-point
+    for pg_id = 1 : size(pos_and_glove_id, 2)
+        % get via-point value
+        y_via = via_points(pos_and_glove_id(pg_id), v); % v-th via-point
+        sigma_via = 0; % must go through
+        % compute conditional probability
+        prob = conditional_probability(model_adjust{pg_id}, ele_traj_struct_adjust{pg_id}, x_via, y_via, sigma_via);
+        disp(['Conditional probability = ', num2str(prob)]);
+        % update model structure and meta-data
+        if prob > threshold_prob
+            % probability is big enough, may use shape modualtion
+            h_via = elementary_trajectory_compute(ele_traj_struct_adjust{pg_id}, x_via, false);
+            model_adjust{pg_id} = shape_modulation_add_viapoint(model_adjust{pg_id}, x_via, h_via, y_via, sigma_via);
+        else
+            % probability is not big enough, shape modulation works poorly, modify elementary trajectory instead                                 
+            y_seq = y_seq_adjust(pos_and_glove_id(pg_id), :); % get the current y!!!
+            sigma_y = 0;
+            f_seq = shape_modulation_compute(model_adjust{pg_id}, time_range, sigma_y, false);
+            ele_traj_struct_adjust{pg_id} = elementary_trajectory_add_viapoint(ele_traj_struct_adjust{pg_id}, x_via, y_via, y_seq, f_seq, time_range);
+        end
+        % update the final trajectory
+        sigma_y = 0;
+        y_seq_adjust(pos_and_glove_id(pg_id), :) = vmp_compute(ele_traj_struct_adjust{pg_id}, model_adjust{pg_id}, time_range, sigma_y, false);
+    end
+    
+    % quaternion via-point
+    for q_id = 1:2
+        % according to the paper, it's more complicated to calculate conditional probability than just integrating via-points into elementart trajectory   
+        y_via = via_points(quat_id((q_id-1)*4+1 : q_id*4), v);
+        % update the model structure (elementary trajectory)
+        y_seq = y_seq_adjust(quat_id((q_id-1)*4+1 : q_id*4), :);
+        sigma_y = 0; % must go through
+        f_seq = shape_modulation_compute(model_adjust{size(pos_and_glove_id, 2)+q_id}, time_range, sigma_y, true);
+        ele_traj_struct_adjust{size(pos_and_glove_id, 2)+q_id} = ...
+                                    elementary_trajectory_add_viapoint(ele_traj_struct_adjust{size(pos_and_glove_id, 2)+q_id}, ...
+                                    x_via, y_via, y_seq, f_seq, time_range);
+        % update the final trajectory
+        y_seq_adjust(quat_id((q_id-1)*4+1 : q_id*4), :) = ...
+                                    vmp_compute(ele_traj_struct_adjust{size(pos_and_glove_id, 2)+q_id}, ...
+                                    model_adjust{size(pos_and_glove_id, 2)+q_id}, time_range, sigma_y, true);
+    end
+    
+end
 
 
 % Adjust the trajectory according to the given via-points
