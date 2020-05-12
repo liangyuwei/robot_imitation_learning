@@ -18,7 +18,7 @@ if quat_or_not
             tmp_traj2(:, i) = tmp_traj(:, id);
         else
             t = (resampled_timestamps(i) - original_timestamps(id-1)) / (original_timestamps(id) - original_timestamps(id-1));
-            tmp_traj2(:, i) = slerp_matlab(tmp_traj(:, id-1), tmp_traj(:, id), t);
+            tmp_traj2(:, i) = quatinterp(tmp_traj(:, id-1)', tmp_traj(:, id)', t)';%slerp_matlab(tmp_traj(:, id-1), tmp_traj(:, id), t);
         end
     end
 else

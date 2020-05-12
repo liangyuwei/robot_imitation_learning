@@ -4,7 +4,7 @@
 
 %% Get imitation trajectory and preprocess
 % load data
-file_name = 'test_imi_data_YuMi.h5';
+file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
 info = h5info(file_name);
 
 % extract group_names and number of imitation data    
@@ -35,7 +35,7 @@ r_glove_angle_resampled = zeros(14, num_resampled_points);
 l_wrist_quat_resampled = zeros(4, num_resampled_points);
 r_wrist_quat_resampled = zeros(4, num_resampled_points);
 
-DOF = 3*2+4*2+14*2;
+DOF = 3 * 4 + 4 * 2 + 14 * 2; % 4 pos(3) + 2 quat(4) + 2 glove(14)
 original_traj = zeros(DOF, num_resampled_points, num_imitation_data);
 
 disp(['>>>> Extract data from Group: ', target_group_name, ' ...']);
@@ -116,39 +116,74 @@ disp('done.');
 
 
 %% Learn VMP (adjusted from PbDlib, demo_proMP01.m)
+addpath('./m_fcts/');
+
 % calculate for 1-D trajectory, then iterate through all DOF
 % quaternion is a little special, h(x) should be 4-dim coupled(for SLERP), while f(x) is 3-dim(q_w is calculated from unit quaternion constraint)
 time_range = linspace(0, 1, num_resampled_points); % canonical time, internal clock
 
-y_seq = original_traj(1, :, :); % all samples of the same dimension
+y_seq = original_traj(pos_and_glove_id(1), :, :); % all samples of the same dimension % (quat_id(1:4), :, :); %
+% quat_id(1:4), quat_id(5:end)
 
 ele_traj_struct = struct;
 ele_traj_struct.floor = [0, 1]; % 1 is added for locating via-points closer to the end (by find function)
-ele_traj_struct.start = y_seq(1); ele_traj_struct.goal = y_seq(end); % set from imitation data, directly connects the start and the end
+% ele_traj_struct.start = y_seq(:, 1, 1); ele_traj_struct.goal = y_seq(:, end, 1); % set from the first imitation data, directly connects the start and the end
+% if pos/angle
 ele_traj_struct.coeff = zeros(1, 6); % coefficients of fifth-order polynomial
+% if quaternion
+%{
+ele_traj_struct.quat = zeros(2,4);
+ele_traj_struct.quat(1, :) = y_seq(:, 1, 1)'; 
+ele_traj_struct.quat(2, :) = y_seq(:, end, 1)';  % row vector
+%}
 
 % get shape modulation f(x) data for estimating the probability distribution of w (For pos, y(x) = h(x) + f(x); For quaternion, y(x) = h(x).*f(x))   
 h_seq = zeros(size(y_seq));
+f_seq = zeros(size(y_seq));
+% if pos or angle
+%
 for d = 1 : num_imitation_data
     h_seq(:, :, d) = linspace(y_seq(1), y_seq(end), num_resampled_points); % since h(x) directly connects the start and end at the beginning, use linspace here as time_range does
 end
 f_seq = y_seq - h_seq;
-
+%}
+% if quaternion
+%{
+for d = 1 : num_imitation_data
+    % get the start and goal of the current sample
+    h_0 = y_seq(:, 1, d)'; h_1 = y_seq(:, end, d)';
+    % iterate to get h_seq
+    for t = 1 : size(time_range, 2)
+        % SLERP interpolation
+        h_seq(:, t, d) = quatinterp(h_0, h_1, time_range(t), 'slerp')';
+        f_seq(:, t, d) = quatmultiply(y_seq(:, t, d)', quatinv(h_seq(:, t, d)'))';
+    end
+end
+%}
 
 % call function to estimate mu_w and sigma_w
 nbStates = 8; % Number of basis functions
-nbVar = 1; % Dimension of position data (here: x1,x2), keep as 1 !!!
+nbVar = size(f_seq, 1); % Dimension of position data (here: x1,x2), keep as 1 !!! % 1-dim for pos or angle data, 4-dim for quaternion
 nbSamples = num_imitation_data; % Number of demonstrations
 nbData = num_resampled_points; % Number of datapoints in a trajectory
-traj_samples = l_wrist_pos_all; % All demonstration samples, should be of the size (DOF, nbData, nbSamples)
+traj_samples = f_seq; % All demonstration samples, should be of the size (DOF, nbData, nbSamples)
 
-m = proMP_get_mu_sigma(nbStates, nbVar, nbSamples, nbData, traj_samples, time_range);
+% for pos/angle, m is 1-dim; for quaternion, m is 3-dim(the real part is calculated from unit quaternion constraint)
+m = proMP_get_mu_sigma_combine(nbStates, nbVar, nbSamples, nbData, traj_samples, time_range);
 
 mu_w = m.Mu_w;
 sigma_w = m.Sigma_w;
 
 
+sigma_y = 0.005;
+f_seq = shape_modulation_compute(m, time_range, sigma_y, false);
+
+
+
+%% This function only computes f(x) values.
+
 %% Extract keypoints from the learned model
+% get the modeled trajectory
 
 
 
