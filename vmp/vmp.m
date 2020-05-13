@@ -132,7 +132,7 @@ for pg_id = 1 : size(pos_and_glove_id, 2)
     ele_traj_struct = struct;
     ele_traj_struct.floor = [0, 1]; % 1 is added for locating via-points closer to the end (by find function)
     ele_traj_struct.start = y_seq(1, 1, 1); ele_traj_struct.goal = y_seq(1, end, 1); % set from the first imitation sample, directly connects the start and the end
-    ele_traj_struct.coeff = zeros(1, 6); % coefficients of fifth-order polynomial
+    ele_traj_struct.coeff = zeros(2, 6); % coefficients of fifth-order polynomial; the last one is not used, just to be in consistence with .floor length
     
     % get shape modulation f(x) data for estimating the probability distribution of w (For pos, y(x) = h(x) + f(x); For quaternion, y(x) = h(x).*f(x))
     h_seq = zeros(size(y_seq));
@@ -143,7 +143,7 @@ for pg_id = 1 : size(pos_and_glove_id, 2)
     f_seq = y_seq - h_seq;
     
     % call function to estimate mu_w and sigma_w
-    nbStates = 8; % Number of basis functions
+    nbStates = 16; % Number of basis functions
     nbVar = size(f_seq, 1); % Dimension of position data (here: x1,x2), keep as 1 !!! % 1-dim for pos or angle data, 4-dim for quaternion
     nbSamples = num_imitation_data; % Number of demonstrations
     nbData = num_resampled_points; % Number of datapoints in a trajectory
@@ -220,11 +220,20 @@ save(tmp_file_name, 'model_all', 'ele_traj_struct_all', 'y_rep');
 
 % display for debug
 %{
+idx = [1,2,3];
 figure;
-for i = 1 : nbSamples
-    plot3(original_traj(11, :, i), original_traj(12, :, i), original_traj(13, :, i), 'b-'); hold on; grid on;
+for i = 1 : 1%nbSamples
+    plot3(original_traj(idx(1), :, i), original_traj(idx(2), :, i), original_traj(idx(3), :, i), 'b-'); hold on; grid on;
 end
-plot3(y_rep(11,:), y_rep(12,:), y_rep(13,:), 'r.');
+plot3(y_rep(idx(1),:), y_rep(idx(2),:), y_rep(idx(3),:), 'r.');
+
+figure;
+subplot(3,1,1); plot(1:num_resampled_points, original_traj(idx(1), :, 1), 'b.'); hold on; grid on;
+plot(1:num_resampled_points, y_rep(idx(1), :), 'r.');
+subplot(3,1,2), plot(1:num_resampled_points, original_traj(idx(2), :, 1), 'b.'); hold on; grid on;
+plot(1:num_resampled_points, y_rep(idx(2), :), 'r.');
+subplot(3,1,3), plot(1:num_resampled_points, original_traj(idx(3), :, 1), 'b.'); hold on; grid on;
+plot(1:num_resampled_points, y_rep(idx(3), :), 'r.');
 %}
 
 %% Extract keypoints from the fisrt sample (the learned model doesn't look well, exact shape is not preserved)
@@ -269,19 +278,22 @@ for v = 1 : size(kp_list, 2)
         y_via = via_points(pos_and_glove_id(pg_id), v); % v-th via-point
         sigma_via = 0; % must go through
         % compute conditional probability
-        prob = conditional_probability(model_adjust{pg_id}, ele_traj_struct_adjust{pg_id}, x_via, y_via, sigma_via);
+        prob = conditional_probability(model_adjust{pg_id}, ele_traj_struct_adjust{pg_id}, x_via, y_via, sigma_via, time_range);
         disp(['Conditional probability = ', num2str(prob)]);
+        if isnan(prob)
+            pause;
+        end
         % update model structure and meta-data
         if prob > threshold_prob
             % probability is big enough, may use shape modualtion
             h_via = elementary_trajectory_compute(ele_traj_struct_adjust{pg_id}, x_via, false);
-            model_adjust{pg_id} = shape_modulation_add_viapoint(model_adjust{pg_id}, x_via, h_via, y_via, sigma_via);
+            model_adjust{pg_id} = shape_modulation_add_viapoint(model_adjust{pg_id}, x_via, h_via, y_via, sigma_via, time_range);
         else
             % probability is not big enough, shape modulation works poorly, modify elementary trajectory instead                                 
             y_seq = y_seq_adjust(pos_and_glove_id(pg_id), :); % get the current y!!!
             sigma_y = 0;
             f_seq = shape_modulation_compute(model_adjust{pg_id}, time_range, sigma_y, false);
-            ele_traj_struct_adjust{pg_id} = elementary_trajectory_add_viapoint(ele_traj_struct_adjust{pg_id}, x_via, y_via, y_seq, f_seq, time_range);
+            ele_traj_struct_adjust{pg_id} = elementary_trajectory_add_viapoint(ele_traj_struct_adjust{pg_id}, x_via, y_via, y_seq, f_seq, time_range, false);
         end
         % update the final trajectory
         sigma_y = 0;
@@ -296,9 +308,10 @@ for v = 1 : size(kp_list, 2)
         y_seq = y_seq_adjust(quat_id((q_id-1)*4+1 : q_id*4), :);
         sigma_y = 0; % must go through
         f_seq = shape_modulation_compute(model_adjust{size(pos_and_glove_id, 2)+q_id}, time_range, sigma_y, true);
+        
         ele_traj_struct_adjust{size(pos_and_glove_id, 2)+q_id} = ...
                                     elementary_trajectory_add_viapoint(ele_traj_struct_adjust{size(pos_and_glove_id, 2)+q_id}, ...
-                                    x_via, y_via, y_seq, f_seq, time_range);
+                                    x_via, y_via, y_seq, f_seq, time_range, true);
         % update the final trajectory
         y_seq_adjust(quat_id((q_id-1)*4+1 : q_id*4), :) = ...
                                     vmp_compute(ele_traj_struct_adjust{size(pos_and_glove_id, 2)+q_id}, ...
@@ -307,20 +320,17 @@ for v = 1 : size(kp_list, 2)
     
 end
 
-
-% Adjust the trajectory according to the given via-points
-
-
-
-
-
-
-
-
-
-
-
-
+% display for debug
+idx = [1,2,3];
+figure;
+plot3(y_seq_adjust(idx(1), :), y_seq_adjust(idx(2), :), y_seq_adjust(idx(3), :), 'g-'); hold on; grid on;
+% figure;
+for v = 1 : size(kp_list, 2)
+    plot3(via_points(idx(1), :), via_points(idx(2), :), via_points(idx(3), :), 'ro'); hold on; grid on;
+end
+for i = 1 : 1%nbSamples
+    plot3(original_traj(idx(1), :, i), original_traj(idx(2), :, i), original_traj(idx(3), :, i), 'b-');
+end
 
 
 

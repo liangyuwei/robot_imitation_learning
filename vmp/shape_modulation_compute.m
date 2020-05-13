@@ -40,9 +40,9 @@ else
     % pos or angle data
     n_y = sqrt(sigma_y) .* randn(1, num_datapoints); % gaussian noise
     % to ensure continuity, w is identical for one single trajectory
-    w = mvnrnd(model.Mu_w, model.Sigma_w)';
+    w = mvnrnd(model.Mu_w, model.Sigma_w)'; % model.Mu_w; %
     f_seq = (model.Psi * w)' + n_y;
-    % .Psi is of the same size of time_range(set during learning VMP). so no need to recompute again.
+    % .Psi is of the same sizev of time_range(set during learning VMP). so no need to recompute again.
     % In addition, .Psi is already the transpose, just use it directly.
 end
 
