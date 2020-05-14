@@ -12,6 +12,7 @@ function ele_traj_struct_all = elementary_trajectory_model(pass_points, pass_tim
 %% Initialize
 ele_traj_struct_all = cell(3*4+14*2+2, 1); % 1 for each pos/angle dim, 1 for each quaternion data
 
+
 %% For pos/angle data
 for pg_id = 1 : size(pos_and_glove_id, 2)
     dof_id = pos_and_glove_id(pg_id);
@@ -24,7 +25,7 @@ for pg_id = 1 : size(pos_and_glove_id, 2)
     % update structure (insert via-points)
     for v = 1 : size(pass_time, 2)
         x_via = pass_time(v);
-        h_via = pass_points(dof_id, v); % f_via == f_via at via-points
+        h_via = pass_points(dof_id, v + 1 ); % v+1 to skip the first pass_point(start point)  % f_via == f_via at via-points
         ele_traj_struct = elementary_trajectory_insert_viapoint(ele_traj_struct, x_via, h_via, false);
     end
     % store the result
@@ -43,7 +44,7 @@ for q_id = 1:2
     % update the structure (insert via-points)
     for v = 1 : size(pass_time, 2)
         x_via = pass_time(v);
-        h_via = pass_points(dof_id, v)'; % f_via == f_via at via-points
+        h_via = pass_points(dof_id, v+1)'; % v+1 to skip the first pass_point(start point)!!! % f_via == f_via at via-points
         ele_traj_struct = elementary_trajectory_insert_viapoint(ele_traj_struct, x_via, h_via, true);
     end
     % store the result

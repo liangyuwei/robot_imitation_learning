@@ -21,7 +21,7 @@ if quat_or_not
         x0 = ele_traj_struct.floor(id-1);
         x1 = ele_traj_struct.floor(id);
         t = (x-x0) / (x1-x0);
-        h_x = quatinterp(ele_traj_struct.quat(id-1, :), ele_traj_struct.quat(id, :), t)';
+        h_x = quatinterp(ele_traj_struct.quat(id-1, :), ele_traj_struct.quat(id, :), t, 'slerp')';
     end
 else
     % pos or angle data

@@ -16,7 +16,7 @@ for q_id = 1:2
         y = y_seq(dof_id, t)';
         h = h_seq(dof_id, t)';
         % SLERP interpolation
-        f_seq(dof_id, t) = quatmultiply(y, quatinv(h))';
+        f_seq(dof_id, t) = quatmultiply(quatinv(h), y)';%quatmultiply(y, quatinv(h))';
     end
 end
 

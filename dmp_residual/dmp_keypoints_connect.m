@@ -159,10 +159,16 @@ h_seq = elementary_trajectory_calculate_sequence(ele_traj_struct_all, time_range
 
 % display for debug: original trajectory and h(x)
 %{
+h_seq_test = h5read(file_name, '/fengren_1/tmp_hseq_noisy');
+y_seq_test = h5read(file_name, '/fengren_1/tmp_yseq_noisy');
+
 figure;
-idx = [11,12,13];
+idx = [1,2,3];%[5,6,7]; %
 plot3(original_traj(idx(1), :, 1), original_traj(idx(2), :, 1), original_traj(idx(3), :, 1), 'b-'); hold on; grid on;
-plot3(h_seq(idx(1), :), h_seq(idx(2), :), h_seq(idx(3), :), 'r-');
+% plot3(h_seq_test(idx(1), :), h_seq_test(idx(2), :), h_seq_test(idx(3), :), 'g-');
+% plot3(h_seq(idx(1), :), h_seq(idx(2), :), h_seq(idx(3), :), 'r-');
+plot3(y_seq_test(idx(1), :), y_seq_test(idx(2), :), y_seq_test(idx(3), :), 'r-');
+
 for v = 1 : size(kp_list, 2)+2
     plot3(pass_points(idx(1), v), pass_points(idx(2), v), pass_points(idx(3), v), 'g*'); % iterate to plot via-poitns
 end
@@ -183,7 +189,7 @@ subplot(3, 1, 3); plot(time_range, f_seq(3, :)); grid on;
 %}
 
 % store the result
-save([target_group_name, '_tmp.mat'], 'f_seq', 'pos_and_glove_id', 'quat_id', 'time_range', 'pass_time');
+% save([target_group_name, '_tmp.mat'], 'f_seq', 'pos_and_glove_id', 'quat_id', 'time_range', 'pass_time');
 
 h5create(file_name, ['/', group_name, '/keypoint_list'], size(kp_list));
 h5write(file_name, ['/', group_name, '/keypoint_list'], kp_list);
@@ -197,8 +203,8 @@ h5write(file_name, ['/', group_name, '/quat_id'], quat_id);
 h5create(file_name, ['/', group_name, '/time_range'], size(time_range));
 h5write(file_name, ['/', group_name, '/time_range'], time_range); % for locating keypoints' time
 
-h5create(file_name, ['/', group_name, '/pass_time'], size(pass_time));
-h5write(file_name, ['/', group_name, '/pass_time'], pass_time); % keypoints' time
+h5create(file_name, ['/', group_name, '/pass_time'], size([0, pass_time, 1]));
+h5write(file_name, ['/', group_name, '/pass_time'], [0, pass_time, 1]); % keypoints' time
 
 h5create(file_name, ['/', group_name, '/pass_points'], size(pass_points));
 h5write(file_name, ['/', group_name, '/pass_points'], pass_points); % initial keypoints' values
@@ -206,7 +212,19 @@ h5write(file_name, ['/', group_name, '/pass_points'], pass_points); % initial ke
 h5create(file_name, ['/', group_name, '/f_seq'], size(f_seq));
 h5write(file_name, ['/', group_name, '/f_seq'], f_seq); % residual
 
-%% Try Adapt to new via-points
+
+% get a noisy sample
+%{
+pass_points_noise = pass_points;
+a = 0; b = 0.01;
+noise_pos = a + (b-a) * rand([3, size(pass_points_noise, 2)]);
+pass_points_noise(1:3, :) = pass_points_noise(1:3, :) + noise_pos;
+h5create(file_name, ['/', group_name, '/pass_points_noise'], size(pass_points_noise));
+h5write(file_name, ['/', group_name, '/pass_points_noise'], pass_points_noise); % residual
+%}
+
+
+%% Try Adapt to new via-points (Above code should stay in MATLAB, below code is for test only, adaptation code is in c++(ubuntu))
 % add noise
 pass_points_new = pass_points;
 a = 0; b = 0.01;
@@ -221,7 +239,7 @@ h_new = elementary_trajectory_calculate_sequence(ele_traj_struct_new, time_range
 
 % get y(x)
 % y_new = h_new + f_seq; % ignore quaternion dimension for now...
-y_new = get_final(h_new, f_seq, pos_and_glove_id, quat_id);
+y_new = get_final(f_seq, h_new, pos_and_glove_id, quat_id);
 
 % display
 %{

@@ -18,6 +18,10 @@ if quat_or_not
 else
     %% find floor and ceil
     id = find(x_via < ele_traj_struct.floor, 1); % id of ceiling
+    if isempty(id)
+        % the last point
+        id = size(ele_traj_struct.floor, 2);
+    end
     x0 = ele_traj_struct.floor(id-1);
     x1 = ele_traj_struct.floor(id); % x0 <= x_via < x1
     %% Prepare data for later solving equation for polynomial's coefficients
