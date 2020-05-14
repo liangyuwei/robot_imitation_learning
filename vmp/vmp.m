@@ -53,8 +53,9 @@ for traj_id = 1 : num_imitation_data
     r_elbow_pos = h5read(file_name, ['/', group_name, '/r_elbow_pos']);
     r_wrist_pos = h5read(file_name, ['/', group_name, '/r_wrist_pos']);
     r_wrist_ori = h5read(file_name, ['/', group_name, '/r_wrist_ori']);
-    l_glove_angle = h5read(file_name, ['/', group_name, '/l_glove_angle']); % 14 x N
-    r_glove_angle = h5read(file_name, ['/', group_name, '/r_glove_angle']);
+    l_glove_angle = h5read(file_name, ['/', group_name, '/l_glove_angle']) .* pi / 180;    % 14 x N, convert to radius
+    r_glove_angle = h5read(file_name, ['/', group_name, '/r_glove_angle']) .* pi / 180;    % convert to radius
+    
     time = h5read(file_name, ['/', group_name, '/time']);
     length = size(l_wrist_pos, 2);
     % convert rotation matrices to euler angles
@@ -131,8 +132,15 @@ for pg_id = 1 : size(pos_and_glove_id, 2)
     
     ele_traj_struct = struct;
     ele_traj_struct.floor = [0, 1]; % 1 is added for locating via-points closer to the end (by find function)
-    ele_traj_struct.start = y_seq(1, 1, 1); ele_traj_struct.goal = y_seq(1, end, 1); % set from the first imitation sample, directly connects the start and the end
-    ele_traj_struct.coeff = zeros(2, 6); % coefficients of fifth-order polynomial; the last one is not used, just to be in consistence with .floor length
+    
+    % IF use fifth-order polynomial
+%     ele_traj_struct.start = y_seq(1, 1, 1); ele_traj_struct.goal = y_seq(1, end, 1); % set from the first imitation sample, directly connects the start and the end
+%     ele_traj_struct.coeff = zeros(2, 6); % coefficients of fifth-order polynomial; the last one is not used, just to be in consistence with .floor length
+    
+    % IF use piece-wise linear segment
+    ele_traj_struct.ab = zeros(2, 2); % a and b, the coefficients of the 1st-order linear function h(x) = a * x + b
+    g = y_seq(1, end, 1); y0 = y_seq(1, 1, 1);
+    ele_traj_struct.ab(1, :) = [g-y0, y0]; % initial: h(x) = (g-y0)*x + y0
     
     % get shape modulation f(x) data for estimating the probability distribution of w (For pos, y(x) = h(x) + f(x); For quaternion, y(x) = h(x).*f(x))
     h_seq = zeros(size(y_seq));
@@ -151,6 +159,7 @@ for pg_id = 1 : size(pos_and_glove_id, 2)
     
     % for pos/angle, m is 1-dim; for quaternion, m is 3-dim(the real part is calculated from unit quaternion constraint)
     model = proMP_get_mu_sigma_combine(nbStates, nbVar, nbSamples, nbData, traj_samples, time_range);
+    
     
     % reproduce the trajectory
     sigma_y = 0;%0.00001; % for pos or angle data?
@@ -244,8 +253,8 @@ l_elbow_pos = target_traj(8:10, :);
 r_wrist_pos = target_traj(11:13, :);
 r_wrist_quat = target_traj(14:17, :);
 r_elbow_pos = target_traj(18:20, :);
-l_glove_angle = target_traj(21:34, :) .* pi/180;
-r_glove_angle = target_traj(35:end, :) .* pi/180;
+l_glove_angle = target_traj(21:34, :);% .* pi/180;
+r_glove_angle = target_traj(35:end, :);% .* pi/180;
 kp_list = extract_keypoints_from_sample(l_wrist_pos, l_wrist_quat, l_elbow_pos, r_wrist_pos, r_wrist_quat, r_elbow_pos, l_glove_angle, r_glove_angle);
 % display for debug
 %{
@@ -266,7 +275,7 @@ via_points = original_traj(:, kp_list, 1); % get the keypoints' values from the 
 ele_traj_struct_adjust = ele_traj_struct_all;
 model_adjust = model_all;
 y_seq_adjust = y_rep;   
-threshold_prob = 0.5;
+threshold_prob = 0.8; %Inf; %0.5;
 % iterate to add via-points (update function structure according to the given via-points)
 for v = 1 : size(kp_list, 2)
     disp(['Processing via-point ', num2str(v), '...']);
@@ -276,24 +285,29 @@ for v = 1 : size(kp_list, 2)
     for pg_id = 1 : size(pos_and_glove_id, 2)
         % get via-point value
         y_via = via_points(pos_and_glove_id(pg_id), v); % v-th via-point
-        sigma_via = 0; % must go through
+        sigma_via = 1E-4; % must go through
         % compute conditional probability
         prob = conditional_probability(model_adjust{pg_id}, ele_traj_struct_adjust{pg_id}, x_via, y_via, sigma_via, time_range);
-        disp(['Conditional probability = ', num2str(prob)]);
         if isnan(prob)
-            pause;
+            prob = 100; % NaN because y_via == mu, and sigma = 0; happens when one dimension doesn't change
         end
+        disp(['Conditional probability = ', num2str(prob)]);
+     
         % update model structure and meta-data
         if prob > threshold_prob
             % probability is big enough, may use shape modualtion
-            h_via = elementary_trajectory_compute(ele_traj_struct_adjust{pg_id}, x_via, false);
+%             h_via = elementary_trajectory_compute(ele_traj_struct_adjust{pg_id}, x_via, false);
+            h_via = elementary_trajectory_compute_linear(ele_traj_struct_adjust{pg_id}, x_via, false);
+
             model_adjust{pg_id} = shape_modulation_add_viapoint(model_adjust{pg_id}, x_via, h_via, y_via, sigma_via, time_range);
         else
             % probability is not big enough, shape modulation works poorly, modify elementary trajectory instead                                 
-            y_seq = y_seq_adjust(pos_and_glove_id(pg_id), :); % get the current y!!!
+            y_seq = y_seq_adjust(pos_and_glove_id(pg_id), :); %y_rep(pos_and_glove_id(pg_id), :); % get the current y!!!
             sigma_y = 0;
             f_seq = shape_modulation_compute(model_adjust{pg_id}, time_range, sigma_y, false);
-            ele_traj_struct_adjust{pg_id} = elementary_trajectory_add_viapoint(ele_traj_struct_adjust{pg_id}, x_via, y_via, y_seq, f_seq, time_range, false);
+%             ele_traj_struct_adjust{pg_id} = elementary_trajectory_add_viapoint(ele_traj_struct_adjust{pg_id}, x_via, y_via, y_seq, f_seq, time_range, false);
+            ele_traj_struct_adjust{pg_id} = elementary_trajectory_add_viapoint_linear(ele_traj_struct_adjust{pg_id}, x_via, y_via, y_seq, f_seq, time_range, false);
+
         end
         % update the final trajectory
         sigma_y = 0;
@@ -305,13 +319,17 @@ for v = 1 : size(kp_list, 2)
         % according to the paper, it's more complicated to calculate conditional probability than just integrating via-points into elementart trajectory   
         y_via = via_points(quat_id((q_id-1)*4+1 : q_id*4), v);
         % update the model structure (elementary trajectory)
-        y_seq = y_seq_adjust(quat_id((q_id-1)*4+1 : q_id*4), :);
+        y_seq = y_seq_adjust(quat_id((q_id-1)*4+1 : q_id*4), :); %y_rep(quat_id((q_id-1)*4+1 : q_id*4), :);
         sigma_y = 0; % must go through
         f_seq = shape_modulation_compute(model_adjust{size(pos_and_glove_id, 2)+q_id}, time_range, sigma_y, true);
         
+%         ele_traj_struct_adjust{size(pos_and_glove_id, 2)+q_id} = ...
+%                                     elementary_trajectory_add_viapoint(ele_traj_struct_adjust{size(pos_and_glove_id, 2)+q_id}, ...
+%                                     x_via, y_via, y_seq, f_seq, time_range, true);
         ele_traj_struct_adjust{size(pos_and_glove_id, 2)+q_id} = ...
-                                    elementary_trajectory_add_viapoint(ele_traj_struct_adjust{size(pos_and_glove_id, 2)+q_id}, ...
+                                    elementary_trajectory_add_viapoint_linear(ele_traj_struct_adjust{size(pos_and_glove_id, 2)+q_id}, ...
                                     x_via, y_via, y_seq, f_seq, time_range, true);
+                                
         % update the final trajectory
         y_seq_adjust(quat_id((q_id-1)*4+1 : q_id*4), :) = ...
                                     vmp_compute(ele_traj_struct_adjust{size(pos_and_glove_id, 2)+q_id}, ...
@@ -321,7 +339,7 @@ for v = 1 : size(kp_list, 2)
 end
 
 % display for debug
-idx = [1,2,3];
+idx = [11,12,13];
 figure;
 plot3(y_seq_adjust(idx(1), :), y_seq_adjust(idx(2), :), y_seq_adjust(idx(3), :), 'g-'); hold on; grid on;
 % figure;

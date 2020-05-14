@@ -1,0 +1,8 @@
+LIBRARY keypoints_connect
+EXPORTS
+keypoints_connectInitialize
+keypoints_connectInitializeWithHandlers
+keypoints_connectTerminate
+keypoints_connectPrintStackTrace
+mlxKeypoints_connect
+

@@ -1,7 +1,7 @@
 function ele_traj_struct = elementary_trajectory_add_viapoint(ele_traj_struct, x_via, y_via, y_seq, f_seq, x_seq, quat_or_not)
 %% This function adds via-points to elementary trajectory, and fits fifth-order polynomials to the two newly added segments.
 % x_seq - canonical time
-% y_seq - NO!!!! we need the current y_seq here!!! derived by the current h(x) and f(x) before the modification ;;;;;;original imitation data, used for interpolating to obtain accurate values of y(x0) and y(x1)
+% y_seq - We need the original imitation data, to obtain correct vel and acc data;;;;used for interpolating to obtain accurate values of y(x0) and y(x1)
 % f_seq - shape modulation data, used for interpolation
 
 
@@ -25,7 +25,7 @@ if quat_or_not
 else
     %% Prepare data for later solving equation for polynomial's coefficients
     % original imitation trajectory
-    dt = x_seq(2) - x_seq(1);
+    dt = abs(x_seq(2) - x_seq(1)); % use the frequency of the original data 
     dy_seq = gradient(y_seq) / dt;
     ddy_seq = gradient(dy_seq) / dt;
     y_x0 = interp1(x_seq, y_seq, x0);
@@ -66,7 +66,6 @@ else
         dy_x_via - df_x_via;
         ddy_x_via - ddf_x_via];
     alpha0 = (A1' * A1) \ A1' * b1; % column vector
-    
     
     %% Second segment
     A2 = [A_x(x_via); A_x(x1)]; % h(), dh(), ddh(), h(), dh(), ddh()

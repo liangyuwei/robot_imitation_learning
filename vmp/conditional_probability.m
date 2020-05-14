@@ -9,7 +9,9 @@ function cond_prob = conditional_probability(model, ele_traj_struct, x_via, y_vi
 
     % preparation
     % h(x_via)
-    h_via = elementary_trajectory_compute(ele_traj_struct, x_via, false); % pos or angle data
+%     h_via = elementary_trajectory_compute(ele_traj_struct, x_via, false); % pos or angle data
+    h_via = elementary_trajectory_compute_linear(ele_traj_struct, x_via, false); % pos or angle data
+
     % phi(x_via)
     t = time_range;  %Time range
     phi_x_via = zeros(size(model.Mu_w)); % interpolate from the already computed .phi

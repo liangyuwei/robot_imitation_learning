@@ -15,10 +15,9 @@ end
 %  conditional distribution parameters
 L = model.Sigma_w * phi_x_via / (sigma_via + phi_x_via'*model.Sigma_w*phi_x_via);
 % tmp = model.Sigma_w * phi_x_via / (sigma_via + phi_x_via'*model.Sigma_w*phi_x_via) * phi_x_via'
-% mu_w = model.Mu_w + L * (y_via - h_via - phi_x_via'*model.Mu_w);
-% sigma_w = model.Sigma_w - L * phi_x_via' * model.Sigma_w;
-mu_w = model.Mu_w + model.Sigma_w * phi_x_via / (sigma_via + phi_x_via'*model.Sigma_w*phi_x_via) * (y_via - h_via - phi_x_via'*model.Mu_w);
-sigma_w = model.Sigma_w - (model.Sigma_w * phi_x_via * phi_x_via' * model.Sigma_w)/(sigma_via + phi_x_via'*model.Sigma_w*phi_x_via);
+mu_w = model.Mu_w + L * (y_via - h_via - phi_x_via'* model.Mu_w); 
+% sigma_w = model.Sigma_w - L * phi_x_via' * model.Sigma_w; % can't guarantee absolute symmetry due to numeric error   
+sigma_w = model.Sigma_w - (model.Sigma_w * phi_x_via) * (model.Sigma_w * phi_x_via)' /(sigma_via + phi_x_via'*model.Sigma_w*phi_x_via); % .Sigma_w is symmetric, so .Sigma_w == .Sigma'
 
 
 % update the shape modulation parameters

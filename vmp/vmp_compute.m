@@ -12,8 +12,11 @@ if quat_or_not
     % elementary trajectory
     h_seq = zeros(4, num_datapoints);
     for n = 1:num_datapoints
-        h_seq(:, n) = elementary_trajectory_compute(ele_traj_struct, time_range(n), quat_or_not)';
+%         h_seq(:, n) = elementary_trajectory_compute(ele_traj_struct, time_range(n), quat_or_not)';
+        h_seq(:, n) = elementary_trajectory_compute_linear(ele_traj_struct, time_range(n), quat_or_not)';
+
     end
+    
     % shape modulation
     f_seq = shape_modulation_compute(model, time_range, sigma_y, quat_or_not);
     % final
@@ -24,7 +27,9 @@ else
     % elementary trajectory
     h_seq = zeros(1, num_datapoints);
     for n = 1:num_datapoints
-        h_seq(n) = elementary_trajectory_compute(ele_traj_struct, time_range(n), quat_or_not);
+%         h_seq(n) = elementary_trajectory_compute(ele_traj_struct, time_range(n), quat_or_not);
+        h_seq(n) = elementary_trajectory_compute_linear(ele_traj_struct, time_range(n), quat_or_not);
+
     end
     % shape modulation
     f_seq = shape_modulation_compute(model, time_range, sigma_y, quat_or_not);
