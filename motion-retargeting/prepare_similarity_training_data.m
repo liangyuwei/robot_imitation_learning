@@ -3,7 +3,7 @@
 num_resampled_points = 100;
 
 %% Load data from mocap data file
-%{
+%
 file_name = 'test_imi_data_YuMi.h5';
 info = h5info(file_name);
 % extract group_names and number of imitation data    
@@ -22,7 +22,7 @@ end
 group_name_list = fieldnames(group_name_dict); % cell of group names
 
 % iterate and apply transformations
-for gp_id = 1 : size(group_name_list, 1)
+for gp_id = 5%1 : size(group_name_list, 1)
     num_imitation_data = eval(['group_name_dict.', group_name_list{gp_id}]);
 %     original_trajs = [];
     similarity_preserved_trajs = [];
@@ -82,6 +82,20 @@ for gp_id = 1 : size(group_name_list, 1)
         % store the original samples
         original_traj_resampled = resample_normalize_flatten_traj(time, original_traj, num_resampled_points);
         similarity_preserved_trajs = [similarity_preserved_trajs; original_traj_resampled];
+        % display for debug
+        %{
+        idxx = [11,12,13]; %[1,2,3];
+        original_traj_display = zeros(size(idxx, 2), num_resampled_points);
+        for id = 1 : num_resampled_points
+            original_traj_display(1, id) = original_traj_resampled(idxx(1)+DOF*(id-1));
+            original_traj_display(2, id) = original_traj_resampled(idxx(2)+DOF*(id-1));
+            original_traj_display(3, id) = original_traj_resampled(idxx(3)+DOF*(id-1));
+        end        
+        figure;
+        plot3(original_traj_display(1, :), original_traj_display(2, :), original_traj_display(3, :), 'b-'); hold on; grid on;
+        title('Original and transformed trajectories');
+        xlabel('x'); ylabel('y'); zlabel('z'); 
+        %}
         
        %% Apply different transformations to obtain similarity_preserved and similarity_destroyed data
         % translate: no need
@@ -92,7 +106,7 @@ for gp_id = 1 : size(group_name_list, 1)
 
         % rotation (on pos data)
         max_angle = 315 * pi/180; min_angle = 45 * pi/180;
-        num_rot_samples = 9;
+        num_rot_samples = 64;
         rand_euler_angles = rand(num_rot_samples, 3) * (max_angle - min_angle) + min_angle;
         for n = 1 : num_rot_samples
             % initialize
@@ -106,13 +120,23 @@ for gp_id = 1 : size(group_name_list, 1)
             % store the result
             tmp_traj_resampled = resample_normalize_flatten_traj(time, tmp_traj, num_resampled_points);
             similarity_destroyed_trajs = [similarity_destroyed_trajs; tmp_traj_resampled];
+            % display for presentation
+            %{
+            tmp_traj_display = zeros(size(idxx, 2), num_resampled_points);
+            for id = 1 : num_resampled_points
+                tmp_traj_display(1, id) = tmp_traj_resampled(idxx(1)+DOF*(id-1));
+                tmp_traj_display(2, id) = tmp_traj_resampled(idxx(2)+DOF*(id-1));
+                tmp_traj_display(3, id) = tmp_traj_resampled(idxx(3)+DOF*(id-1));
+            end
+            plot3(tmp_traj_display(1, :), tmp_traj_display(2, :), tmp_traj_display(3, :), 'r-'); hold on; grid on;
+            %}
         end
         
         % add noise (to pos and angles)
         bnd_wrist = (max(tmp_traj(wrist_id, :), [], 2) - min(tmp_traj(wrist_id, :), [], 2)) / 50; % 1/50 of the range
         bnd_elbow = (max(tmp_traj(elbow_id, :), [], 2) - min(tmp_traj(elbow_id, :), [], 2)) / 50;
         bnd_glove = (max(tmp_traj(glove_id, :), [], 2) - min(tmp_traj(glove_id, :), [], 2)) / 100; %5; % +-5 degree range
-        for n = 1 : 10
+        for n = 1 : 50
             % initialize
             tmp_traj = original_traj;
             % use uniformly distributed pseudorandom numbers
@@ -129,12 +153,22 @@ for gp_id = 1 : size(group_name_list, 1)
             % store result
             tmp_traj_resampled = resample_normalize_flatten_traj(time, tmp_traj, num_resampled_points);
             similarity_preserved_trajs = [similarity_preserved_trajs; tmp_traj_resampled];
+            % display for presentation
+            %{
+            tmp_traj_display = zeros(size(idxx, 2), num_resampled_points);
+            for id = 1 : num_resampled_points
+                tmp_traj_display(1, id) = tmp_traj_resampled(idxx(1)+DOF*(id-1));
+                tmp_traj_display(2, id) = tmp_traj_resampled(idxx(2)+DOF*(id-1));
+                tmp_traj_display(3, id) = tmp_traj_resampled(idxx(3)+DOF*(id-1));
+            end
+            plot3(tmp_traj_display(1, :), tmp_traj_display(2, :), tmp_traj_display(3, :), 'g-'); hold on; grid on;
+            %}
         end
         
         % keypoint local shift (only on pos data for now; what about orientation ???)
         kp_id_list = extract_keypoints_func(l_wrist_pos, l_wrist_ori, l_elbow_pos, r_wrist_pos, r_wrist_ori, r_elbow_pos, l_glove_angle, r_glove_angle);
         num_kps = size(kp_id_list,2);
-        for n = 1 : 10 % get 10 samples
+        for n = 1 : 50 
             % initialize
             tmp_traj = original_traj;
             % display for debug - part 1
@@ -168,6 +202,18 @@ for gp_id = 1 : size(group_name_list, 1)
             % store the result
             tmp_traj_resampled = resample_normalize_flatten_traj(time, tmp_traj, num_resampled_points);
             similarity_preserved_trajs = [similarity_preserved_trajs; tmp_traj_resampled];
+            
+            % display for presentation
+            %{
+            tmp_traj_display = zeros(size(idxx, 2), num_resampled_points);
+            for id = 1 : num_resampled_points
+                tmp_traj_display(1, id) = tmp_traj_resampled(idxx(1)+DOF*(id-1));
+                tmp_traj_display(2, id) = tmp_traj_resampled(idxx(2)+DOF*(id-1));
+                tmp_traj_display(3, id) = tmp_traj_resampled(idxx(3)+DOF*(id-1));
+            end
+            plot3(tmp_traj_display(1, :), tmp_traj_display(2, :), tmp_traj_display(3, :), 'g-'); hold on; grid on;
+            %}
+                        
         end
         
         disp('done.');
@@ -196,9 +242,9 @@ info = h5info(new_file_name);
 num_groups = size(info.Groups, 1);
 
 % settings
-num_intra_group_similar = 20;
-num_intra_group_dissimilar = 10;
-num_inter_group_dissimilar = 10;
+num_intra_group_similar = 100;
+num_intra_group_dissimilar = 50;
+num_inter_group_dissimilar = 50;
 min_num_similar = Inf; min_num_dissimilar = Inf;
 for n = 1:num_groups
     % obtain the smallest number 
@@ -221,33 +267,66 @@ assert(num_intra_group_similar * 2 + num_intra_group_dissimilar + num_inter_grou
         < min_num_similar, 'Samples not enough for unique selection of similar pairs!!!');
 assert(num_intra_group_dissimilar < min_num_dissimilar, 'Samples not enough for unique selection of dissimilar pairs!!!');
 
-if mod(num_groups, 2) ~= 0
+% split the groups(vocabularies) into train set and test set (isolation)
+num_train_groups = round(num_groups * 3/4); % train set : test set, 1:3
+num_test_groups = num_groups - num_train_groups;
+train_group_id = randperm(num_groups, num_train_groups); % randomly select groups to be inside train set or test set
+test_group_id = setdiff(1:num_groups, train_group_id);
+
+% set group id pair (if num_groups is odd, one group would appear twice)
+if mod(num_train_groups, 2) ~= 0
     % odd number of 
     assert(num_intra_group_similar * 2 + num_intra_group_dissimilar + ...
            num_inter_group_dissimilar * 2 < min_num_similar, ...
            'Similar samples may not be enough for unique selection of inter-group dissimilar pairs');
     % choose one group to be used twice for inter-group sample selection
-    double_effort_group_id = randperm(num_groups, 1);
+    double_effort_train_group_id = train_group_id(randperm(num_train_groups, 1)); % randomly select one group ID inside train group
+end
+if mod(num_test_groups, 2) ~= 0
+    % odd number of 
+    assert(num_intra_group_similar * 2 + num_intra_group_dissimilar + ...
+           num_inter_group_dissimilar * 2 < min_num_similar, ...
+           'Similar samples may not be enough for unique selection of inter-group dissimilar pairs');
+    % choose one group to be used twice for inter-group sample selection
+    double_effort_test_group_id = test_group_id(randperm(num_test_groups, 1)); % randomly select one group ID inside test group
 end
 
-% set group id pair (if num_groups is odd, one group would appear twice)
 found = false;
 while ~found
-    unique_id = randperm(num_groups, num_groups);
-    inter_group_pair = [unique_id(1:floor(num_groups/2)); unique_id(floor(num_groups/2)+1 : floor(num_groups/2)*2)];
-    if mod(num_groups, 2) ~= 0
+    unique_id = randperm(num_train_groups, num_train_groups); % find index to num_train_group_id
+    inter_train_group_pair = [train_group_id(unique_id(1:floor(num_train_groups/2))); ...
+                              train_group_id(unique_id(floor(num_train_groups/2)+1 : floor(num_train_groups/2)*2))];
+    if mod(num_train_groups, 2) ~= 0
         % odd number
-        if unique_id(end) == double_effort_group_id
+        if train_group_id(unique_id(end)) == double_effort_train_group_id
             continue;
         end
-        inter_group_pair = [inter_group_pair, [double_effort_group_id; unique_id(end)]];
-        found = true;
+        inter_train_group_pair = [inter_train_group_pair, [double_effort_train_group_id; train_group_id(unique_id(end))]];        
     end
+    found = true; % in case the number is even...
+end
+
+found = false;
+while ~found
+    unique_id = randperm(num_test_groups, num_test_groups); % find index to num_train_group_id
+    inter_test_group_pair = [test_group_id(unique_id(1:floor(num_test_groups/2))); ...
+                             test_group_id(unique_id(floor(num_test_groups/2)+1 : floor(num_test_groups/2)*2))];
+    if mod(num_test_groups, 2) ~= 0
+        % odd number
+        if test_group_id(unique_id(end)) == double_effort_test_group_id
+            continue;
+        end
+        inter_test_group_pair = [inter_test_group_pair, [double_effort_test_group_id; test_group_id(unique_id(end))]];
+    end
+    found = true; % in case the number is even...
 end
 
 % initialize
-similar_class = [];
-dissimilar_class = [];
+train_similar_class = [];
+train_dissimilar_class = [];
+test_similar_class = [];
+test_dissimilar_class = [];
+
 group_similar_samples_id = zeros(num_groups, num_intra_group_similar*2+num_intra_group_dissimilar+num_inter_group_dissimilar);
 group_dissimilar_samples_id = zeros(num_groups, num_intra_group_dissimilar);
 
@@ -264,90 +343,114 @@ for i = 1 : num_groups
     % set up IDs
     group_similar_samples_id(i, :) = randperm(num_similar, size(group_similar_samples_id, 2));
     group_dissimilar_samples_id(i, :) = randperm(num_dissimilar, size(group_dissimilar_samples_id, 2));
-    if mod(num_groups, 2) ~= 0
+    if mod(num_train_groups, 2) ~= 0
         % odd number
-        if i == double_effort_group_id
+        if i == double_effort_train_group_id
             rest_id_all = setdiff(1:num_similar, group_similar_samples_id(i, :));
-            rest_id = rest_id_all(randperm(size(rest_id_all,2), num_inter_group_dissimilar));
+            rest_train_id = rest_id_all(randperm(size(rest_id_all,2), num_inter_group_dissimilar));
+        end
+    end
+    if mod(num_test_groups, 2) ~= 0
+        % odd number
+        if i == double_effort_test_group_id
+            rest_id_all = setdiff(1:num_similar, group_similar_samples_id(i, :));
+            rest_test_id = rest_id_all(randperm(size(rest_id_all,2), num_inter_group_dissimilar));
         end
     end
     
     % 1- Get samples of similar class from within the current group
-    % potential number of samples is huge - factorial(num_similar)
-%     num_pair = 20; % get 20 samples 
-%     found = false;
-%     while ~found
-%         rand_id = [randperm(num_similar, num_pair); randperm(num_similar, num_pair)];
-%         % eliminate self-replicate samples, e.g. (A,A)
-%         if sum(rand_id(1, :) == rand_id(2,:)) > 0
-%             continue;
-%         end
-%         % eliminate symmetric samples, e.g. (A,B) and (B,A)        
-%         sorted_id = sort(rand_id, 1);
-%     end
     rand_id = [group_similar_samples_id(i, 1 : num_intra_group_similar); ...
                group_similar_samples_id(i, num_intra_group_similar+1 : 2*num_intra_group_similar)];
-    similar_class = [similar_class; [cur_group_similar(rand_id(1,:), :), cur_group_similar(rand_id(2,:), :)] ];
-
+    if ~isempty(find(i == train_group_id, 1))
+        % if i is inside train_group_id, i.e. the current group belongs to train set                 
+        train_similar_class = [train_similar_class; [cur_group_similar(rand_id(1,:), :), cur_group_similar(rand_id(2,:), :)] ];
+    else        
+        test_similar_class = [test_similar_class; [cur_group_similar(rand_id(1,:), :), cur_group_similar(rand_id(2,:), :)] ];
+    end
+    
     % 2 - Get samples of dissimilar class from within the current group   
-%     num_pair = 10; % get 20 samples 
     rand_id = [group_similar_samples_id(i, 2*num_intra_group_similar+1 : 2*num_intra_group_similar+num_intra_group_dissimilar); ...
                group_dissimilar_samples_id(i, :)];  
-    dissimilar_class = [dissimilar_class; [cur_group_similar(rand_id(1,:), :), cur_group_dissimilar(rand_id(2,:), :)] ];
-    
-    % 3 - Get samples of dissimilar class from different groups    
-%     num_gp_pair = 5;
-%     num_pair_per_group = 2; % yields num_gp_pair x num_pair_per_group pairs of dissimilar data  
-%     gp_id = randi(num_groups-1, num_gp_pair, 1); % randomly choose group to access
-%     for j = 1 : num_gp_pair
-%         target_gp_id = gp_id(j); % ID of the group to access
-%         target_group_similar = h5read(new_file_name, [info.Groups(target_gp_id).Name, '/similarity_preserved_trajs']); 
-%         num_target_similar = size(target_group_similar, 1);
-%         % get pair
-%         rand_id = [randperm(num_similar, num_pair_per_group); randperm(num_target_similar, num_pair_per_group)];
-%         dissimilar_class = [dissimilar_class; [cur_group_similar(rand_id(1,:), :), target_group_similar(rand_id(2,:), :)] ];
-%     end
-%     
+    if ~isempty(find(i == train_group_id, 1))
+        % if i is inside train_group_id, i.e. the current group belongs to train set   
+        train_dissimilar_class = [train_dissimilar_class; [cur_group_similar(rand_id(1,:), :), cur_group_dissimilar(rand_id(2,:), :)] ]; 
+    else
+        test_dissimilar_class = [test_dissimilar_class; [cur_group_similar(rand_id(1,:), :), cur_group_dissimilar(rand_id(2,:), :)] ];         
+    end
+        
     disp('Intra-group samples done.');
     
 end
 
-% get inter-group pairs
-for i = 1 ; size(inter_group_pair, 2)
+
+% 3 - Get inter-group dissimilar pairs
+% for train set
+for i = 1 ; size(inter_train_group_pair, 2)
     % set id
-    rand_id = [group_similar_samples_id(inter_group_pair(1, i), num_intra_group_similar*2+num_intra_group_dissimilar+1 : end); ...
-               group_similar_samples_id(inter_group_pair(2, i), num_intra_group_similar*2+num_intra_group_dissimilar+1 : end)];
-    if mod(num_groups, 2) ~= 0
+    rand_id = [group_similar_samples_id(inter_train_group_pair(1, i), num_intra_group_similar*2+num_intra_group_dissimilar+1 : end); ...
+               group_similar_samples_id(inter_train_group_pair(2, i), num_intra_group_similar*2+num_intra_group_dissimilar+1 : end)];
+    if mod(num_train_groups, 2) ~= 0
         % odd number
-        if i == size(inter_group_pair, 2)
+        if (i == size(inter_train_group_pair, 2))
             % the last group pair; one group appear twice
-            rand_id = [rest_id; ...
-                      group_similar_samples_id(inter_group_pair(2, i), num_intra_group_similar*2+num_intra_group_dissimilar+1 : end)];
+            rand_id = [rest_train_id; ...
+                      group_similar_samples_id(inter_train_group_pair(2, i), num_intra_group_similar*2+num_intra_group_dissimilar+1 : end)];
         end
     end
 
     % get data
-    group_1_similar = h5read(new_file_name, [info.Groups(inter_group_pair(1, i)).Name, '/similarity_preserved_trajs']);
-    group_2_similar = h5read(new_file_name, [info.Groups(inter_group_pair(2, i)).Name, '/similarity_preserved_trajs']);
+    group_1_similar = h5read(new_file_name, [info.Groups(inter_train_group_pair(1, i)).Name, '/similarity_preserved_trajs']);
+    group_2_similar = h5read(new_file_name, [info.Groups(inter_train_group_pair(2, i)).Name, '/similarity_preserved_trajs']);
     
     % get pair
-    dissimilar_class = [dissimilar_class; [group_1_similar(rand_id(1,:), :), group_2_similar(rand_id(2,:), :)] ];
-    
+    train_dissimilar_class = [train_dissimilar_class; [group_1_similar(rand_id(1,:), :), group_2_similar(rand_id(2,:), :)] ];
 end
+% for test set
+% for train set
+for i = 1 ; size(inter_test_group_pair, 2)
+    % set id
+    rand_id = [group_similar_samples_id(inter_test_group_pair(1, i), num_intra_group_similar*2+num_intra_group_dissimilar+1 : end); ...
+               group_similar_samples_id(inter_test_group_pair(2, i), num_intra_group_similar*2+num_intra_group_dissimilar+1 : end)];
+    if mod(num_test_groups, 2) ~= 0
+        % odd number
+        if (i == size(inter_test_group_pair, 2))
+            % the last group pair; one group appear twice
+            rand_id = [rest_test_id; ...
+                      group_similar_samples_id(inter_test_group_pair(2, i), num_intra_group_similar*2+num_intra_group_dissimilar+1 : end)];
+        end
+    end
+
+    % get data
+    group_1_similar = h5read(new_file_name, [info.Groups(inter_test_group_pair(1, i)).Name, '/similarity_preserved_trajs']);
+    group_2_similar = h5read(new_file_name, [info.Groups(inter_test_group_pair(2, i)).Name, '/similarity_preserved_trajs']);
+    
+    % get pair
+    test_dissimilar_class = [test_dissimilar_class; [group_1_similar(rand_id(1,:), :), group_2_similar(rand_id(2,:), :)] ];
+end
+
 
 disp('Inter-group samples done.');
 
 
 % store the training datasets
+disp('Storing similar and dissimilar sample pairs in file...');
 train_file_name = 'test_imi_data_YuMi_training_dataset.h5';
-h5create(train_file_name, '/similar', size(similar_class));
-h5create(train_file_name, '/dissimilar', size(dissimilar_class));
-
-h5write(train_file_name, '/similar', similar_class);
-h5write(train_file_name, '/dissimilar', dissimilar_class);
+% h5create(train_file_name, '/similar', size(similar_class));
+% h5create(train_file_name, '/dissimilar', size(dissimilar_class));
+% h5write(train_file_name, '/similar', similar_class);
+% h5write(train_file_name, '/dissimilar', dissimilar_class);
+h5create(train_file_name, '/train_similar', size(train_similar_class));
+h5create(train_file_name, '/train_dissimilar', size(train_dissimilar_class));
+h5create(train_file_name, '/test_similar', size(test_similar_class));
+h5create(train_file_name, '/test_dissimilar', size(test_dissimilar_class));
+h5write(train_file_name, '/train_similar', train_similar_class);
+h5write(train_file_name, '/train_dissimilar', train_dissimilar_class);
+h5write(train_file_name, '/test_similar', test_similar_class);
+h5write(train_file_name, '/test_dissimilar', test_dissimilar_class);
 
 
 % further divide into x_train and x_test
+%{
 num_similar_samples = size(similar_class, 1);
 num_dissimilar_samples = size(dissimilar_class, 1);
 y_similar = ones(num_similar_samples, 1) .* 1; % labels
@@ -362,6 +465,12 @@ x_train = [similar_class(similar_train_id, :); dissimilar_class(dissimilar_train
 x_test = [similar_class(similar_test_id, :); dissimilar_class(dissimilar_test_id, :)];
 y_train = [y_similar(similar_train_id, :); y_dissimilar(dissimilar_train_id, :)];
 y_test = [y_similar(similar_test_id, :); y_dissimilar(dissimilar_test_id, :)];
+%}
+disp('Divide sample pairs into x_train and x_test..');
+x_train = [train_similar_class; train_dissimilar_class];
+y_train = [ones(size(train_similar_class, 1), 1); zeros(size(train_dissimilar_class, 1), 1)];
+x_test = [test_similar_class; test_dissimilar_class];
+y_test = [ones(size(test_similar_class, 1), 1); zeros(size(test_dissimilar_class, 1), 1)];
 % randomize the order
 id_train = randperm(size(x_train, 1));
 id_test = randperm(size(x_test, 1));
@@ -381,6 +490,4 @@ h5write(train_file_name, '/y_train', y_train_rand);
 h5write(train_file_name, '/x_test', x_test_rand);
 h5write(train_file_name, '/y_test', y_test_rand);
 
-
-%}
-
+disp('All done.');

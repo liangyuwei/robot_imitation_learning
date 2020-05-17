@@ -285,7 +285,7 @@ for v = 1 : size(kp_list, 2)
     for pg_id = 1 : size(pos_and_glove_id, 2)
         % get via-point value
         y_via = via_points(pos_and_glove_id(pg_id), v); % v-th via-point
-        sigma_via = 1E-4; % must go through
+        sigma_via = 1E-4; % 0 means must go through
         % compute conditional probability
         prob = conditional_probability(model_adjust{pg_id}, ele_traj_struct_adjust{pg_id}, x_via, y_via, sigma_via, time_range);
         if isnan(prob)
@@ -294,6 +294,7 @@ for v = 1 : size(kp_list, 2)
         disp(['Conditional probability = ', num2str(prob)]);
      
         % update model structure and meta-data
+        threshold_prob = Inf;
         if prob > threshold_prob
             % probability is big enough, may use shape modualtion
 %             h_via = elementary_trajectory_compute(ele_traj_struct_adjust{pg_id}, x_via, false);
@@ -349,9 +350,17 @@ end
 for i = 1 : 1%nbSamples
     plot3(original_traj(idx(1), :, i), original_traj(idx(2), :, i), original_traj(idx(3), :, i), 'b-');
 end
+xlabel('x'); ylabel('y'); zlabel('z'); 
 
 
 
+title('fengren\_1, l\_wrist\_pos');
+
+title('fengren\_1, r\_wrist\_pos');
+
+view(-120, 45); % view the start (l_wrist_pos)
+
+view(-120, 30); % view the mid (r_wrist_pos)
 
 
 

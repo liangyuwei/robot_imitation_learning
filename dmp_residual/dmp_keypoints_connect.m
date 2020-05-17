@@ -47,9 +47,9 @@ DOF = 3 * 4 + 4 * 2 + 14 * 2; % 4 pos(3) + 2 quat(4) + 2 glove(14)
 original_traj = zeros(DOF, num_resampled_points, num_imitation_data);
 
 disp(['>>>> Extract data from Group: ', target_group_name, ' ...']);
-for traj_id = 1 : num_imitation_data 
+for traj_id = 1 : num_imitation_data  
     %% Load original trajectory
-    group_name = [target_group_name, '_', num2str(traj_id)];  % fengren: eliminate the first bad sample
+    group_name = [target_group_name, '_', num2str(traj_id+1)];  % fengren: eliminate the first bad sample
     
     disp(['>>>> ---- processing ', group_name, ' ...']);
     
@@ -191,26 +191,26 @@ subplot(3, 1, 3); plot(time_range, f_seq(3, :)); grid on;
 % store the result
 % save([target_group_name, '_tmp.mat'], 'f_seq', 'pos_and_glove_id', 'quat_id', 'time_range', 'pass_time');
 
-h5create(file_name, ['/', group_name, '/keypoint_list'], size(kp_list));
-h5write(file_name, ['/', group_name, '/keypoint_list'], kp_list);
-
-h5create(file_name, ['/', group_name, '/pos_and_glove_id'], size(pos_and_glove_id));
-h5write(file_name, ['/', group_name, '/pos_and_glove_id'], pos_and_glove_id);
-
-h5create(file_name, ['/', group_name, '/quat_id'], size(quat_id));
-h5write(file_name, ['/', group_name, '/quat_id'], quat_id);
-
-h5create(file_name, ['/', group_name, '/time_range'], size(time_range));
-h5write(file_name, ['/', group_name, '/time_range'], time_range); % for locating keypoints' time
-
-h5create(file_name, ['/', group_name, '/pass_time'], size([0, pass_time, 1]));
-h5write(file_name, ['/', group_name, '/pass_time'], [0, pass_time, 1]); % keypoints' time
-
-h5create(file_name, ['/', group_name, '/pass_points'], size(pass_points));
-h5write(file_name, ['/', group_name, '/pass_points'], pass_points); % initial keypoints' values
-
-h5create(file_name, ['/', group_name, '/f_seq'], size(f_seq));
-h5write(file_name, ['/', group_name, '/f_seq'], f_seq); % residual
+% h5create(file_name, ['/', group_name, '/keypoint_list'], size(kp_list));
+% h5write(file_name, ['/', group_name, '/keypoint_list'], kp_list);
+% 
+% h5create(file_name, ['/', group_name, '/pos_and_glove_id'], size(pos_and_glove_id));
+% h5write(file_name, ['/', group_name, '/pos_and_glove_id'], pos_and_glove_id);
+% 
+% h5create(file_name, ['/', group_name, '/quat_id'], size(quat_id));
+% h5write(file_name, ['/', group_name, '/quat_id'], quat_id);
+% 
+% h5create(file_name, ['/', group_name, '/time_range'], size(time_range));
+% h5write(file_name, ['/', group_name, '/time_range'], time_range); % for locating keypoints' time
+% 
+% h5create(file_name, ['/', group_name, '/pass_time'], size([0, pass_time, 1]));
+% h5write(file_name, ['/', group_name, '/pass_time'], [0, pass_time, 1]); % keypoints' time
+% 
+% h5create(file_name, ['/', group_name, '/pass_points'], size(pass_points));
+% h5write(file_name, ['/', group_name, '/pass_points'], pass_points); % initial keypoints' values
+% 
+% h5create(file_name, ['/', group_name, '/f_seq'], size(f_seq));
+% h5write(file_name, ['/', group_name, '/f_seq'], f_seq); % residual
 
 
 % get a noisy sample
@@ -228,8 +228,11 @@ h5write(file_name, ['/', group_name, '/pass_points_noise'], pass_points_noise); 
 % add noise
 pass_points_new = pass_points;
 a = 0; b = 0.01;
-noise_pos = a + (b-a) * rand([3, size(pass_points_new, 2)]);
-pass_points_new(1:3, :) = pass_points_new(1:3, :) + noise_pos;
+% noise_pos = a + (b-a) * rand([3, size(pass_points_new, 2)]);
+% pass_points_new(1:3, :) = pass_points_new(1:3, :) + noise_pos;
+noise_pos = a + (b-a) * rand([3, size(pass_points_new, 2)-2]);
+% pass_points_new(1:3, 2:end-1) = pass_points_new(1:3, 2:end-1) + noise_pos;
+pass_points_new(11:13, 2:end-1) = pass_points_new(11:13, 2:end-1) + noise_pos;
 
 % model the function
 ele_traj_struct_new = elementary_trajectory_model(pass_points_new, pass_time, pos_and_glove_id, quat_id);
@@ -243,16 +246,27 @@ y_new = get_final(f_seq, h_new, pos_and_glove_id, quat_id);
 
 % display
 %{
-idx = [quat_id(1),quat_id(2),quat_id(3)];
+idx = [11,12,13];%[quat_id(1),quat_id(2),quat_id(3)];
 figure;
 plot3(y_seq(idx(1), :), y_seq(idx(2), :), y_seq(idx(3), :), 'b-'); hold on; grid on; % original trajectory
 for v = 1 : size(kp_list, 2)+2
-    plot3(pass_points(idx(1), v), pass_points(idx(2), v), pass_points(idx(3), v), 'g*'); % iterate to plot via-poitns
+    plot3(pass_points(idx(1), v), pass_points(idx(2), v), pass_points(idx(3), v), 'ro'); % iterate to plot via-poitns
 end
-plot3(y_new(idx(1), :), y_new(idx(2), :), y_new(idx(3), :), 'r-');  % new trajectory
+plot3(y_new(idx(1), :), y_new(idx(2), :), y_new(idx(3), :), 'g-');  % new trajectory
 for v = 1 : size(kp_list, 2)+2
     plot3(pass_points_new(idx(1), v), pass_points_new(idx(2), v), pass_points_new(idx(3), v), 'g*'); % iterate to plot new via-poitns
 end
+xlabel('x'); ylabel('y'); zlabel('z'); 
+
+
+% for presentation
+title('fengren\_1, l\_wrist\_pos');
+
+title('fengren\_1, r\_wrist\_pos');
+
+view(-120, 45); % view the start (l_wrist_pos)
+
+view(-120, 30); % view the mid (r_wrist_pos)
 %}
 
 

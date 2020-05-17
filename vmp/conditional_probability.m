@@ -1,5 +1,5 @@
 function cond_prob = conditional_probability(model, ele_traj_struct, x_via, y_via, sigma_via, time_range)
-%% Compute conditional probability at the given point
+%% Compute conditional probability density at the given point
 % Input: model - the current shape modulation model;
 %        x_via, y_via - canonical time and value of the given via-point
 %        sigma_via - uncertainty of the via-point. 0 indicates that it must be gone through    
