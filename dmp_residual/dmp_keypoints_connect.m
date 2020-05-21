@@ -49,7 +49,7 @@ original_traj = zeros(DOF, num_resampled_points, num_imitation_data);
 disp(['>>>> Extract data from Group: ', target_group_name, ' ...']);
 for traj_id = 1 : num_imitation_data  
     %% Load original trajectory
-    group_name = [target_group_name, '_', num2str(traj_id+1)];  % fengren: eliminate the first bad sample
+    group_name = [target_group_name, '_', num2str(traj_id)]; %(traj_id+1)];  % fengren: eliminate the first bad sample
     
     disp(['>>>> ---- processing ', group_name, ' ...']);
     
