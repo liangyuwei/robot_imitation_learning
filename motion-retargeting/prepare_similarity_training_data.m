@@ -97,6 +97,12 @@ for gp_id = 5%1 : size(group_name_list, 1)
         xlabel('x'); ylabel('y'); zlabel('z'); 
         %}
         
+        
+        % store the resampled_normalized_flattened version of the original trajectory in h5 file    
+        h5create(file_name, ['/', group_name, '/resampled_normalized_flattened_oritraj'], size(original_traj_resampled));
+        h5write(file_name, ['/', group_name, '/resampled_normalized_flattened_oritraj'], original_traj_resampled);
+        
+        
        %% Apply different transformations to obtain similarity_preserved and similarity_destroyed data
         % translate: no need
         

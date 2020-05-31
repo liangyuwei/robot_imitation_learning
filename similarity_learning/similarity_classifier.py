@@ -116,11 +116,29 @@ class Net(nn.Module):
         output2 = self.forward_once(input2)
         return output1, output2
 
+class Net_for_output(nn.Module):
+
+    def __init__(self):
+        super(Net_for_output, self).__init__()
+        # N is batch size, D_in is input dimension, D_out is output dimension (dim=2 means 2-class classification)
+        D_in, H_1, H_2, D_out = 4800, 2400, 1000, 100
+        self.linear1 = nn.Linear(D_in, H_1)
+        self.linear2 = nn.Linear(H_1, H_2)
+        self.linear3 = nn.Linear(H_2, D_out)
+
+    def forward(self, x):
+        h1_relu = F.relu(self.linear1(x))
+        h2_relu = F.relu(self.linear2(h1_relu))
+        y_pred = self.linear3(h2_relu)
+        return y_pred
+
+
+
 ### Preparations
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 
-
+'''
 ### Load datasets and convert to PyTorch Tensor(using torch.tensor())
 # load data from h5 file
 file_name = 'test_imi_data_YuMi_training_dataset.h5'
@@ -175,7 +193,7 @@ for epoch in range(epochs):
         # get the inputs and labels
         #print('Get the inputs and labels.')
         xb1, xb2, yb = data[0].to(device, dtype=torch.float), data[1].to(device, dtype=torch.float), data[2].to(device, dtype=torch.long) # send to GPU at every step
-
+    
         # Zero the gradients
         #print('Zero the gradients')
         optimizer.zero_grad()  # zero the gradients before running the backward pass
@@ -210,6 +228,7 @@ print('Finished Training')
 
 show_plot(counter, loss_history)
 
+
 #import pdb
 #pdb.set_trace()
 
@@ -217,9 +236,36 @@ show_plot(counter, loss_history)
 ### Save trained model
 model_path = './trained_model_adam_cosine_epoch500_bs256_group_split_dataset.pth'
 torch.save(model.state_dict(), model_path)
+'''
+
 
 #import pdb
 #pdb.set_trace()
+
+
+### Convert .pth model to Torch Script .pt file
+# load the trained .pth model
+tmp_model_path = '/home/liangyuwei/dataset_backup/groups_split_current_20200517/trained_model_adam_euclidean_epoch500_bs128_group_split_dataset.pth'#model_path
+tmp_net = Net_for_output()
+print('Load trained model..')
+tmp_net.load_state_dict(torch.load(tmp_model_path, map_location=torch.device('cpu')))
+#tmp_net.to(device)
+# set a random example
+example = torch.rand(1, 4800)
+# generate ScriptModule via tracing (or annotation...)
+traced_script_module = torch.jit.trace(tmp_net, example) # generate a torch.jit.ScriptModule via tracing
+# can now be evaluated
+print('Evaluate the ScriptModule:')
+output = traced_script_module(torch.ones(1, 4800))
+import pdb
+pdb.set_trace()
+# serialize ScriptModule to a file
+traced_script_module.save("traced_model_adam_euclidean_epoch500_bs128_group_split_dataset.pt")
+
+import pdb
+pdb.set_trace()
+
+
 
 ### Test the network on test data
 net = Net()
