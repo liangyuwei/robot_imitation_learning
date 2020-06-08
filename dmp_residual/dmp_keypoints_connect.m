@@ -32,7 +32,7 @@ end
 % extract target group's data
 target_group_name = 'fengren';
 num_imitation_data = 1; %eval(['group_name_dict.', group_name]) - 1; % fengren: eliminate the first bad sample
-num_resampled_points = 100;
+num_resampled_points = 50; %100;
 
 l_wrist_pos_resampled = zeros(3, num_resampled_points);
 l_elbow_pos_resampled = zeros(3, num_resampled_points);
@@ -191,26 +191,26 @@ subplot(3, 1, 3); plot(time_range, f_seq(3, :)); grid on;
 % store the result
 % save([target_group_name, '_tmp.mat'], 'f_seq', 'pos_and_glove_id', 'quat_id', 'time_range', 'pass_time');
 
-% h5create(file_name, ['/', group_name, '/keypoint_list'], size(kp_list));
-% h5write(file_name, ['/', group_name, '/keypoint_list'], kp_list);
-% 
-% h5create(file_name, ['/', group_name, '/pos_and_glove_id'], size(pos_and_glove_id));
-% h5write(file_name, ['/', group_name, '/pos_and_glove_id'], pos_and_glove_id);
-% 
-% h5create(file_name, ['/', group_name, '/quat_id'], size(quat_id));
-% h5write(file_name, ['/', group_name, '/quat_id'], quat_id);
-% 
-% h5create(file_name, ['/', group_name, '/time_range'], size(time_range));
-% h5write(file_name, ['/', group_name, '/time_range'], time_range); % for locating keypoints' time
-% 
-% h5create(file_name, ['/', group_name, '/pass_time'], size([0, pass_time, 1]));
-% h5write(file_name, ['/', group_name, '/pass_time'], [0, pass_time, 1]); % keypoints' time
-% 
-% h5create(file_name, ['/', group_name, '/pass_points'], size(pass_points));
-% h5write(file_name, ['/', group_name, '/pass_points'], pass_points); % initial keypoints' values
-% 
-% h5create(file_name, ['/', group_name, '/f_seq'], size(f_seq));
-% h5write(file_name, ['/', group_name, '/f_seq'], f_seq); % residual
+h5create(file_name, ['/', group_name, '/keypoint_list'], size(kp_list));
+h5write(file_name, ['/', group_name, '/keypoint_list'], kp_list);
+
+h5create(file_name, ['/', group_name, '/pos_and_glove_id'], size(pos_and_glove_id));
+h5write(file_name, ['/', group_name, '/pos_and_glove_id'], pos_and_glove_id);
+
+h5create(file_name, ['/', group_name, '/quat_id'], size(quat_id));
+h5write(file_name, ['/', group_name, '/quat_id'], quat_id);
+
+h5create(file_name, ['/', group_name, '/time_range'], size(time_range));
+h5write(file_name, ['/', group_name, '/time_range'], time_range); % for locating keypoints' time
+
+h5create(file_name, ['/', group_name, '/pass_time'], size([0, pass_time, 1]));
+h5write(file_name, ['/', group_name, '/pass_time'], [0, pass_time, 1]); % keypoints' time
+
+h5create(file_name, ['/', group_name, '/pass_points'], size(pass_points));
+h5write(file_name, ['/', group_name, '/pass_points'], pass_points); % initial keypoints' values
+
+h5create(file_name, ['/', group_name, '/f_seq'], size(f_seq));
+h5write(file_name, ['/', group_name, '/f_seq'], f_seq); % residual
 
 
 % get a noisy sample

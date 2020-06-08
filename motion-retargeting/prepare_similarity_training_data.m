@@ -1,6 +1,6 @@
 %% Build datasets
 
-num_resampled_points = 100;
+num_resampled_points = 50; %100;
 
 %% Load data from mocap data file
 %
@@ -22,7 +22,7 @@ end
 group_name_list = fieldnames(group_name_dict); % cell of group names
 
 % iterate and apply transformations
-for gp_id = 5%1 : size(group_name_list, 1)
+for gp_id = 1 : size(group_name_list, 1)
     num_imitation_data = eval(['group_name_dict.', group_name_list{gp_id}]);
 %     original_trajs = [];
     similarity_preserved_trajs = [];
@@ -99,6 +99,8 @@ for gp_id = 5%1 : size(group_name_list, 1)
         
         
         % store the resampled_normalized_flattened version of the original trajectory in h5 file    
+        % %%%%%% If a dataset already exists, use h5py_delete_datasets/del_using_h5py.py to delete it!!! %%%%%%
+        % %%%%%% MATLAB's h5py doesn't have the functionality to overwrite or delete an existing dataset, only h5py or c++ API can!!! %%%%%
         h5create(file_name, ['/', group_name, '/resampled_normalized_flattened_oritraj'], size(original_traj_resampled));
         h5write(file_name, ['/', group_name, '/resampled_normalized_flattened_oritraj'], original_traj_resampled);
         
