@@ -121,7 +121,7 @@ class Net_for_output(nn.Module):
     def __init__(self):
         super(Net_for_output, self).__init__()
         # N is batch size, D_in is input dimension, D_out is output dimension (dim=2 means 2-class classification)
-        D_in, H_1, H_2, D_out = 2400, 1200, 500, 100 #4800, 2400, 1000, 100
+        D_in, H_1, H_2, D_out = 2400, 3600, 1600, 100 #4800, 2400, 1000, 100
         self.linear1 = nn.Linear(D_in, H_1)
         self.linear2 = nn.Linear(H_1, H_2)
         self.linear3 = nn.Linear(H_2, D_out)
@@ -140,7 +140,7 @@ print(device)
 
 ### Load datasets and convert to PyTorch Tensor(using torch.tensor())
 # load data from h5 file
-file_name = 'test_imi_data_YuMi_training_dataset.h5'
+file_name = 'test_imi_data_YuMi_training_dataset-50datapoints.h5'
 f = h5py.File(file_name, 'r')
 x_train = f['x_train'][:].transpose()
 y_train = f['y_train'][:].transpose()
@@ -233,7 +233,7 @@ show_plot(counter, loss_history)
 
 
 ### Save trained model
-model_path = './trained_model_adam_euclidean_epoch500_bs256_group_split_dataset-50p.pth'
+model_path = './trained_model_adam_euclidean_epoch500_bs256_group_split_dataset_50p.pth'
 torch.save(model.state_dict(), model_path)
 
 
