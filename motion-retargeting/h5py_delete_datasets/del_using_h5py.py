@@ -7,7 +7,6 @@ if __name__ == '__main__':
 
 
     ### For generating new trainging datasets
-    '''
     del_dataset_list = ['resampled_normalized_flattened_oritraj']
 
     group_name_list = []
@@ -23,9 +22,10 @@ if __name__ == '__main__':
                     del f[group_name+'/'+del_dataset]
 
     print('Deletion done.')
-    '''
+
 
     ### For generating new f_seq and others
+    '''
     # Preparations
     group_name = 'fengren_1'
     del_dataset_list = ['keypoint_list',
@@ -43,4 +43,4 @@ if __name__ == '__main__':
                 del f[group_name+'/'+del_dataset]
 
     print('Deletion done.')
-
+    '''

@@ -114,7 +114,7 @@ for gp_id = 1 : size(group_name_list, 1)
 
         % rotation (on pos data)
         max_angle = 315 * pi/180; min_angle = 45 * pi/180;
-        num_rot_samples = 64;
+        num_rot_samples = 125; %64; %4^3 %5^3
         rand_euler_angles = rand(num_rot_samples, 3) * (max_angle - min_angle) + min_angle;
         for n = 1 : num_rot_samples
             % initialize
@@ -144,7 +144,7 @@ for gp_id = 1 : size(group_name_list, 1)
         bnd_wrist = (max(tmp_traj(wrist_id, :), [], 2) - min(tmp_traj(wrist_id, :), [], 2)) / 50; % 1/50 of the range
         bnd_elbow = (max(tmp_traj(elbow_id, :), [], 2) - min(tmp_traj(elbow_id, :), [], 2)) / 50;
         bnd_glove = (max(tmp_traj(glove_id, :), [], 2) - min(tmp_traj(glove_id, :), [], 2)) / 100; %5; % +-5 degree range
-        for n = 1 : 50
+        for n = 1 : 60
             % initialize
             tmp_traj = original_traj;
             % use uniformly distributed pseudorandom numbers
@@ -176,7 +176,7 @@ for gp_id = 1 : size(group_name_list, 1)
         % keypoint local shift (only on pos data for now; what about orientation ???)
         kp_id_list = extract_keypoints_func(l_wrist_pos, l_wrist_ori, l_elbow_pos, r_wrist_pos, r_wrist_ori, r_elbow_pos, l_glove_angle, r_glove_angle);
         num_kps = size(kp_id_list,2);
-        for n = 1 : 50 
+        for n = 1 : 60 
             % initialize
             tmp_traj = original_traj;
             % display for debug - part 1
@@ -250,9 +250,9 @@ info = h5info(new_file_name);
 num_groups = size(info.Groups, 1);
 
 % settings
-num_intra_group_similar = 100;
-num_intra_group_dissimilar = 50;
-num_inter_group_dissimilar = 50;
+num_intra_group_similar = 160;%100;
+num_intra_group_dissimilar = 80;%50;
+num_inter_group_dissimilar = 80;%50;
 min_num_similar = Inf; min_num_dissimilar = Inf;
 for n = 1:num_groups
     % obtain the smallest number 

@@ -103,12 +103,14 @@ class Net(nn.Module):
         D_in, H_1, H_2, D_out = 2400, 1200, 500, 100 #4800, 2400, 1000, 100
         self.linear1 = nn.Linear(D_in, H_1)
         self.linear2 = nn.Linear(H_1, H_2)
-        self.linear3 = nn.Linear(H_2, D_out)
+        self.linear4 = nn.Linear(H_3, D_out)
+        #self.dropout = nn.Dropout(p=0.5)
 
     def forward_once(self, x):
-        h1_relu = F.relu(self.linear1(x))
-        h2_relu = F.relu(self.linear2(h1_relu))
-        y_pred = self.linear3(h2_relu)
+        h1_drop = F.relu(self.linear1(x))
+        h2_drop = F.relu(self.linear2(h1_drop))
+        h3_drop = F.relu(self.linear3(h2_drop))
+        y_pred = self.linear4(h3_drop)
         return y_pred
 
     def forward(self, input1, input2):
@@ -140,7 +142,7 @@ print(device)
 
 ### Load datasets and convert to PyTorch Tensor(using torch.tensor())
 # load data from h5 file
-file_name = 'test_imi_data_YuMi_training_dataset.h5'
+file_name = 'test_imi_data_YuMi_training_dataset-50datapoints.h5'
 f = h5py.File(file_name, 'r')
 x_train = f['x_train'][:].transpose()
 y_train = f['y_train'][:].transpose()
