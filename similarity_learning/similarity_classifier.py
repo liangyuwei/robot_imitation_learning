@@ -32,8 +32,8 @@ def calc_rate(dist_results, ground_truths, threshold):
     num_data = dist_results.shape[0]
     # classify according to threshold
     for i in range(num_data):
-        if(dist_results[i] < threshold): # for cosine distance
-        #if (dist_results[i] > threshold): # for euclidean distance
+        #if(dist_results[i] < threshold): # for cosine distance
+        if (dist_results[i] > threshold): # for euclidean distance
             # distance large enough to be classified as dissimilar (negative class)
             if (int(ground_truths[i]) == 1):
                 # actually positive class
@@ -100,15 +100,17 @@ class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         # N is batch size, D_in is input dimension, D_out is output dimension (dim=2 means 2-class classification)
-        D_in, H_1, H_2, D_out = 2400, 1200, 500, 100 #4800, 2400, 1000, 100
+        D_in, H_1, H_2, D_out = 2400, 800, 400, 100 #4800, 2400, 1000, 100
         self.linear1 = nn.Linear(D_in, H_1)
         self.linear2 = nn.Linear(H_1, H_2)
         self.linear3 = nn.Linear(H_2, D_out)
+        #self.dropout = nn.Dropout(p=0.5)
 
     def forward_once(self, x):
-        h1_relu = F.relu(self.linear1(x))
-        h2_relu = F.relu(self.linear2(h1_relu))
-        y_pred = self.linear3(h2_relu)
+        h1_drop = F.relu(self.linear1(x))
+        h2_drop = F.relu(self.linear2(h1_drop))
+        #h3_drop = F.relu(self.linear3(h2_drop))
+        y_pred = self.linear3(h2_drop)
         return y_pred
 
     def forward(self, input1, input2):
@@ -158,7 +160,8 @@ x_train1, x_train2, y_train, x_test1, x_test2, y_test = map(
     torch.tensor, (x_train1, x_train2, y_train, x_test1, x_test2, y_test)
 )
 # construct Dataset and DataLoader to automatically handle minibatches
-bs = 256
+bs = 512
+print('Batch size: ' + str(bs))
 train_ds = TensorDataset(x_train1, x_train2, y_train)
 train_dl = DataLoader(train_ds, batch_size=bs, shuffle=True)
 train_eval_dl = DataLoader(train_ds, batch_size=bs*2)
@@ -177,16 +180,22 @@ criterion = ContrastiveLoss() #nn.CrossEntropyLoss()
 # optimization algorithms
 learning_rate = 1e-4
 #optimizer = optim.SGD(model.parameters(), lr=learning_rate)#, momentum=0.9) #torch.optim.Adam(model.parameters(), lr=learning_rate)
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.1) # add L2 norm for regularization
+
 
 ### Training
 epochs = 500
+print('Train for ' + str(epochs) + ' epochs')
 counter = []
 loss_history = []
 iteration_number = 0
 for epoch in range(epochs):
+    # statistics
     running_loss = 0.0
     print('Epoch ' + str(epoch+1) + ' / ' + str(epochs))
+
+    # always call .train() before training, for layers such as BatchNorm and Dropout to work properly
+    model.train()
     for i, data in enumerate(train_dl, 0):
         #print('batch ' + str(i+1))
         # get the inputs and labels
@@ -276,6 +285,8 @@ labels_all = np.array([]) # for test set
 train_dist_result_all = np.array([])
 train_labels_all = np.array([]) # for train set
 print('Evaluating test set..')
+# always call .eval() before evaluation, for layers such as BatchNorm and Dropout to work properly
+net.eval()
 with torch.no_grad():
     # on test set
     for data in test_dl:
@@ -283,8 +294,10 @@ with torch.no_grad():
         xb1, xb2, yb = data[0].to(device, dtype=torch.float), data[1].to(device, dtype=torch.float), data[2].to(device, dtype=torch.long)
         # evaluate
         output1, output2 = net(xb1, xb2) # output features N x 100
-        #dist_result = F.pairwise_distance(output1, output2) # torch.Size([N]) to array?
-        dist_result = F.cosine_similarity(output1, output2) # torch.Size([N]) to array?
+        # using Euclidean distance
+        dist_result = F.pairwise_distance(output1, output2) # torch.Size([N]) to array?
+        # using Cosine distance
+        #dist_result = F.cosine_similarity(output1, output2) # torch.Size([N]) to array?
         # store the result
         dist_result_cpu = dist_result.cpu() # if using gpu, should copy the tensor to host memory first
         dist_result_all = np.concatenate((dist_result_all, dist_result_cpu.numpy())) # .concatenate(), deep copy
@@ -297,8 +310,10 @@ with torch.no_grad():
         xb1, xb2, yb = data[0].to(device, dtype=torch.float), data[1].to(device, dtype=torch.float), data[2].to(device, dtype=torch.long)
         # evaluate
         output1, output2 = net(xb1, xb2) # output features N x 100
-        #dist_result = F.pairwise_distance(output1, output2) # torch.Size([N]) to array?
-        dist_result = F.cosine_similarity(output1, output2) # torch.Size([N]) to array?
+        # using Euclidean distance
+        dist_result = F.pairwise_distance(output1, output2) # torch.Size([N]) to array?
+        # using Cosine distance
+        #dist_result = F.cosine_similarity(output1, output2) # torch.Size([N]) to array?
         # store the result
         dist_result_cpu = dist_result.cpu() # if using gpu, should copy the tensor to host memory first
         train_dist_result_all = np.concatenate((train_dist_result_all, dist_result_cpu.numpy())) # .concatenate(), deep copy
