@@ -111,6 +111,7 @@ class Net(nn.Module):
         h2_drop = F.relu(self.linear2(h1_drop))
         #h3_drop = F.relu(self.linear3(h2_drop))
         y_pred = self.linear3(h2_drop)
+
         return y_pred
 
     def forward(self, input1, input2):
