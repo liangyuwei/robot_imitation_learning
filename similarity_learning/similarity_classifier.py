@@ -80,6 +80,45 @@ class ContrastiveLoss(torch.nn.Module):
 
         # 1 - Euclidean_distance (for similar pair, euclidean_distance better be small)
         euclidean_distance = F.pairwise_distance(output1, output2)
+        # adaptively set margin
+        '''
+        with torch.no_grad():
+            best_acc = -1
+            best_margin = 0
+            num_data = euclidean_distance.shape[0]
+            # iterate over different threshold settings
+            for threshold in euclidean_distance:
+                TP = 0
+                TN = 0
+                FP = 0
+                FN = 0
+                # classify according to threshold
+                for i in range(num_data):
+                    # if(dist_results[i] < threshold): # for cosine distance
+                    if (euclidean_distance[i] > threshold):  # for euclidean distance
+                        # distance large enough to be classified as dissimilar (negative class)
+                        if (int(label[i]) == 1):
+                            # actually positive class
+                            FN += 1
+                        else:
+                            # actually negative class
+                            TN += 1
+                    else:
+                        # distance smaller than or equal to threshold, classified as similar (positive class)
+                        if (int(label[i]) == 1):
+                            # actually positive class
+                            TP += 1
+                        else:
+                            # actually negative class
+                            FP += 1
+                # decide if the best
+                acc = float(TP + TN) / float(num_data)
+                if acc > best_acc:
+                    best_acc = acc
+                    best_margin = threshold
+        # assign for later usage
+        self.margin = best_margin.detach().cpu().numpy().tolist()
+        '''
         # Contrastive loss
         loss_contrastive = torch.mean((label) * torch.pow(euclidean_distance, 2) + \
         (1 - label) * torch.pow(torch.clamp(self.margin - euclidean_distance, min=0.0), 2))
@@ -100,17 +139,18 @@ class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         # N is batch size, D_in is input dimension, D_out is output dimension (dim=2 means 2-class classification)
-        D_in, H_1, H_2, D_out = 2400, 800, 400, 100 #4800, 2400, 1000, 100
+        D_in, H_1, D_out = 2400, 400, 100#200, 100 #4800, 2400, 1000, 100
         self.linear1 = nn.Linear(D_in, H_1)
-        self.linear2 = nn.Linear(H_1, H_2)
-        self.linear3 = nn.Linear(H_2, D_out)
-        #self.dropout = nn.Dropout(p=0.5)
+        self.linear2 = nn.Linear(H_1, D_out)
+        #self.linear3 = nn.Linear(H_2, D_out)
+        #self.linear4 = nn.Linear(H_3, D_out)
+        self.dropout = nn.Dropout(p=0.5)
 
     def forward_once(self, x):
-        h1_drop = F.relu(self.linear1(x))
-        h2_drop = F.relu(self.linear2(h1_drop))
-        #h3_drop = F.relu(self.linear3(h2_drop))
-        y_pred = self.linear3(h2_drop)
+        h1_drop = self.dropout(F.relu(self.linear1(x)))
+        #h2_drop = self.dropout(F.relu(self.linear2(h1_drop)))
+        #h3_drop = self.dropout(F.relu(self.linear3(h2_drop)))
+        y_pred = F.normalize(self.linear2(h1_drop))
 
         return y_pred
 
@@ -124,17 +164,20 @@ class Net_for_output(nn.Module):
     def __init__(self):
         super(Net_for_output, self).__init__()
         # N is batch size, D_in is input dimension, D_out is output dimension (dim=2 means 2-class classification)
-        D_in, H_1, H_2, D_out = 2400, 3600, 1600, 100 #4800, 2400, 1000, 100
+        D_in, H_1, D_out = 2400, 400, 100  # 200, 100 #4800, 2400, 1000, 100
         self.linear1 = nn.Linear(D_in, H_1)
-        self.linear2 = nn.Linear(H_1, H_2)
-        self.linear3 = nn.Linear(H_2, D_out)
+        self.linear2 = nn.Linear(H_1, D_out)
+        # self.linear3 = nn.Linear(H_2, D_out)
+        # self.linear4 = nn.Linear(H_3, D_out)
+        self.dropout = nn.Dropout(p=0.5)
 
     def forward(self, x):
-        h1_relu = F.relu(self.linear1(x))
-        h2_relu = F.relu(self.linear2(h1_relu))
-        y_pred = self.linear3(h2_relu)
-        return y_pred
+        h1_drop = self.dropout(F.relu(self.linear1(x)))
+        # h2_drop = self.dropout(F.relu(self.linear2(h1_drop)))
+        # h3_drop = self.dropout(F.relu(self.linear3(h2_drop)))
+        y_pred = F.normalize(self.linear2(h1_drop))
 
+        return y_pred
 
 
 ### Preparations
@@ -161,7 +204,7 @@ x_train1, x_train2, y_train, x_test1, x_test2, y_test = map(
     torch.tensor, (x_train1, x_train2, y_train, x_test1, x_test2, y_test)
 )
 # construct Dataset and DataLoader to automatically handle minibatches
-bs = 512
+bs = 1024
 print('Batch size: ' + str(bs))
 train_ds = TensorDataset(x_train1, x_train2, y_train)
 train_dl = DataLoader(train_ds, batch_size=bs, shuffle=True)
@@ -169,7 +212,7 @@ train_eval_dl = DataLoader(train_ds, batch_size=bs*2)
 test_ds = TensorDataset(x_test1, x_test2, y_test)
 test_dl = DataLoader(test_ds, batch_size=bs*2)
 
-
+'''
 ### Build networks
 # nn model
 print('Input dim: ' + str(x_train.shape[1]))
@@ -180,12 +223,12 @@ model.to(device) # for GPU computing
 criterion = ContrastiveLoss() #nn.CrossEntropyLoss()
 # optimization algorithms
 learning_rate = 1e-4
-#optimizer = optim.SGD(model.parameters(), lr=learning_rate)#, momentum=0.9) #torch.optim.Adam(model.parameters(), lr=learning_rate)
+#optimizer = optim.SGD(model.parameters(), lr=learning_rate, weight_decay=0.1)#, momentum=0.9) #torch.optim.Adam(model.parameters(), lr=learning_rate)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.1) # add L2 norm for regularization
 
 
 ### Training
-epochs = 500
+epochs = 2000
 print('Train for ' + str(epochs) + ' epochs')
 counter = []
 loss_history = []
@@ -237,45 +280,40 @@ print('Finished Training')
 
 show_plot(counter, loss_history)
 
-
-#import pdb
-#pdb.set_trace()
-
-
 ### Save trained model
-model_path = './trained_model_adam_euclidean_epoch500_bs256_group_split_dataset_50p.pth'
+model_path = './trained_model_adam_euclidean_epoch2000_bs1024_group_split_dataset_50p.pth'
+#'./trained_model_adam_euclidean_epoch' + str(epochs) + '_bs' + str(bs) + '_group_split_dataset_50p.pth'
 torch.save(model.state_dict(), model_path)
 
+'''
 
 #import pdb
 #pdb.set_trace()
 
 
 ### Convert .pth model to Torch Script .pt file
-'''
 # load the trained .pth model
-tmp_model_path = '/home/liangyuwei/dataset_backup/groups_split_current_20200517/trained_model_adam_euclidean_epoch500_bs128_group_split_dataset.pth'#model_path
+tmp_model_path = './trained_model_adam_euclidean_epoch2000_bs1024_group_split_dataset_50p.pth'#model_path
 tmp_net = Net_for_output()
 print('Load trained model..')
 tmp_net.load_state_dict(torch.load(tmp_model_path, map_location=torch.device('cpu')))
+tmp_net.eval()
 #tmp_net.to(device)
 # set a random example
-example = torch.rand(1, 4800)
+example = torch.rand(1, 2400) #4800)
 # generate ScriptModule via tracing (or annotation...)
 traced_script_module = torch.jit.trace(tmp_net, example) # generate a torch.jit.ScriptModule via tracing
 # can now be evaluated
 print('Evaluate the ScriptModule:')
-output = traced_script_module(torch.ones(1, 4800))
-import pdb
-pdb.set_trace()
+output = traced_script_module(torch.ones(1, 2400))#4800))
 # serialize ScriptModule to a file
-traced_script_module.save("traced_model_adam_euclidean_epoch500_bs128_group_split_dataset.pt")
+traced_script_module.save("trained_model_adam_euclidean_epoch2000_bs1024_group_split_dataset_50p.pt")
 
-import pdb
-pdb.set_trace()
+#import pdb
+#pdb.set_trace()
+
+
 '''
-
-
 ### Test the network on test data
 net = Net()
 print('Load trained model..')
@@ -407,3 +445,4 @@ plt.grid()
 plt.show()
 
 
+'''
