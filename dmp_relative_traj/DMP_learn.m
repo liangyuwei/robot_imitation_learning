@@ -3,7 +3,6 @@
 
 % addpath('./m_fcts/');
 
-
 %% Load demonstration
 file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
 group_name = 'fengren_1';
@@ -18,26 +17,41 @@ l_elbow_wrist_pos = l_elbow_pos - l_wrist_pos;
 r_elbow_wrist_pos = r_elbow_pos - r_wrist_pos;
 
 
-%% Parameters
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-num_datapoints = 50;
-model.nbStates = 8; %5; %Number of activation functions (i.e., number of states in the GMM)
-model.nbVar = 1; %Number of variables for the radial basis functions [s] (decay term)
-model.nbVarPos = 3; %2; %Number of motion variables [x1,x2] 
-model.kP = 50; %Stiffness gain
-model.kV = (2*model.kP)^.5; %Damping gain (with ideal underdamped damping ratio)
-model.alpha = 1.0; %Decay factor
-model.dt = 1/num_datapoints; %Duration of time step
-nbData = num_datapoints; %200; %Length of each trajectory
-nbSamples = 1; %Number of demonstrations
-L = [eye(model.nbVarPos)*model.kP, eye(model.nbVarPos)*model.kV]; %Feedback term
+%% DMP settings
+num_datapoints = 50; % resampling inside DMP_learn.m !!!
+nbStates = 64; %Number of activation functions (i.e., number of states in the GMM)
+nbVar = 1; %Number of variables for the radial basis functions [s] (decay term)
+nbVarPos = 3; %2; %Number of motion variables [x1,x2] 
+kP = 50; %Stiffness gain
+kV = (2*kP)^.5; %Damping gain (with ideal underdamped damping ratio)
+alpha = 1.0; %Decay factor
+dt = 1/num_datapoints; %Duration of time step
+nbSamples = 1; % Number of samples (of the same movement)
+display = true; % display the reproduction to see the performance
+
+%% Construct traj_dataset
+% relative position between left and right wrists
+traj_dataset{1} = lr_wrist_pos'; % should be of size Length x DOF!!!
+[Mu_lrw, Sigma_lrw, Weights_lrw] = DMP_learn_weights(traj_dataset, num_datapoints, ...
+                                                     nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, display);
 
 
-%% Load handwriting data
+% relative position between elbow and wrist (Left)
+traj_dataset{1} = l_elbow_wrist_pos'; % should be of size Length x DOF!!!
+[Mu_lew, Sigma_lew, Weights_lew] = DMP_learn_weights(traj_dataset, num_datapoints, ...
+                                                     nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, display);
+
+% relative position between elbow and wrist (Right)
+traj_dataset{1} = r_elbow_wrist_pos'; % should be of size Length x DOF!!!
+[Mu_rew, Sigma_rew, Weights_rew] = DMP_learn_weights(traj_dataset, num_datapoints, ...
+                                                     nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, display);
+
+
+
+%% Load imitation data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 posId=[1:model.nbVarPos]; velId=[model.nbVarPos+1:2*model.nbVarPos]; accId=[2*model.nbVarPos+1:3*model.nbVarPos]; 
 % demos=[];
-% load('data/2Dletters/G.mat');
 sIn(1) = 1; %Initialization of decay term
 for t=2:nbData
 	sIn(t) = sIn(t-1) - model.alpha * sIn(t-1) * model.dt; %Update of decay term (ds/dt=-alpha s)
@@ -61,6 +75,7 @@ for n=1:nbSamples
             ./ repmat(sIn,model.nbVarPos,1) ]; %./ repmat(xTar-xStart, 1, nbData)];
 end
 xTar = new_goal;  % modified by LYW
+
 
 %% Setting of the basis functions and reproduction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -119,88 +134,3 @@ end
 save learned_DMP_params.mat DMP_params
 
 
-%% Plots
-%{
-% plot DataDMP(force profile) and currF(retrieved force)
-trajId = 1;
-figure;
-plot3(0, 0, 0, 'ro'); hold on; grid on;
-xlabel('x'); ylabel('y'); zlabel('z');
-title(['Imi Traj ', num2str(trajId)]);
-for i = trajId : trajId%nbSamples
-    for j = 1 : nbData
-        plot3(DataDMP(1, (i-1)*nbData+j), DataDMP(2, (i-1)*nbData+j), DataDMP(3, (i-1)*nbData+j), 'b.');
-        pause(0.01);
-    end
-end
-
-% plot velocity component of the imitation trajectory
-figure;
-plot3(0, 0, 0, 'ro'); hold on; grid on;
-xlabel('x'); ylabel('y'); zlabel('z');
-title('Vel component of imitation trajectory');
-plot3(s(n).Data(7, :), s(n).Data(8, :), s(n).Data(9, :), 'b-');
-
-% plot acceleration component of the imitation trajectory
-figure;
-plot3(0, 0, 0, 'ro'); hold on; grid on;
-xlabel('x'); ylabel('y'); zlabel('z');
-title('Acc component of imitation trajectory');
-plot3(s(n).Data(13, :), s(n).Data(14, :), s(n).Data(15, :), 'b-');
-
-% DMP
-figure;
-plot3(0, 0, 0, 'ro'); hold on; grid on;
-xlabel('x'); ylabel('y'); zlabel('z');
-title('CurrF');
-plot3(currF(1, 1), currF(2, 1), currF(3, 1), 'go');
-plot3(currF(1, end), currF(2, end), currF(3, end), 'ro');
-for j = 2 : nbData-1
-    plot3(currF(1, j), currF(2, j), currF(3, j), 'b.');
-    pause(0.01);
-end
-% plot Data
-figure;
-plot3(Data(1, :), Data(2, :), Data(3, :), 'b.'); grid on;
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-figure('PaperPosition',[0 0 16 4],'position',[10,10,1300,500],'color',[1 1 1]); 
-xx = round(linspace(1,64,model.nbStates));
-clrmap = colormap('jet')*0.5;
-clrmap = min(clrmap(xx,:),.9);
-
-%Spatial plot
-axes('Position',[0 0 .2 1]); hold on; axis off;
-plot(Data(1,:),Data(2,:),'.','markersize',8,'color',[.7 .7 .7]);
-plot(r(1).Data(1,:),r(1).Data(2,:),'-','linewidth',3,'color',[.8 0 0]);
-axis equal; axis square;  
-
-%Timeline plot of the nonlinear perturbing force
-axes('Position',[.25 .58 .7 .4]); hold on; 
-for n=1:nbSamples
-	plot(sIn, DataDMP(1,(n-1)*nbData+1:n*nbData), '-','linewidth',2,'color',[.7 .7 .7]);
-end
-[~,id] = max(H);
-for i=1:model.nbStates
-	plot(sIn(id==i), repmat(MuF(1,i),1,sum(id==i)), '-','linewidth',6,'color',min(clrmap(i,:)+0.5,1));
-end
-plot(sIn, currF(1,:), '-','linewidth',2,'color',[.8 0 0]);
-axis([min(sIn) max(sIn) min(DataDMP(1,:)) max(DataDMP(1,:))]);
-ylabel('$F_1$','fontsize',16,'interpreter','latex');
-view(180,-90);
-
-%Timeline plot of the basis functions activation
-axes('Position',[.25 .12 .7 .4]); hold on; 
-for i=1:model.nbStates
-	patch([sIn(1), sIn, sIn(end)], [0, H(i,:), 0], min(clrmap(i,:)+0.5,1), 'EdgeColor', 'none', 'facealpha', .4);
-	plot(sIn, H(i,:), 'linewidth', 2, 'color', min(clrmap(i,:)+0.2,1));
-end
-axis([min(sIn) max(sIn) 0 1]);
-xlabel('$s$','fontsize',16,'interpreter','latex'); 
-ylabel('$h$','fontsize',16,'interpreter','latex');
-view(180,-90);
-%}
-%print('-dpng','graphs/demo_DMP01.png');
-%pause;
-%close all;
