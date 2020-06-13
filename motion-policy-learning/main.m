@@ -467,7 +467,7 @@ for c = 1 : length(wrist_traj_dataset_aligned)
 end
 %}
 
-%{
+%
 %% for learning DMP parameters
 tic; %wrist_traj_dataset_aligned(1, 1) --------------\\
 new_wrist_traj_l = perform_DMP('l_approach_2', {wrist_traj_dataset{1, 1}(1:n_first_l(1), :)}, nbStates, nbVar, nbVarPos, kP_l, kV_l, alpha, dt, nbData, nbSamples, new_goal_l, new_start_l);

@@ -1,4 +1,4 @@
-function [Mu, Sigma, Weights] = DMP_learn_weights(traj_dataset, num_datapoints, nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, display)
+function [Mu, Sigma, Weights] = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, display)
 %% This function trains a DMP on the imitation trajectory
 % addpath('./m_fcts/');
 % input trajectory should be of size Length x DOF
@@ -13,8 +13,8 @@ model.nbVarPos = nbVarPos;%3; %2; %Number of motion variables [x1,x2]
 model.kP = kP;%50; %Stiffness gain
 model.kV = kV; %(2*model.kP)^.5; %Damping gain (with ideal underdamped damping ratio)
 model.alpha = alpha; %1.0; %Decay factor
-model.dt = 1/num_datapoints; %Duration of time step
-nbData = num_datapoints; %200; %Length of each trajectory
+model.dt = 0.01; %1/nbData; %Duration of time step
+% nbData = num_datapoints; %200; %Length of each trajectory
 % nbSamples = nbSamples; %1; %Number of demonstrations
 L = [eye(model.nbVarPos)*model.kP, eye(model.nbVarPos)*model.kV]; %Feedback term
 
@@ -27,6 +27,8 @@ sIn(1) = 1; %Initialization of decay term
 for t=2:nbData
 	sIn(t) = sIn(t-1) - model.alpha * sIn(t-1) * model.dt; %Update of decay term (ds/dt=-alpha s)
 end
+% decay term, wish it to be in consistent with the time_range on which pass_time is specified..   
+% sIn = linspace(1, 0, nbData);
 % xTar = new_goal; %demos{1}.pos(:,end);
 Data=[];
 DataDMP=[];
@@ -50,10 +52,10 @@ end
 
 %% Setting of the basis functions and reproduction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-model = init_GMM_timeBased(sIn, model);
+% model = init_GMM_timeBased(sIn, model);
 %model = init_GMM_logBased(sIn, model); %Log-spread in s <-> equal spread in t
-%model = init_GMM_kmeans(sIn, model);
-
+model = init_GMM_kmeans(sIn, model);
+% model = EM_GMM(sIn, model);
 %Set Sigma as diagonal matrices (i.e., inpedendent systems synchronized by the s variable)
 for i=1:model.nbStates
 	model.Sigma(:,:,i) = 2E-3; %Setting of covariance
@@ -90,7 +92,8 @@ Weights = MuF;
 if display
     %Motion retrieval with DMP
     currF = MuF * H;
-    x = Data(1:model.nbVarPos,1); % the original start
+    x = traj_dataset{n}(1, :)'; % the original start
+    xTar = traj_dataset{n}(end, :)';
     dx = zeros(model.nbVarPos,1); % initial velocity
     for t=1:nbData
         %Compute acceleration, velocity and position
