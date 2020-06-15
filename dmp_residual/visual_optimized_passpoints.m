@@ -19,7 +19,7 @@ pass_time = h5read(filename1, ['/', groupname, '/pass_time']);
 pass_time = pass_time(2:end-1); % eliminate the start and final point for ease of modeling h_seq
 
 %% Load the optimized pass points
-filename2 = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity-2.h5';
+filename2 = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity-jacobians-3.h5';
 
 pass_points_new = h5read(filename2, ['/', groupname, '/passpoint_traj_1']);
 
@@ -79,6 +79,7 @@ similarity_cost_history = h5read(filename2, ['/', groupname, '/similarity_cost_h
 smoothness_cost_history = h5read(filename2, ['/', groupname, '/smoothness_cost_history']);
 col_cost_history = h5read(filename2, ['/', groupname, '/col_cost_history']);
 pos_limit_cost_history = h5read(filename2, ['/', groupname, '/pos_limit_cost_history']);
+jacobian_history = h5read(filename2, ['/', groupname, '/jacobian_history']);
 
 figure;
 plot((1:size(wrist_pos_cost_history, 2))*10, sum(wrist_pos_cost_history), 'b-'); hold on; grid on;
@@ -109,6 +110,25 @@ plot((1:size(similarity_cost_history, 2))*10, similarity_cost_history, 'b-'); ho
 plot((1:size(finger_cost_history, 2))*10, similarity_cost_history, 'bo');
 title('History of similarity cost');
 xlabel('Iterations'); ylabel('Cost Value'); 
+
+% pre-processing before displaying jacobian
+passpoint_dof = size(jacobian_history, 1);
+num_records = size(jacobian_history, 3);
+num_passpoints = size(jacobian_history, 2);
+jacobian_norm = zeros(num_passpoints, num_records);
+for n = 1 : num_records
+    for p = 1 : num_passpoints
+        jacobian_norm(p, n) = norm(jacobian_history(:, p, n));
+    end
+end
+figure;
+for p = 1 : num_passpoints
+    plot((1:num_records)*10, jacobian_norm(p, :), 'b-'); hold on; grid on;
+    plot((1:num_records)*10, jacobian_norm(p, :), 'bo');
+end
+title('History of Jacobians');
+xlabel('Iterations'); ylabel('Gradients magnitude'); 
+
 
 
 
