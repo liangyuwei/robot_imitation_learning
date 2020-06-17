@@ -1,7 +1,7 @@
 %% This file learns and generalizes relative position trajectories using DMP, and store the learned result in .h5 file for later use.
 % Targets to encode: elbow pos relative to wrist, relative wrist pos (between left and right). Three parts in total.    
 
-% addpath('./m_fcts/');
+addpath('./m_fcts/');
 addpath('../vmp/'); % use resample_traj
 
 num_datapoints = 200;%50;
@@ -37,10 +37,9 @@ display = true; % display the reproduction to see the performance
 %% Construct traj_dataset
 % relative position between left and right wrists
 traj_dataset{1} = lr_wrist_pos'; % should be of size Length x DOF!!!
-f_lrw = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, true);
-% f_lrw = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
-         
-
+f = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, true);
+f_lrw = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
+                                     
 % relative position between elbow and wrist (Left)
 traj_dataset{1} = l_elbow_wrist_pos'; % should be of size Length x DOF!!!
 f_lew = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
