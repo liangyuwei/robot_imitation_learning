@@ -4,7 +4,7 @@
 % addpath('./m_fcts/');
 addpath('../vmp/'); % use resample_traj
 
-num_datapoints = 400; %50;
+num_datapoints = 200;%50;
 
 %% Load demonstration
 file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
@@ -23,7 +23,7 @@ r_elbow_wrist_pos = r_elbow_pos - r_wrist_pos;
 
 %% DMP settings
 nbData = num_datapoints; % resampling inside DMP_learn.m !!!
-nbStates = 64; %Number of activation functions (i.e., number of states in the GMM)
+nbStates = 96; %Number of activation functions (i.e., number of states in the GMM)
 nbVar = 1; %Number of variables for the radial basis functions [s] (decay term)
 nbVarPos = 3; %2; %Number of motion variables [x1,x2] 
 kP = 64; %Stiffness gain
@@ -37,8 +37,10 @@ display = true; % display the reproduction to see the performance
 %% Construct traj_dataset
 % relative position between left and right wrists
 traj_dataset{1} = lr_wrist_pos'; % should be of size Length x DOF!!!
-f_lrw = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
-                                     
+f_lrw = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, true);
+% f_lrw = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
+         
+
 % relative position between elbow and wrist (Left)
 traj_dataset{1} = l_elbow_wrist_pos'; % should be of size Length x DOF!!!
 f_lew = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);

@@ -21,21 +21,20 @@ L = [eye(model.nbVarPos)*model.kP, eye(model.nbVarPos)*model.kV]; %Feedback term
 
 %% Load imitation data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-posId=[1:model.nbVarPos]; velId=[model.nbVarPos+1:2*model.nbVarPos]; accId=[2*model.nbVarPos+1:3*model.nbVarPos]; 
+posId=1:model.nbVarPos; velId=model.nbVarPos+1:2*model.nbVarPos; accId=2*model.nbVarPos+1:3*model.nbVarPos; 
 % demos=[];
-sIn(1) = 1; %Initialization of decay term
-for t=2:nbData
-	sIn(t) = sIn(t-1) - model.alpha * sIn(t-1) * model.dt; %Update of decay term (ds/dt=-alpha s)
-end
-% decay term, wish it to be in consistent with the time_range on which pass_time is specified..   
-% sIn = linspace(1, 0, nbData);
-% xTar = new_goal; %demos{1}.pos(:,end);
+% sIn(1) = 1; %Initialization of decay term
+% for t=2:nbData
+% 	sIn(t) = sIn(t-1) - model.alpha * sIn(t-1) * model.dt; %Update of decay term (ds/dt=-alpha s)
+% end
+sIn = exp(-model.alpha * (0:nbData-1)*model.dt);
+
 Data=[];
 DataDMP=[];
 %traj_dataset = ...; % {i} 1000 x 3
 for n=1:nbSamples
     tmp = traj_dataset{n}';
-%     xStart = tmp(:, 1); 
+    xStart = tmp(:, 1); 
     xTar = tmp(:, end); % modified by LYW, column vector, 3 x 1
 	%Demonstration data as [x;dx;ddx]
 	s(n).Data = spline(1:size(traj_dataset{n}, 1), traj_dataset{n}', linspace(1, size(traj_dataset{n}, 1), nbData)); %Resampling
@@ -45,17 +44,17 @@ for n=1:nbSamples
     %Nonlinear forcing term
 	DataDMP = [DataDMP, (s(n).Data(accId,:) - ...
 		(repmat(xTar,1,nbData)-s(n).Data(posId,:))*model.kP + s(n).Data(velId,:)*model.kV) ...
-            ./ repmat(sIn,model.nbVarPos,1) ]; %./ repmat(xTar-xStart, 1, nbData)];
+            ./ repmat(sIn,model.nbVarPos,1) ./ repmat(xTar-xStart, 1, nbData)];
 end
 % xTar = new_goal;  % modified by LYW
 
 
 %% Setting of the basis functions and reproduction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% model = init_GMM_timeBased(sIn, model);
+model = init_GMM_timeBased(sIn, model);
 %model = init_GMM_logBased(sIn, model); %Log-spread in s <-> equal spread in t
-model = init_GMM_kmeans(sIn, model);
-% model = EM_GMM(sIn, model);
+% model = init_GMM_kmeans(sIn, model);
+
 %Set Sigma as diagonal matrices (i.e., inpedendent systems synchronized by the s variable)
 for i=1:model.nbStates
 	model.Sigma(:,:,i) = 2E-3; %Setting of covariance
@@ -70,16 +69,35 @@ H = H ./ repmat(sum(H),model.nbStates,1);
 H2 = repmat(H,1,nbSamples);
 
 
-% %Nonlinear force profile retrieval (as in RBFN)
+% %Nonlinear force profile retrieval (as in RBFN) standard DMP...
 % MuF = DataDMP * pinv(H2);
 
-%Nonlinear force profile retrieval (as in LWR)
-X = ones(nbSamples*nbData,1);
+%Nonlinear force profile retrieval (as in Ijspeert'13, but without (g-y0) modulation)
+X = repmat(sIn',nbSamples,1);
 Y = DataDMP';
 for i=1:model.nbStates
 	W = diag(H2(i,:));
-	MuF(:,i) = (X'*W*X \ X'*W * Y)';
+	MuF(:,i) = X'*W*X \ X'*W * Y; %Weighted least squares
 end
+Xr = sIn';
+Yr = zeros(nbData,model.nbVarPos);
+for i=1:model.nbStates
+	Yr = Yr + diag(H(i,:)) * Xr * MuF(:,i)';
+end
+% for t=1:nbData
+% 	for i=1:model.nbStates
+% 		Yr(t,:) = Yr(t,:) + H(i,t) * Xr(t,:) * MuF(:,i)';
+% 	end
+% end
+
+
+%Nonlinear force profile retrieval (as in LWR), with polynomial of degree 0
+% X = ones(nbSamples*nbData,1);
+% Y = DataDMP';
+% for i=1:model.nbStates
+% 	W = diag(H2(i,:));
+% 	MuF(:,i) = (X'*W*X \ X'*W * Y)';
+% end
 
 
 %% return learned results
@@ -91,18 +109,34 @@ Weights = MuF;
 %% Reproduction to see the performance
 if display
     %Motion retrieval with DMP
-    currF = MuF * H;
-    x = traj_dataset{n}(1, :)'; % the original start
-    xTar = traj_dataset{n}(end, :)';
-    dx = zeros(model.nbVarPos,1); % initial velocity
+%     currF = MuF * H;
+%     x = traj_dataset{n}(1, :)'; % the original start
+%     xTar = traj_dataset{n}(end, :)';
+%     dx = zeros(model.nbVarPos,1); % initial velocity
+%     for t=1:nbData
+%         %Compute acceleration, velocity and position
+%         ddx = L * [xTar-x; -dx] + currF(:,t) * sIn(t);
+%         dx = dx + ddx * model.dt;
+%         x = x + dx * model.dt;
+%         repro(:,t) = x;
+%     end
+
+    %Motion retrieval with DMP
+    test = 1;
+    xTar = traj_dataset{test}(end, :)';% + [-3, -2.0]';
+    xStart = traj_dataset{test}(1, :)';% + [3, 2.0]';
+
+    x = xStart; %Data(1:model.nbVarPos,1);
+    dx = zeros(model.nbVarPos,1);
     for t=1:nbData
         %Compute acceleration, velocity and position
-        ddx = L * [xTar-x; -dx] + currF(:,t) * sIn(t);
+        ddx = L * [xTar-x; -dx] + Yr(t,:)' * sIn(t) .* (xTar - xStart);
         dx = dx + ddx * model.dt;
         x = x + dx * model.dt;
         repro(:,t) = x;
     end
 end
+
 
 figure;
 plot3(Data(1, :), Data(2, :), Data(3, :), 'b.'); hold on; grid on;

@@ -19,7 +19,7 @@ pass_time = h5read(filename1, ['/', groupname, '/pass_time']);
 pass_time = pass_time(2:end-1); % eliminate the start and final point for ease of modeling h_seq
 
 %% Load the optimized pass points
-filename2 = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity-jacobians-3.h5';
+filename2 = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity-jacobians-4.h5';
 
 pass_points_new = h5read(filename2, ['/', groupname, '/passpoint_traj_1']);
 
