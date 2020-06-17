@@ -1,10 +1,13 @@
 %% This file learns and generalizes relative position trajectories using DMP, and store the learned result in .h5 file for later use.
 % Targets to encode: elbow pos relative to wrist, relative wrist pos (between left and right). Three parts in total.    
 
+clear;
+clc;
+
 addpath('./m_fcts/');
 addpath('../vmp/'); % use resample_traj
 
-num_datapoints = 200;%50;
+num_datapoints = 400;%50;
 
 %% Load demonstration
 file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
@@ -23,7 +26,7 @@ r_elbow_wrist_pos = r_elbow_pos - r_wrist_pos;
 
 %% DMP settings
 nbData = num_datapoints; % resampling inside DMP_learn.m !!!
-nbStates = 96; %Number of activation functions (i.e., number of states in the GMM)
+nbStates = 64; %Number of activation functions (i.e., number of states in the GMM)
 nbVar = 1; %Number of variables for the radial basis functions [s] (decay term)
 nbVarPos = 3; %2; %Number of motion variables [x1,x2] 
 kP = 64; %Stiffness gain
@@ -37,9 +40,16 @@ display = true; % display the reproduction to see the performance
 %% Construct traj_dataset
 % relative position between left and right wrists
 traj_dataset{1} = lr_wrist_pos'; % should be of size Length x DOF!!!
-f = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, true);
-f_lrw = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
-                                     
+% 1 - Use TP-GMM to model the goal signal
+% model = DMP_TPGMM(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, true); % scalability not quite well, possibily due to modeling g instead of f/x/(g-y0)
+% 2 - Multiple methods, including direct inverse(best for our case), LWR, several GMR implementations, etc.      
+% f = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, true);
+% 3 - Direct copy of nonlinear force profile f
+% f_lrw = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
+% 4 - GMR reproduces trajectory; refine with LQR
+model = DMP_LQR(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, true);
+
+
 % relative position between elbow and wrist (Left)
 traj_dataset{1} = l_elbow_wrist_pos'; % should be of size Length x DOF!!!
 f_lew = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
