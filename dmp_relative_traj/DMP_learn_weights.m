@@ -1,4 +1,4 @@
-function [Mu, Sigma, Weights] = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, display)
+function [Mu, Sigma, Weights, sIn, Yr] = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbSamples, display)
 %% This function trains a DMP on the imitation trajectory
 % addpath('./m_fcts/');
 % input trajectory should be of size Length x DOF
@@ -52,7 +52,7 @@ for n=1:nbSamples
 	%
     DataDMP = [DataDMP, (s(n).Data(accId,:) - ...
 		(repmat(xTar,1,nbData)-s(n).Data(posId,:))*model.kP + s(n).Data(velId,:)*model.kV) ...
-            ./ repmat(sIn,model.nbVarPos,1) ./ repmat(xTar-xStart, 1, nbData)];
+            ./ repmat(sIn,model.nbVarPos,1) ./ repmat(abs(xTar-xStart), 1, nbData)];
     %}
 
     %Training data as [s;F] - for methods like GMR which relates time and f/x/(g-y0)         
@@ -255,47 +255,48 @@ if display
     repro = [];
     for t=1:nbData
         %Compute acceleration, velocity and position
-        ddx = L * [xTar-x; -dx] + Yr(t,:)' * sIn(t) .* (xTar - xStart);
+        ddx = L * [xTar-x; -dx] + Yr(t,:)' * sIn(t) .* abs(xTar - xStart);
         %ddx = L * [r(1).currTar(:,t)-x; -dx]; %Spring-damper system % for use with GMR03
         dx = dx + ddx * model.dt;
         x = x + dx * model.dt;
         repro(:,t) = x;
     end
+    
+    
+    
+    figure;
+    plot3(Data(1, :), Data(2, :), Data(3, :), 'b.'); hold on; grid on;
+    plot3(repro(1, :), repro(2, :), repro(3, :), 'r*');
+    title('Reproduced trajectory and the original trajectory');
+    xlabel('x'); ylabel('y'); zlabel('z');
+    
+    
+    figure;
+    sgtitle('Reproduced and original nonlinear force profile');
+    subplot(3, 1, 1); plot(DataDMP(1, :), 'b-'); hold on; grid on;
+    plot(Yr(:, 1), 'r-');
+    ylabel('X Force'); title('x');
+    subplot(3, 1, 2); plot(DataDMP(2, :), 'b-'); hold on; grid on;
+    plot(Yr(:, 2), 'r-');
+    ylabel('Y Force'); title('y');
+    subplot(3, 1, 3); plot(DataDMP(3, :), 'b-'); hold on; grid on;
+    plot(Yr(:, 3), 'r-');
+    ylabel('Z Force'); title('z');
+    
+    
+    figure;
+    sgtitle('Reproduced and original trajectory - split');
+    subplot(3, 1, 1); plot(Data(1, :), 'b-'); hold on; grid on;
+    plot(repro(1, :), 'r-');
+    ylabel('X motion'); title('x');
+    subplot(3, 1, 2); plot(Data(2, :), 'b-'); hold on; grid on;
+    plot(repro(2, :), 'r-');
+    ylabel('Y motion'); title('y');
+    subplot(3, 1, 3); plot(Data(3, :), 'b-'); hold on; grid on;
+    plot(repro(3, :), 'r-');
+    ylabel('Z motion'); title('z');
+    
 end
-
-
-figure;
-plot3(Data(1, :), Data(2, :), Data(3, :), 'b.'); hold on; grid on;
-plot3(repro(1, :), repro(2, :), repro(3, :), 'r*');
-title('Reproduced trajectory and the original trajectory');
-xlabel('x'); ylabel('y'); zlabel('z'); 
-
-
-figure;
-sgtitle('Reproduced and original nonlinear force profile');
-subplot(3, 1, 1); plot(DataDMP(1, :), 'b-'); hold on; grid on;
-plot(Yr(:, 1), 'r-'); 
-ylabel('X Force'); title('x');
-subplot(3, 1, 2); plot(DataDMP(2, :), 'b-'); hold on; grid on;
-plot(Yr(:, 2), 'r-'); 
-ylabel('Y Force'); title('y');
-subplot(3, 1, 3); plot(DataDMP(3, :), 'b-'); hold on; grid on;
-plot(Yr(:, 3), 'r-'); 
-ylabel('Z Force'); title('z');
-
-
-figure;
-sgtitle('Reproduced and original trajectory - split');
-subplot(3, 1, 1); plot(Data(1, :), 'b-'); hold on; grid on;
-plot(repro(1, :), 'r-'); 
-ylabel('X motion'); title('x');
-subplot(3, 1, 2); plot(Data(2, :), 'b-'); hold on; grid on;
-plot(repro(2, :), 'r-'); 
-ylabel('Y motion'); title('y');
-subplot(3, 1, 3); plot(Data(3, :), 'b-'); hold on; grid on;
-plot(repro(3, :), 'r-'); 
-ylabel('Z motion'); title('z');
-
 
 
 end

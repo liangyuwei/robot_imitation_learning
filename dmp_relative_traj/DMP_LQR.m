@@ -73,11 +73,11 @@ K = kron(K1d,eye(model.nbVarPos));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % demos=[];
 % load('data/2Dletters/G.mat');
-% sIn(1) = 1; %Initialization of decay term
-% for t=2:nbData
-% 	sIn(t) = sIn(t-1) - model.alpha * sIn(t-1) * model.dt; %Update of decay term (ds/dt=-alpha s)
-% end
-sIn = exp(-model.alpha * (0:nbData-1)*model.dt);
+sIn(1) = 1; %Initialization of decay term
+for t=2:nbData
+	sIn(t) = sIn(t-1) - model.alpha * sIn(t-1) * model.dt; %Update of decay term (ds/dt=-alpha s)
+end
+% sIn = exp(-model.alpha * (0:nbData-1)*model.dt);
 
 
 DataDMP = zeros(model.nbVar,1,nbData*nbSamples);
@@ -140,7 +140,7 @@ end
 %% Display results
 if display
     figure;
-    plot3(Data(1, :), Data(2, :), Data(3, :), 'b.'); hold on; grid on;
+    plot3(traj_dataset{1}(:, 1), traj_dataset{1}(:, 2), traj_dataset{1}(:, 3), 'b.'); hold on; grid on;
     plot3(repro(1, :), repro(2, :), repro(3, :), 'r*');
     title('Reproduced trajectory and the original trajectory');
     %view(0, 90);
@@ -162,13 +162,13 @@ if display
     
     figure;
     sgtitle('Reproduced and original trajectory - split');
-    subplot(3, 1, 1); plot(Data(1, :), 'b-'); hold on; grid on;
+    subplot(3, 1, 1); plot(traj_dataset{1}(:, 1), 'b-'); hold on; grid on;
     plot(repro(1, :), 'r-');
     ylabel('X motion'); title('x');
-    subplot(3, 1, 2); plot(Data(2, :), 'b-'); hold on; grid on;
+    subplot(3, 1, 2); plot(traj_dataset{1}(:, 2), 'b-'); hold on; grid on;
     plot(repro(2, :), 'r-');
     ylabel('Y motion'); title('y');
-    subplot(3, 1, 3); plot(Data(3, :), 'b-'); hold on; grid on;
+    subplot(3, 1, 3); plot(traj_dataset{1}(:, 3), 'b-'); hold on; grid on;
     plot(repro(3, :), 'r-');
     ylabel('Z motion'); title('z');
     

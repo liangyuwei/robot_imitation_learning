@@ -7,6 +7,7 @@ if __name__ == '__main__':
 
 
     ### For generating new trainging datasets
+    '''
     del_dataset_list = ['resampled_normalized_flattened_oritraj']
 
     group_name_list = []
@@ -22,7 +23,7 @@ if __name__ == '__main__':
                     del f[group_name+'/'+del_dataset]
 
     print('Deletion done.')
-
+    '''
 
     ### For generating new f_seq and others
     '''
@@ -44,3 +45,37 @@ if __name__ == '__main__':
 
     print('Deletion done.')
     '''
+    
+    
+    ### For clearing learned DMP weights and others
+    # Preparations
+    group_name = 'fengren_1'
+    del_dataset_list_prefix = ['Mu',
+                               'Sigma',
+                               'Weights',
+                               'Yr',
+                               'sIn']
+    del_dataset_list_suffix = ['_lrw',
+                               '_lew',
+                               '_rew',
+                               '_rw']
+
+    with h5py.File(file_name, 'a') as f:
+        # check the kill list
+        for del_dataset_prefix in del_dataset_list_prefix:
+            for del_dataset_suffix in del_dataset_list_suffix:
+                if (del_dataset_prefix+del_dataset_suffix in f[group_name].keys()):
+                    del f[group_name+'/'+del_dataset_prefix+del_dataset_suffix]
+
+    print('Deletion done.')
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

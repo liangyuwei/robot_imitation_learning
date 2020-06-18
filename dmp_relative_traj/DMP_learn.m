@@ -32,7 +32,7 @@ nbVarPos = 3; %2; %Number of motion variables [x1,x2]
 kP = 64; %Stiffness gain
 kV = (2*kP)^.5; %Damping gain (with ideal underdamped damping ratio)
 alpha = 1.0; %Decay factor
-% dt = 0.01; %1/num_datapoints; %Duration of time step
+dt = 0.01; %1/num_datapoints; %Duration of time step
 nbSamples = 1; % Number of samples (of the same movement)
 display = true; % display the reproduction to see the performance
 
@@ -43,41 +43,121 @@ traj_dataset{1} = lr_wrist_pos'; % should be of size Length x DOF!!!
 % 1 - Use TP-GMM to model the goal signal
 % model = DMP_TPGMM(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, true); % scalability not quite well, possibily due to modeling g instead of f/x/(g-y0)
 % 2 - Multiple methods, including direct inverse(best for our case), LWR, several GMR implementations, etc.      
-% f = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, true);
+[Mu_lrw, Sigma_lrw, Weights_lrw, sIn_lrw, Yr_lrw] = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbSamples, false);
 % 3 - Direct copy of nonlinear force profile f
 % f_lrw = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
-% 4 - GMR reproduces trajectory; refine with LQR
-model = DMP_LQR(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, true);
+% 4 - GMR reproduces trajectory; refine with LQR. 
+% model = DMP_LQR(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, true); % huge error due to unknown reason...
+
+% debug display: output trajectory of different length, start and goal
+%{
+xTar = traj_dataset{1}(end, :)';% + [0, -0.5, 1.0]';
+xStart = traj_dataset{1}(1, :)';% + [0, 0.5, 1.0]';
+repro = DMP_use_weights(Mu_lrw, Sigma_lrw, Weights_lrw, 50, kP, kV, alpha, dt, xTar, xStart, true);
+figure;
+plot3(traj_dataset{1}(:, 1), traj_dataset{1}(:, 2), traj_dataset{1}(:, 3), 'b.'); hold on; grid on;
+plot3(traj_dataset{1}(1, 1), traj_dataset{1}(1, 2), traj_dataset{1}(1, 3), 'go');
+plot3(traj_dataset{1}(end, 1), traj_dataset{1}(end, 2), traj_dataset{1}(end, 3), 'ro');
+plot3(repro(1, :), repro(2, :), repro(3, :), 'r-');
+plot3(repro(1, 1), repro(2, 1), repro(3, 1), 'go');
+plot3(repro(1, end), repro(2, end), repro(3, end), 'ro');
+title('Reproduced trajectory and the original trajectory');
+xlabel('x'); ylabel('y'); zlabel('z');
+%}
 
 
 % relative position between elbow and wrist (Left)
 traj_dataset{1} = l_elbow_wrist_pos'; % should be of size Length x DOF!!!
-f_lew = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
+[Mu_lew, Sigma_lew, Weights_lew, sIn_lew, Yr_lew] = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbSamples, false);
+% f_lew = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
 
 % relative position between elbow and wrist (Right)
 traj_dataset{1} = r_elbow_wrist_pos'; % should be of size Length x DOF!!!
-f_rew = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
+[Mu_rew, Sigma_rew, Weights_rew, sIn_rew, Yr_rew] = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbSamples, false);
+% f_rew = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
 
 % absolute position of Right wrist
 traj_dataset{1} = r_wrist_pos'; % should be of size Length x DOF!!!
-f_rw = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
+[Mu_rw, Sigma_rw, Weights_rw, sIn_rw, Yr_rw] = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbSamples, false);
+% f_rw = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
 
+
+
+%% Store the learned results
+%
+file_name = 'test_imi_data_YuMi.h5';
+group_name = 'fengren_1';
+% data about lrw
+h5create(file_name, ['/', group_name, '/Mu_lrw'], size(Mu_lrw));
+h5write(file_name, ['/', group_name, '/Mu_lrw'], Mu_lrw);
+h5create(file_name, ['/', group_name, '/Sigma_lrw'], size(Sigma_lrw));
+h5write(file_name, ['/', group_name, '/Sigma_lrw'], Sigma_lrw);
+h5create(file_name, ['/', group_name, '/Weights_lrw'], size(Weights_lrw));
+h5write(file_name, ['/', group_name, '/Weights_lrw'], Weights_lrw);
+h5create(file_name, ['/', group_name, '/sIn_lrw'], size(sIn_lrw));
+h5write(file_name, ['/', group_name, '/sIn_lrw'], sIn_lrw);
+h5create(file_name, ['/', group_name, '/Yr_lrw'], size(Yr_lrw));
+h5write(file_name, ['/', group_name, '/Yr_lrw'], Yr_lrw);
+
+% data about lew
+h5create(file_name, ['/', group_name, '/Mu_lew'], size(Mu_lew));
+h5write(file_name, ['/', group_name, '/Mu_lew'], Mu_lew);
+h5create(file_name, ['/', group_name, '/Sigma_lew'], size(Sigma_lew));
+h5write(file_name, ['/', group_name, '/Sigma_lew'], Sigma_lew);
+h5create(file_name, ['/', group_name, '/Weights_lew'], size(Weights_lew));
+h5write(file_name, ['/', group_name, '/Weights_lew'], Weights_lew);
+h5create(file_name, ['/', group_name, '/sIn_lew'], size(sIn_lew));
+h5write(file_name, ['/', group_name, '/sIn_lew'], sIn_lew);
+h5create(file_name, ['/', group_name, '/Yr_lew'], size(Yr_lew));
+h5write(file_name, ['/', group_name, '/Yr_lew'], Yr_lew);
+
+% data about rew
+h5create(file_name, ['/', group_name, '/Mu_rew'], size(Mu_rew));
+h5write(file_name, ['/', group_name, '/Mu_rew'], Mu_rew);
+h5create(file_name, ['/', group_name, '/Sigma_rew'], size(Sigma_rew));
+h5write(file_name, ['/', group_name, '/Sigma_rew'], Sigma_rew);
+h5create(file_name, ['/', group_name, '/Weights_rew'], size(Weights_rew));
+h5write(file_name, ['/', group_name, '/Weights_rew'], Weights_rew);
+h5create(file_name, ['/', group_name, '/sIn_rew'], size(sIn_rew));
+h5write(file_name, ['/', group_name, '/sIn_rew'], sIn_rew);
+h5create(file_name, ['/', group_name, '/Yr_rew'], size(Yr_rew));
+h5write(file_name, ['/', group_name, '/Yr_rew'], Yr_rew);
+
+% data about rw
+h5create(file_name, ['/', group_name, '/Mu_rw'], size(Mu_rw));
+h5write(file_name, ['/', group_name, '/Mu_rw'], Mu_rw);
+h5create(file_name, ['/', group_name, '/Sigma_rw'], size(Sigma_rw));
+h5write(file_name, ['/', group_name, '/Sigma_rw'], Sigma_rw);
+h5create(file_name, ['/', group_name, '/Weights_rw'], size(Weights_rw));
+h5write(file_name, ['/', group_name, '/Weights_rw'], Weights_rw);
+h5create(file_name, ['/', group_name, '/sIn_rw'], size(sIn_rw));
+h5write(file_name, ['/', group_name, '/sIn_rw'], sIn_rw);
+h5create(file_name, ['/', group_name, '/Yr_rw'], size(Yr_rw));
+h5write(file_name, ['/', group_name, '/Yr_rw'], Yr_rw);
+
+%}
 
 %% Reproduce trajectory
-new_goal_lrw = lr_wrist_pos(:, end) + [0.05, -0.05, 0.05]';
-new_start_lrw = lr_wrist_pos(:, 1) + [-0.05, 0.05, 0.05]';
-new_goal_lew = l_elbow_wrist_pos(:, end) + [0.05, 0.0, -0.05]';
-new_start_lew = l_elbow_wrist_pos(:, 1) + [0.0, -0.05, -0.05]';
-new_goal_rew = r_elbow_wrist_pos(:, end) + [0.01, 0.08, 0.03]';
-new_start_rew = r_elbow_wrist_pos(:, 1) + [0.02, 0.1, 0.05]';
-new_goal_rw = r_wrist_pos(:, end) + [-0.05, 0.0, 0.0]';
-new_start_rw = r_wrist_pos(:, 1) + [-0.05, 0.0, 0.0]';
-y_lrw = DMP_use_f(f_lrw, nbData, alpha, kP, kV, new_goal_lrw, new_start_lrw);
-y_lew = DMP_use_f(f_lew, nbData, alpha, kP, kV, new_goal_lew, new_start_lew);
-y_rew = DMP_use_f(f_rew, nbData, alpha, kP, kV, new_goal_rew, new_start_rew);
-y_rw = DMP_use_f(f_rw, nbData, alpha, kP, kV, new_goal_rw, new_start_rw);
+new_goal_lrw = lr_wrist_pos(:, end) + [0.01, -0.01, 0.05]';
+new_start_lrw = lr_wrist_pos(:, 1) + [-0.01, 0.01, 0.05]';
+new_goal_lew = l_elbow_wrist_pos(:, end) + [0.01, 0.0, -0.05]';
+new_start_lew = l_elbow_wrist_pos(:, 1) + [0.01, -0.01, -0.05]';
+new_goal_rew = r_elbow_wrist_pos(:, end) + [0.01, 0.02, 0.03]';
+new_start_rew = r_elbow_wrist_pos(:, 1) + [0.02, 0.01, 0.05]';
+new_goal_rw = r_wrist_pos(:, end) + [-0.02, 0.0, 0.0]';
+new_start_rw = r_wrist_pos(:, 1) + [-0.02, 0.0, 0.0]';
+% y_lrw = DMP_use_f(f_lrw, nbData, alpha, kP, kV, new_goal_lrw, new_start_lrw);
+% y_lew = DMP_use_f(f_lew, nbData, alpha, kP, kV, new_goal_lew, new_start_lew);
+% y_rew = DMP_use_f(f_rew, nbData, alpha, kP, kV, new_goal_rew, new_start_rew);
+% y_rw = DMP_use_f(f_rw, nbData, alpha, kP, kV, new_goal_rw, new_start_rw);
 
-%{
+y_lrw = DMP_use_weights(Mu_lrw, Sigma_lrw, Weights_lrw, 50, kP, kV, alpha, dt, new_goal_lrw, new_start_lrw, false);
+y_lew = DMP_use_weights(Mu_lew, Sigma_lew, Weights_lew, 50, kP, kV, alpha, dt, new_goal_lew, new_start_lew, false);
+y_rew = DMP_use_weights(Mu_rew, Sigma_rew, Weights_rew, 50, kP, kV, alpha, dt, new_goal_rew, new_start_rew, false);
+y_rw = DMP_use_weights(Mu_rw, Sigma_rw, Weights_rw, 50, kP, kV, alpha, dt, new_goal_rw, new_start_rw, false);
+
+
+%
 figure; plot3(y_rw(1,:), y_rw(2,:), y_rw(3,:), 'r.'); hold on; grid on;
 plot3(r_wrist_pos(1,:), r_wrist_pos(2,:), r_wrist_pos(3,:), 'b.');
 title('r\_wist\_pos');
