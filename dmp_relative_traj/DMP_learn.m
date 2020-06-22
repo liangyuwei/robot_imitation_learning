@@ -84,58 +84,80 @@ traj_dataset{1} = r_wrist_pos'; % should be of size Length x DOF!!!
 
 
 %% Store the learned results
-%
+%{
 file_name = 'test_imi_data_YuMi.h5';
 group_name = 'fengren_1';
 % data about lrw
-h5create(file_name, ['/', group_name, '/Mu_lrw'], size(Mu_lrw));
-h5write(file_name, ['/', group_name, '/Mu_lrw'], Mu_lrw);
-h5create(file_name, ['/', group_name, '/Sigma_lrw'], size(Sigma_lrw));
-h5write(file_name, ['/', group_name, '/Sigma_lrw'], Sigma_lrw);
-h5create(file_name, ['/', group_name, '/Weights_lrw'], size(Weights_lrw));
-h5write(file_name, ['/', group_name, '/Weights_lrw'], Weights_lrw);
+% h5create(file_name, ['/', group_name, '/Mu_lrw'], size(Mu_lrw));
+% h5write(file_name, ['/', group_name, '/Mu_lrw'], Mu_lrw);
+% h5create(file_name, ['/', group_name, '/Sigma_lrw'], size(Sigma_lrw));
+% h5write(file_name, ['/', group_name, '/Sigma_lrw'], Sigma_lrw);
+% h5create(file_name, ['/', group_name, '/Weights_lrw'], size(Weights_lrw));
+% h5write(file_name, ['/', group_name, '/Weights_lrw'], Weights_lrw);
 h5create(file_name, ['/', group_name, '/sIn_lrw'], size(sIn_lrw));
 h5write(file_name, ['/', group_name, '/sIn_lrw'], sIn_lrw);
 h5create(file_name, ['/', group_name, '/Yr_lrw'], size(Yr_lrw));
 h5write(file_name, ['/', group_name, '/Yr_lrw'], Yr_lrw);
 
 % data about lew
-h5create(file_name, ['/', group_name, '/Mu_lew'], size(Mu_lew));
-h5write(file_name, ['/', group_name, '/Mu_lew'], Mu_lew);
-h5create(file_name, ['/', group_name, '/Sigma_lew'], size(Sigma_lew));
-h5write(file_name, ['/', group_name, '/Sigma_lew'], Sigma_lew);
-h5create(file_name, ['/', group_name, '/Weights_lew'], size(Weights_lew));
-h5write(file_name, ['/', group_name, '/Weights_lew'], Weights_lew);
+% h5create(file_name, ['/', group_name, '/Mu_lew'], size(Mu_lew));
+% h5write(file_name, ['/', group_name, '/Mu_lew'], Mu_lew);
+% h5create(file_name, ['/', group_name, '/Sigma_lew'], size(Sigma_lew));
+% h5write(file_name, ['/', group_name, '/Sigma_lew'], Sigma_lew);
+% h5create(file_name, ['/', group_name, '/Weights_lew'], size(Weights_lew));
+% h5write(file_name, ['/', group_name, '/Weights_lew'], Weights_lew);
 h5create(file_name, ['/', group_name, '/sIn_lew'], size(sIn_lew));
 h5write(file_name, ['/', group_name, '/sIn_lew'], sIn_lew);
 h5create(file_name, ['/', group_name, '/Yr_lew'], size(Yr_lew));
 h5write(file_name, ['/', group_name, '/Yr_lew'], Yr_lew);
 
 % data about rew
-h5create(file_name, ['/', group_name, '/Mu_rew'], size(Mu_rew));
-h5write(file_name, ['/', group_name, '/Mu_rew'], Mu_rew);
-h5create(file_name, ['/', group_name, '/Sigma_rew'], size(Sigma_rew));
-h5write(file_name, ['/', group_name, '/Sigma_rew'], Sigma_rew);
-h5create(file_name, ['/', group_name, '/Weights_rew'], size(Weights_rew));
-h5write(file_name, ['/', group_name, '/Weights_rew'], Weights_rew);
+% h5create(file_name, ['/', group_name, '/Mu_rew'], size(Mu_rew));
+% h5write(file_name, ['/', group_name, '/Mu_rew'], Mu_rew);
+% h5create(file_name, ['/', group_name, '/Sigma_rew'], size(Sigma_rew));
+% h5write(file_name, ['/', group_name, '/Sigma_rew'], Sigma_rew);
+% h5create(file_name, ['/', group_name, '/Weights_rew'], size(Weights_rew));
+% h5write(file_name, ['/', group_name, '/Weights_rew'], Weights_rew);
 h5create(file_name, ['/', group_name, '/sIn_rew'], size(sIn_rew));
 h5write(file_name, ['/', group_name, '/sIn_rew'], sIn_rew);
 h5create(file_name, ['/', group_name, '/Yr_rew'], size(Yr_rew));
 h5write(file_name, ['/', group_name, '/Yr_rew'], Yr_rew);
 
 % data about rw
-h5create(file_name, ['/', group_name, '/Mu_rw'], size(Mu_rw));
-h5write(file_name, ['/', group_name, '/Mu_rw'], Mu_rw);
-h5create(file_name, ['/', group_name, '/Sigma_rw'], size(Sigma_rw));
-h5write(file_name, ['/', group_name, '/Sigma_rw'], Sigma_rw);
-h5create(file_name, ['/', group_name, '/Weights_rw'], size(Weights_rw));
-h5write(file_name, ['/', group_name, '/Weights_rw'], Weights_rw);
+% h5create(file_name, ['/', group_name, '/Mu_rw'], size(Mu_rw));
+% h5write(file_name, ['/', group_name, '/Mu_rw'], Mu_rw);
+% h5create(file_name, ['/', group_name, '/Sigma_rw'], size(Sigma_rw));
+% h5write(file_name, ['/', group_name, '/Sigma_rw'], Sigma_rw);
+% h5create(file_name, ['/', group_name, '/Weights_rw'], size(Weights_rw));
+% h5write(file_name, ['/', group_name, '/Weights_rw'], Weights_rw);
 h5create(file_name, ['/', group_name, '/sIn_rw'], size(sIn_rw));
 h5write(file_name, ['/', group_name, '/sIn_rw'], sIn_rw);
 h5create(file_name, ['/', group_name, '/Yr_rw'], size(Yr_rw));
 h5write(file_name, ['/', group_name, '/Yr_rw'], Yr_rw);
 
+% goals and starts
+h5create(file_name, ['/', group_name, '/lrw_goal'], size(lr_wrist_pos(:, end)));
+h5write(file_name, ['/', group_name, '/lrw_goal'], lr_wrist_pos(:, end));
+h5create(file_name, ['/', group_name, '/lrw_start'], size(lr_wrist_pos(:, 1)));
+h5write(file_name, ['/', group_name, '/lrw_start'], lr_wrist_pos(:, 1));
+
+h5create(file_name, ['/', group_name, '/lew_goal'], size(l_elbow_wrist_pos(:, end)));
+h5write(file_name, ['/', group_name, '/lew_goal'], l_elbow_wrist_pos(:, end));
+h5create(file_name, ['/', group_name, '/lew_start'], size(l_elbow_wrist_pos(:, 1)));
+h5write(file_name, ['/', group_name, '/lew_start'], l_elbow_wrist_pos(:, 1));
+
+h5create(file_name, ['/', group_name, '/rew_goal'], size(r_elbow_wrist_pos(:, end)));
+h5write(file_name, ['/', group_name, '/rew_goal'], r_elbow_wrist_pos(:, end));
+h5create(file_name, ['/', group_name, '/rew_start'], size(r_elbow_wrist_pos(:, 1)));
+h5write(file_name, ['/', group_name, '/rew_start'], r_elbow_wrist_pos(:, 1));
+
+h5create(file_name, ['/', group_name, '/rw_goal'], size(r_wrist_pos(:, end)));
+h5write(file_name, ['/', group_name, '/rw_goal'], r_wrist_pos(:, end));
+h5create(file_name, ['/', group_name, '/rw_start'], size(r_wrist_pos(:, 1)));
+h5write(file_name, ['/', group_name, '/rw_start'], r_wrist_pos(:, 1));
+
 %}
+
 
 %% Reproduce trajectory
 new_goal_lrw = lr_wrist_pos(:, end) + [0.01, -0.01, 0.05]';
@@ -144,8 +166,8 @@ new_goal_lew = l_elbow_wrist_pos(:, end) + [0.01, 0.0, -0.05]';
 new_start_lew = l_elbow_wrist_pos(:, 1) + [0.01, -0.01, -0.05]';
 new_goal_rew = r_elbow_wrist_pos(:, end) + [0.01, 0.02, 0.03]';
 new_start_rew = r_elbow_wrist_pos(:, 1) + [0.02, 0.01, 0.05]';
-new_goal_rw = r_wrist_pos(:, end) + [-0.02, 0.0, 0.0]';
-new_start_rw = r_wrist_pos(:, 1) + [-0.02, 0.0, 0.0]';
+new_goal_rw = r_wrist_pos(:, end) + [0.01, 0.0, 0.0]';
+new_start_rw = r_wrist_pos(:, 1) + [-0.01, 0.0, 0.0]';
 % y_lrw = DMP_use_f(f_lrw, nbData, alpha, kP, kV, new_goal_lrw, new_start_lrw);
 % y_lew = DMP_use_f(f_lew, nbData, alpha, kP, kV, new_goal_lew, new_start_lew);
 % y_rew = DMP_use_f(f_rew, nbData, alpha, kP, kV, new_goal_rew, new_start_rew);
