@@ -8,6 +8,8 @@ addpath('./m_fcts/');
 addpath('../vmp/'); % use resample_traj
 
 num_datapoints = 400;%50;
+num_resampled_points = 50;
+
 
 %% Load demonstration
 file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
@@ -160,14 +162,14 @@ h5write(file_name, ['/', group_name, '/rw_start'], r_wrist_pos(:, 1));
 
 
 %% Reproduce trajectory
-new_goal_lrw = lr_wrist_pos(:, end) + [0.01, -0.01, 0.05]';
-new_start_lrw = lr_wrist_pos(:, 1) + [-0.01, 0.01, 0.05]';
-new_goal_lew = l_elbow_wrist_pos(:, end) + [0.01, 0.0, -0.05]';
-new_start_lew = l_elbow_wrist_pos(:, 1) + [0.01, -0.01, -0.05]';
-new_goal_rew = r_elbow_wrist_pos(:, end) + [0.01, 0.02, 0.03]';
-new_start_rew = r_elbow_wrist_pos(:, 1) + [0.02, 0.01, 0.05]';
-new_goal_rw = r_wrist_pos(:, end) + [0.01, 0.0, 0.0]';
-new_start_rw = r_wrist_pos(:, 1) + [-0.01, 0.0, 0.0]';
+new_goal_lrw = lr_wrist_pos(:, end);% + [0.01, -0.01, 0.05]';
+new_start_lrw = lr_wrist_pos(:, 1);% + [-0.01, 0.01, 0.05]';
+new_goal_lew = l_elbow_wrist_pos(:, end);% + [0.01, 0.0, -0.05]';
+new_start_lew = l_elbow_wrist_pos(:, 1);% + [0.01, -0.01, -0.05]';
+new_goal_rew = r_elbow_wrist_pos(:, end);% + [0.01, 0.02, 0.03]';
+new_start_rew = r_elbow_wrist_pos(:, 1);% + [0.02, 0.01, 0.05]';
+new_goal_rw = r_wrist_pos(:, end);% + [0.01, 0.0, 0.0]';
+new_start_rw = r_wrist_pos(:, 1);% + [-0.01, 0.0, 0.0]';
 % y_lrw = DMP_use_f(f_lrw, nbData, alpha, kP, kV, new_goal_lrw, new_start_lrw);
 % y_lew = DMP_use_f(f_lew, nbData, alpha, kP, kV, new_goal_lew, new_start_lew);
 % y_rew = DMP_use_f(f_rew, nbData, alpha, kP, kV, new_goal_rew, new_start_rew);
@@ -219,4 +221,52 @@ view(-45, 45);
 % title('Original and reproduced trajectories');
 title('Original and generalized trajectories');
 xlabel('x'); ylabel('y'); zlabel('z'); 
+
+
+%% Other information to store in h5
+% resampled quaternion trajectories           
+l_wrist_ori = h5read(file_name, ['/', group_name, '/l_wrist_ori']);
+r_wrist_ori = h5read(file_name, ['/', group_name, '/r_wrist_ori']);
+length = size(l_wrist_ori, 2);
+% convert rotation matrices to euler angles
+l_wrist_quat = zeros(4, length);
+r_wrist_quat = zeros(4, length);
+for i = 1:length
+    % left
+    rotm = reshape(l_wrist_ori(:, i), 3, 3);
+    rotm = rotm';
+    quat = rotm2quat(rotm);
+    l_wrist_quat(:, i) = quat';
+    % right
+    rotm = reshape(r_wrist_ori(:, i), 3, 3);
+    rotm = rotm';
+    quat = rotm2quat(rotm);
+    r_wrist_quat(:, i) = quat';
+end
+l_wrist_quat_resampled = resample_traj(time, l_wrist_quat, num_resampled_points, false);
+r_wrist_quat_resampled = resample_traj(time, r_wrist_quat, num_resampled_points, false);
+
+
+% resampled glove angle trajectories
+l_glove_angle_resampled = resample_traj(time, h5read(file_name, ['/', group_name, '/l_glove_angle']), num_resampled_points, false); % 14 x N
+r_glove_angle_resampled = resample_traj(time, h5read(file_name, ['/', group_name, '/r_glove_angle']), num_resampled_points, false);
+
+% l_glove_angle = h5read(file_name, ['/', group_name, '/l_glove_angle']);
+% idx = [1,2,3];
+% figure; 
+% plot3(l_glove_angle(idx(1),:), l_glove_angle(idx(2),:), l_glove_angle(idx(3), :), 'b-'); hold on; grid on; 
+% plot3(l_glove_angle_resampled(idx(1),:), l_glove_angle_resampled(idx(2),:), l_glove_angle_resampled(idx(3),:), 'r-');
+
+
+% store the resampled results
+h5create(file_name, ['/', group_name, '/l_wrist_quat_resampled'], size(l_wrist_quat_resampled));
+h5write(file_name, ['/', group_name, '/l_wrist_quat_resampled'], l_wrist_quat_resampled);
+h5create(file_name, ['/', group_name, '/r_wrist_quat_resampled'], size(r_wrist_quat_resampled));
+h5write(file_name, ['/', group_name, '/r_wrist_quat_resampled'], r_wrist_quat_resampled);
+h5create(file_name, ['/', group_name, '/l_glove_angle_resampled'], size(l_glove_angle_resampled));
+h5write(file_name, ['/', group_name, '/l_glove_angle_resampled'], l_glove_angle_resampled);
+h5create(file_name, ['/', group_name, '/r_glove_angle_resampled'], size(r_glove_angle_resampled));
+h5write(file_name, ['/', group_name, '/r_glove_angle_resampled'], r_glove_angle_resampled);
+
+
 
