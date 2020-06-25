@@ -17,7 +17,7 @@ function repro_final = DMP_use_weights(Mu, Sigma, Weights, nbData, kP, kV, alpha
 L = [eye(nbVarPos)*kP, eye(nbVarPos)*kV]; %Feedback term
 
 % internal clock (following the setting for learning)
-train_nbData = 400;
+train_nbData = 100;%400;
 sIn = exp(-alpha * (0:train_nbData-1)*dt);
 
 %Compute activation

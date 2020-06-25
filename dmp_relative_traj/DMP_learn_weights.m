@@ -13,7 +13,7 @@ model.nbVarPos = nbVarPos;%3; %2; %Number of motion variables [x1,x2]
 model.kP = kP;%50; %Stiffness gain
 model.kV = kV; %(2*model.kP)^.5; %Damping gain (with ideal underdamped damping ratio)
 model.alpha = alpha; %1.0; %Decay factor
-model.dt = 0.01; %1/nbData; %Duration of time step
+model.dt = dt; %0.01; %1/nbData; %Duration of time step
 model.polDeg = 3; %Degree of polynomial fit
 % nbData = num_datapoints; %200; %Length of each trajectory
 % nbSamples = nbSamples; %1; %Number of demonstrations
@@ -265,8 +265,8 @@ if display
     
     
     figure;
-    plot3(Data(1, :), Data(2, :), Data(3, :), 'b.'); hold on; grid on;
-    plot3(repro(1, :), repro(2, :), repro(3, :), 'r*');
+    plot3(Data(1, :), Data(2, :), Data(3, :), 'b-.'); hold on; grid on;
+    plot3(repro(1, :), repro(2, :), repro(3, :), 'r-*');
     title('Reproduced trajectory and the original trajectory');
     xlabel('x'); ylabel('y'); zlabel('z');
     

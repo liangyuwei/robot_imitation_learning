@@ -68,10 +68,44 @@ if __name__ == '__main__':
                     del f[group_name+'/'+del_dataset_prefix+del_dataset_suffix]
 
     print('Deletion done.')
+
+
+    ### For clearing original starts and goals
+    # Preparations
+    group_name = 'fengren_1'
+    del_dataset_list_prefix = ['lrw',
+                               'lew',
+                               'rew',
+                               'rw']
+    del_dataset_list_suffix = ['_goal',
+                               '_start']
+
+    with h5py.File(file_name, 'a') as f:
+        # check the kill list
+        for del_dataset_prefix in del_dataset_list_prefix:
+            for del_dataset_suffix in del_dataset_list_suffix:
+                if (del_dataset_prefix+del_dataset_suffix in f[group_name].keys()):
+                    del f[group_name+'/'+del_dataset_prefix+del_dataset_suffix]
+
+    print('Deletion done.')    
     
     
-    
-    
+    ### For clearing resampled quaternion and glove angle trajectories
+    # Preparations
+    group_name = 'fengren_1'
+    del_dataset_list_prefix = ['l',
+                               'r']
+    del_dataset_list_suffix = ['_wrist_quat_resampled',
+                               '_glove_angle_resampled']
+
+    with h5py.File(file_name, 'a') as f:
+        # check the kill list
+        for del_dataset_prefix in del_dataset_list_prefix:
+            for del_dataset_suffix in del_dataset_list_suffix:
+                if (del_dataset_prefix+del_dataset_suffix in f[group_name].keys()):
+                    del f[group_name+'/'+del_dataset_prefix+del_dataset_suffix]
+
+    print('Deletion done.')      
     
     
     

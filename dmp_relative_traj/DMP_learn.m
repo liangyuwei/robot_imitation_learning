@@ -7,12 +7,12 @@ clc;
 addpath('./m_fcts/');
 addpath('../vmp/'); % use resample_traj
 
-num_datapoints = 400;%50;
+num_datapoints = 100;%50;
 num_resampled_points = 50;
 
 
 %% Load demonstration
-file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
+file_name = '../motion-retargeting/test_imi_data_YuMi.h5'; %'test_imi_data_YuMi.h5'; %
 group_name = 'fengren_1';
 
 time = h5read(file_name, ['/', group_name, '/time']);
@@ -20,6 +20,7 @@ l_wrist_pos = resample_traj(time, h5read(file_name, ['/', group_name, '/l_wrist_
 l_elbow_pos = resample_traj(time, h5read(file_name, ['/', group_name, '/l_elbow_pos']), num_datapoints, false);
 r_wrist_pos = resample_traj(time, h5read(file_name, ['/', group_name, '/r_wrist_pos']), num_datapoints, false);
 r_elbow_pos = resample_traj(time, h5read(file_name, ['/', group_name, '/r_elbow_pos']), num_datapoints, false); % input should be DOF x length
+
 
 lr_wrist_pos = l_wrist_pos - r_wrist_pos;
 l_elbow_wrist_pos = l_elbow_pos - l_wrist_pos;
@@ -34,9 +35,9 @@ nbVarPos = 3; %2; %Number of motion variables [x1,x2]
 kP = 64; %Stiffness gain
 kV = (2*kP)^.5; %Damping gain (with ideal underdamped damping ratio)
 alpha = 1.0; %Decay factor
-dt = 0.01; %1/num_datapoints; %Duration of time step
+dt = 0.04; %1/num_datapoints; %Duration of time step
 nbSamples = 1; % Number of samples (of the same movement)
-display = true; % display the reproduction to see the performance
+display = false; % display the reproduction to see the performance
 
 
 %% Construct traj_dataset
@@ -45,7 +46,7 @@ traj_dataset{1} = lr_wrist_pos'; % should be of size Length x DOF!!!
 % 1 - Use TP-GMM to model the goal signal
 % model = DMP_TPGMM(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, nbSamples, true); % scalability not quite well, possibily due to modeling g instead of f/x/(g-y0)
 % 2 - Multiple methods, including direct inverse(best for our case), LWR, several GMR implementations, etc.      
-[Mu_lrw, Sigma_lrw, Weights_lrw, sIn_lrw, Yr_lrw] = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbSamples, false);
+[Mu_lrw, Sigma_lrw, Weights_lrw, sIn_lrw, Yr_lrw] = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbSamples, display);
 % 3 - Direct copy of nonlinear force profile f
 % f_lrw = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
 % 4 - GMR reproduces trajectory; refine with LQR. 
@@ -70,24 +71,23 @@ xlabel('x'); ylabel('y'); zlabel('z');
 
 % relative position between elbow and wrist (Left)
 traj_dataset{1} = l_elbow_wrist_pos'; % should be of size Length x DOF!!!
-[Mu_lew, Sigma_lew, Weights_lew, sIn_lew, Yr_lew] = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbSamples, false);
+[Mu_lew, Sigma_lew, Weights_lew, sIn_lew, Yr_lew] = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbSamples, display);
 % f_lew = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
 
 % relative position between elbow and wrist (Right)
 traj_dataset{1} = r_elbow_wrist_pos'; % should be of size Length x DOF!!!
-[Mu_rew, Sigma_rew, Weights_rew, sIn_rew, Yr_rew] = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbSamples, false);
+[Mu_rew, Sigma_rew, Weights_rew, sIn_rew, Yr_rew] = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbSamples, display);
 % f_rew = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
 
 % absolute position of Right wrist
 traj_dataset{1} = r_wrist_pos'; % should be of size Length x DOF!!!
-[Mu_rw, Sigma_rw, Weights_rw, sIn_rw, Yr_rw] = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbSamples, false);
+[Mu_rw, Sigma_rw, Weights_rw, sIn_rw, Yr_rw] = DMP_learn_weights(traj_dataset, nbData, nbStates, nbVar, nbVarPos, kP, kV, alpha, dt, nbSamples, display);
 % f_rw = DMP_get_f(traj_dataset, nbData, nbVarPos, kP, kV, alpha);
 
 
 
 %% Store the learned results
-%{
-file_name = 'test_imi_data_YuMi.h5';
+%
 group_name = 'fengren_1';
 % data about lrw
 % h5create(file_name, ['/', group_name, '/Mu_lrw'], size(Mu_lrw));
@@ -182,20 +182,20 @@ y_rw = DMP_use_weights(Mu_rw, Sigma_rw, Weights_rw, 50, kP, kV, alpha, dt, new_g
 
 
 %
-figure; plot3(y_rw(1,:), y_rw(2,:), y_rw(3,:), 'r.'); hold on; grid on;
-plot3(r_wrist_pos(1,:), r_wrist_pos(2,:), r_wrist_pos(3,:), 'b.');
+figure; plot3(y_rw(1,:), y_rw(2,:), y_rw(3,:), 'r-.'); hold on; grid on;
+plot3(r_wrist_pos(1,:), r_wrist_pos(2,:), r_wrist_pos(3,:), 'b-.');
 title('r\_wist\_pos');
 
-figure; plot3(y_lrw(1,:), y_lrw(2,:), y_lrw(3,:), 'r.'); hold on; grid on;
-plot3(lr_wrist_pos(1,:), lr_wrist_pos(2,:), lr_wrist_pos(3,:), 'b.');
+figure; plot3(y_lrw(1,:), y_lrw(2,:), y_lrw(3,:), 'r-.'); hold on; grid on;
+plot3(lr_wrist_pos(1,:), lr_wrist_pos(2,:), lr_wrist_pos(3,:), 'b-.');
 title('lr\_wrist\_pos');
 
-figure; plot3(y_lew(1,:), y_lew(2,:), y_lew(3,:), 'r.'); hold on; grid on;
-plot3(l_elbow_wrist_pos(1,:), l_elbow_wrist_pos(2,:), l_elbow_wrist_pos(3,:), 'b.');
+figure; plot3(y_lew(1,:), y_lew(2,:), y_lew(3,:), 'r-.'); hold on; grid on;
+plot3(l_elbow_wrist_pos(1,:), l_elbow_wrist_pos(2,:), l_elbow_wrist_pos(3,:), 'b-.');
 title('l\_elbow\_wrist\_pos');
 
-figure; plot3(y_rew(1,:), y_rew(2,:), y_rew(3,:), 'r.'); hold on; grid on;
-plot3(r_elbow_wrist_pos(1,:), r_elbow_wrist_pos(2,:), r_elbow_wrist_pos(3,:), 'b.');
+figure; plot3(y_rew(1,:), y_rew(2,:), y_rew(3,:), 'r-.'); hold on; grid on;
+plot3(r_elbow_wrist_pos(1,:), r_elbow_wrist_pos(2,:), r_elbow_wrist_pos(3,:), 'b-.');
 title('r\_elbow\_wrist\_pos');
 %}
 

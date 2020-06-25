@@ -46,11 +46,17 @@ end
 TimingSep = linspace(min(Data(1,:)), max(Data(1,:)), model.nbStates+1);
 
 for i=1:model.nbStates
-	idtmp = find( Data(1,:)>=TimingSep(i) & Data(1,:)<TimingSep(i+1));
-	model.Priors(i) = length(idtmp);
-	model.Mu(:,i) = mean(Data(:,idtmp)');
-	model.Sigma(:,:,i) = cov(Data(:,idtmp)');
-	%Optional regularization term to avoid numerical instability
-	model.Sigma(:,:,i) = model.Sigma(:,:,i) + eye(nbVar) * model.params_diagRegFact;
+    idtmp = find( Data(1,:)>=TimingSep(i) & Data(1,:)<TimingSep(i+1));
+    if isempty(idtmp)   % added by LYW, 2020/06/25 to cope with sparsity problem...      
+        model.Priors(i) = 0;
+        model.Mu(:,i) = (TimingSep(i)+TimingSep(i+1))/2;
+        model.Sigma(:,:,i) = 0; % will be modified later anyway
+    else
+        model.Priors(i) = length(idtmp);
+        model.Mu(:,i) = mean(Data(:,idtmp)');
+        model.Sigma(:,:,i) = cov(Data(:,idtmp)');
+        %Optional regularization term to avoid numerical instability
+        model.Sigma(:,:,i) = model.Sigma(:,:,i) + eye(nbVar) * model.params_diagRegFact;
+    end
 end
 model.Priors = model.Priors / sum(model.Priors);
