@@ -3,7 +3,7 @@
 clear;
 clc;
 
-
+addpath('./m_fcts/');
 addpath('../vmp/'); % use resample_traj
 
 ori_file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
@@ -11,6 +11,11 @@ file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity.h5';
 group_name = 'fengren_1';
 
 num_datapoints = 50;
+
+kP = 64; %Stiffness gain
+kV = (2*kP)^.5; %Damping gain (with ideal underdamped damping ratio)
+alpha = 1.0;
+dt = 0.04;
 
 %% Prepare the original data for comparison
 time = h5read(ori_file_name, ['/', group_name, '/time']);
@@ -23,8 +28,20 @@ lr_wrist_pos = l_wrist_pos - r_wrist_pos;
 l_elbow_wrist_pos = l_elbow_pos - l_wrist_pos;
 r_elbow_wrist_pos = r_elbow_pos - r_wrist_pos; 
 
-Mu_lrw 
+Mu_lrw = h5read(ori_file_name, ['/', group_name, '/Mu_lrw']);
+Mu_lew = h5read(ori_file_name, ['/', group_name, '/Mu_lew']);
+Mu_rew = h5read(ori_file_name, ['/', group_name, '/Mu_rew']);
+Mu_rw = h5read(ori_file_name, ['/', group_name, '/Mu_rw']);
 
+Sigma_lrw = h5read(ori_file_name, ['/', group_name, '/Sigma_lrw']);
+Sigma_lew = h5read(ori_file_name, ['/', group_name, '/Sigma_lew']);
+Sigma_rew = h5read(ori_file_name, ['/', group_name, '/Sigma_rew']);
+Sigma_rw = h5read(ori_file_name, ['/', group_name, '/Sigma_rw']);
+
+Weights_lrw = h5read(ori_file_name, ['/', group_name, '/Weights_lrw']);
+Weights_lew = h5read(ori_file_name, ['/', group_name, '/Weights_lew']);
+Weights_rew = h5read(ori_file_name, ['/', group_name, '/Weights_rew']);
+Weights_rw = h5read(ori_file_name, ['/', group_name, '/Weights_rw']);
 
 %% Load optimized DMP starts and goals and reproduce relative position trajectories using the optimized starts and goals 
 dmp_starts_goals = h5read(file_name, ['/', group_name, '/dmp_starts_goals_1']);
@@ -87,63 +104,107 @@ xlabel('x'); ylabel('y'); zlabel('z');
 
 
 %% Plot the cost history
-wrist_pos_cost_history = h5read(file_name, ['/', groupname, '/wrist_pos_cost_history']);
-wrist_ori_cost_history = h5read(file_name, ['/', groupname, '/wrist_ori_cost_history']);
-elbow_pos_cost_history = h5read(file_name, ['/', groupname, '/elbow_pos_cost_history']);
-finger_cost_history = h5read(file_name, ['/', groupname, '/finger_cost_history']);
-similarity_cost_history = h5read(file_name, ['/', groupname, '/similarity_cost_history']);
-smoothness_cost_history = h5read(file_name, ['/', groupname, '/smoothness_cost_history']);
-col_cost_history = h5read(file_name, ['/', groupname, '/col_cost_history']);
-pos_limit_cost_history = h5read(file_name, ['/', groupname, '/pos_limit_cost_history']);
-jacobian_history = h5read(file_name, ['/', groupname, '/jacobian_history']);
+per_iteration = 5;
+wrist_pos_cost_history = h5read(file_name, ['/', group_name, '/wrist_pos_cost_history']);
+wrist_ori_cost_history = h5read(file_name, ['/', group_name, '/wrist_ori_cost_history']);
+elbow_pos_cost_history = h5read(file_name, ['/', group_name, '/elbow_pos_cost_history']);
+finger_cost_history = h5read(file_name, ['/', group_name, '/finger_cost_history']);
+similarity_cost_history = h5read(file_name, ['/', group_name, '/similarity_cost_history']);
+smoothness_cost_history = h5read(file_name, ['/', group_name, '/smoothness_cost_history']);
+col_cost_history = h5read(file_name, ['/', group_name, '/col_cost_history']);
+pos_limit_cost_history = h5read(file_name, ['/', group_name, '/pos_limit_cost_history']);
+sim_jacobian_history = h5read(file_name, ['/', group_name, '/sim_jacobian_history']);
+track_jacobian_history = h5read(file_name, ['/', group_name, '/track_jacobian_history']);
 
 figure;
-plot((1:size(wrist_pos_cost_history, 2))*10, sum(wrist_pos_cost_history), 'b-'); hold on; grid on;
-plot((1:size(wrist_pos_cost_history, 2))*10, sum(wrist_pos_cost_history), 'bo');
+plot((1:size(col_cost_history, 2))*per_iteration, sum(col_cost_history), 'b-'); hold on; grid on;
+plot((1:size(col_cost_history, 2))*per_iteration, sum(col_cost_history), 'bo');
+title('History of collision cost');
+xlabel('Iterations'); ylabel('Cost Value'); 
+
+figure;
+plot((1:size(smoothness_cost_history, 2))*per_iteration, sum(smoothness_cost_history), 'b-'); hold on; grid on;
+plot((1:size(smoothness_cost_history, 2))*per_iteration, sum(smoothness_cost_history), 'bo');
+title('History of smoothness cost');
+xlabel('Iterations'); ylabel('Cost Value'); 
+
+figure;
+plot((1:size(wrist_pos_cost_history, 2))*per_iteration, sum(wrist_pos_cost_history), 'b-'); hold on; grid on;
+plot((1:size(wrist_pos_cost_history, 2))*per_iteration, sum(wrist_pos_cost_history), 'bo');
 title('History of wrist position cost');
 xlabel('Iterations'); ylabel('Cost Value'); 
 
 figure;
-plot((1:size(wrist_ori_cost_history, 2))*10, sum(wrist_ori_cost_history), 'b-'); hold on; grid on;
-plot((1:size(wrist_ori_cost_history, 2))*10, sum(wrist_ori_cost_history), 'bo');
+plot((1:size(wrist_ori_cost_history, 2))*per_iteration, sum(wrist_ori_cost_history), 'b-'); hold on; grid on;
+plot((1:size(wrist_ori_cost_history, 2))*per_iteration, sum(wrist_ori_cost_history), 'bo');
 title('History of wrist orientation cost');
 xlabel('Iterations'); ylabel('Cost Value'); 
 
 figure;
-plot((1:size(elbow_pos_cost_history, 2))*10, sum(elbow_pos_cost_history), 'b-'); hold on; grid on;
-plot((1:size(elbow_pos_cost_history, 2))*10, sum(elbow_pos_cost_history), 'bo');
+plot((1:size(elbow_pos_cost_history, 2))*per_iteration, sum(elbow_pos_cost_history), 'b-'); hold on; grid on;
+plot((1:size(elbow_pos_cost_history, 2))*per_iteration, sum(elbow_pos_cost_history), 'bo');
 title('History of elbow position cost');
 xlabel('Iterations'); ylabel('Cost Value'); 
 
 figure;
-plot((1:size(finger_cost_history, 2))*10, sum(finger_cost_history), 'b-'); hold on; grid on;
-plot((1:size(finger_cost_history, 2))*10, sum(finger_cost_history), 'bo');
+plot((1:size(finger_cost_history, 2))*per_iteration, sum(finger_cost_history), 'b-'); hold on; grid on;
+plot((1:size(finger_cost_history, 2))*per_iteration, sum(finger_cost_history), 'bo');
 title('History of finger angle cost');
 xlabel('Iterations'); ylabel('Cost Value'); 
 
 figure;
-plot((1:size(similarity_cost_history, 2))*10, similarity_cost_history, 'b-'); hold on; grid on;
-plot((1:size(finger_cost_history, 2))*10, similarity_cost_history, 'bo');
+plot((1:size(similarity_cost_history, 2))*per_iteration, similarity_cost_history, 'b-'); hold on; grid on;
+plot((1:size(finger_cost_history, 2))*per_iteration, similarity_cost_history, 'bo');
 title('History of similarity cost');
 xlabel('Iterations'); ylabel('Cost Value'); 
 
 % pre-processing before displaying jacobian
-passpoint_dof = size(jacobian_history, 1);
-num_records = size(jacobian_history, 3);
-num_passpoints = size(jacobian_history, 2);
-jacobian_norm = zeros(num_passpoints, num_records);
+dmp_starts_goals_dof = size(sim_jacobian_history, 1);
+num_records = size(sim_jacobian_history, 2);
+jacobian_norm = zeros(1, num_records);
 for n = 1 : num_records
-    for p = 1 : num_passpoints
-        jacobian_norm(p, n) = norm(jacobian_history(:, p, n));
-    end
+    jacobian_norm(n) = norm(sim_jacobian_history(:, n));
 end
 figure;
-for p = 1 : num_passpoints
-    plot((1:num_records)*10, jacobian_norm(p, :), 'b-'); hold on; grid on;
-    plot((1:num_records)*10, jacobian_norm(p, :), 'bo');
-end
-title('History of Jacobians');
+plot((1:num_records)*per_iteration, jacobian_norm, 'b-'); hold on; grid on;
+plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
+title('History of SimilarityConstraint Jacobians');
 xlabel('Iterations'); ylabel('Gradients magnitude'); 
+
+num_records = size(track_jacobian_history, 2);
+jacobian_norm = zeros(1, num_records);
+for n = 1 : num_records
+    jacobian_norm(n) = norm(track_jacobian_history(:, n));
+end
+figure;
+plot((1:num_records)*per_iteration, jacobian_norm, 'b-'); hold on; grid on;
+plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
+title('History of TrackingConstraint Jacobians');
+xlabel('Iterations'); ylabel('Gradients magnitude'); 
+
+
+%% The change of DMP starts and goals
+dmp_starts_goals_original = [lr_wrist_pos(:, end); lr_wrist_pos(:, 1);
+                             l_elbow_wrist_pos(:, end); l_elbow_wrist_pos(:, 1);
+                             r_elbow_wrist_pos(:, end); r_elbow_wrist_pos(:, 1);
+                             r_wrist_pos(:, end); r_wrist_pos(:, 1)];
+dmp_starts_goals_final = h5read(file_name, ['/', group_name, '/dmp_starts_goals_1']);
+dmp_starts_goals_moved = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved']);
+dmp_starts_goals_moved_optimed = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved_optimed']);
+dmp_starts_goals_moved_pulled = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved_pulled']);
+
+
+%% Analyze condition number of J'*J
+cond_nums = [];
+for i = 1 : size(track_jacobian_history, 2)
+    J = track_jacobian_history(:, i); % column vector
+    cond_nums = [cond_nums, cond(J*J')];
+end
+disp(['History of condition numbers of J^T*J = ', num2str(cond_nums)]);
+
+
+% History of condition numbers of J^T*J = 7.388521923723018e+20  2.343177021191475e+20  3.929846188521127e+20  2.947066452778979e+20  3.816431692540564e+20  2.745309753057258e+22
+
 
 
 

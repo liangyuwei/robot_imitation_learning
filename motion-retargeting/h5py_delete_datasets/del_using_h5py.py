@@ -71,6 +71,7 @@ if __name__ == '__main__':
 
 
     ### For clearing original starts and goals
+    '''
     # Preparations
     group_name = 'fengren_1'
     del_dataset_list_prefix = ['lrw',
@@ -88,9 +89,10 @@ if __name__ == '__main__':
                     del f[group_name+'/'+del_dataset_prefix+del_dataset_suffix]
 
     print('Deletion done.')    
-    
+    '''
     
     ### For clearing resampled quaternion and glove angle trajectories
+    '''
     # Preparations
     group_name = 'fengren_1'
     del_dataset_list_prefix = ['l',
@@ -106,7 +108,7 @@ if __name__ == '__main__':
                     del f[group_name+'/'+del_dataset_prefix+del_dataset_suffix]
 
     print('Deletion done.')      
-    
+    '''
     
     
     
