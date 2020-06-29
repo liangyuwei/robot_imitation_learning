@@ -115,6 +115,7 @@ col_cost_history = h5read(file_name, ['/', group_name, '/col_cost_history']);
 pos_limit_cost_history = h5read(file_name, ['/', group_name, '/pos_limit_cost_history']);
 sim_jacobian_history = h5read(file_name, ['/', group_name, '/sim_jacobian_history']);
 track_jacobian_history = h5read(file_name, ['/', group_name, '/track_jacobian_history']);
+dmp_update_history = h5read(file_name, ['/', group_name, '/dmp_update_history']);
 
 figure;
 plot((1:size(col_cost_history, 2))*per_iteration, sum(col_cost_history), 'b-'); hold on; grid on;
@@ -154,7 +155,7 @@ xlabel('Iterations'); ylabel('Cost Value');
 
 figure;
 plot((1:size(similarity_cost_history, 2))*per_iteration, similarity_cost_history, 'b-'); hold on; grid on;
-plot((1:size(finger_cost_history, 2))*per_iteration, similarity_cost_history, 'bo');
+plot((1:size(similarity_cost_history, 2))*per_iteration, similarity_cost_history, 'bo');
 title('History of similarity cost');
 xlabel('Iterations'); ylabel('Cost Value'); 
 
@@ -182,6 +183,13 @@ plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
 title('History of TrackingConstraint Jacobians');
 xlabel('Iterations'); ylabel('Gradients magnitude'); 
 
+figure;
+plot((1:size(dmp_update_history, 2))*per_iteration, sum(dmp_update_history), 'b-'); hold on; grid on;
+plot((1:size(dmp_update_history, 2))*per_iteration, sum(dmp_update_history), 'bo');
+title('History of DMP updates');
+xlabel('Iterations'); ylabel('Sum of updates on all DOF'); 
+
+
 
 %% The change of DMP starts and goals
 dmp_starts_goals_original = [lr_wrist_pos(:, end); lr_wrist_pos(:, 1);
@@ -208,4 +216,27 @@ disp(['History of condition numbers of J^T*J = ', num2str(cond_nums)]);
 
 
 
+%% Debug: try to establish a constraint for DMP starts and goals
+lrw_goal_ori = dmp_starts_goals_original(1:3);
+lrw_start_ori = dmp_starts_goals_original(4:6);
+lew_goal_ori = dmp_starts_goals_original(7:9);
+lew_start_ori = dmp_starts_goals_original(10:12);
+rew_goal_ori = dmp_starts_goals_original(13:15);
+rew_start_ori = dmp_starts_goals_original(16:18);
+rw_goal_ori = dmp_starts_goals_original(19:21);
+rw_start_ori = dmp_starts_goals_original(22:24);
+
+lrw_goal_new = dmp_starts_goals(1:3);
+lrw_start_new = dmp_starts_goals(4:6);
+lew_goal_new = dmp_starts_goals(7:9);
+lew_start_new = dmp_starts_goals(10:12);
+rew_goal_new = dmp_starts_goals(13:15);
+rew_start_new = dmp_starts_goals(16:18);
+rw_goal_new = dmp_starts_goals(19:21);
+rw_start_new = dmp_starts_goals(22:24);
+
+
+a = rw_goal_new - rw_start_new;
+b = rw_goal_ori - rw_start_ori;
+th = acos(a'*b/norm(a)/norm(b)) * 180 / pi;
 
