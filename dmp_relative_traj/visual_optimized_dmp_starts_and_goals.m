@@ -113,9 +113,17 @@ similarity_cost_history = h5read(file_name, ['/', group_name, '/similarity_cost_
 smoothness_cost_history = h5read(file_name, ['/', group_name, '/smoothness_cost_history']);
 col_cost_history = h5read(file_name, ['/', group_name, '/col_cost_history']);
 pos_limit_cost_history = h5read(file_name, ['/', group_name, '/pos_limit_cost_history']);
+dmp_scale_cost_history = h5read(file_name, ['/', group_name, '/dmp_scale_cost_history']);
+dmp_orien_cost_history = h5read(file_name, ['/', group_name, '/dmp_orien_cost_history']);
+
+% jacobians for DMP starts and goals
 sim_jacobian_history = h5read(file_name, ['/', group_name, '/sim_jacobian_history']);
 track_jacobian_history = h5read(file_name, ['/', group_name, '/track_jacobian_history']);
+orien_jacobian_history = h5read(file_name, ['/', group_name, '/orien_jacobian_history']);
+scale_jacobian_history = h5read(file_name, ['/', group_name, '/scale_jacobian_history']);
+% update history of DMP
 dmp_update_history = h5read(file_name, ['/', group_name, '/dmp_update_history']);
+
 
 figure;
 plot((1:size(col_cost_history, 2))*per_iteration, sum(col_cost_history), 'b-'); hold on; grid on;
@@ -154,6 +162,18 @@ title('History of finger angle cost');
 xlabel('Iterations'); ylabel('Cost Value'); 
 
 figure;
+plot((1:size(dmp_orien_cost_history, 2))*per_iteration, sum(dmp_orien_cost_history), 'b-'); hold on; grid on;
+plot((1:size(dmp_orien_cost_history, 2))*per_iteration, sum(dmp_orien_cost_history), 'bo');
+title('History of dmp orientation cost');
+xlabel('Iterations'); ylabel('Cost Value'); 
+
+figure;
+plot((1:size(dmp_scale_cost_history, 2))*per_iteration, sum(dmp_scale_cost_history), 'b-'); hold on; grid on;
+plot((1:size(dmp_scale_cost_history, 2))*per_iteration, sum(dmp_scale_cost_history), 'bo');
+title('History of dmp scale cost');
+xlabel('Iterations'); ylabel('Cost Value'); 
+
+figure;
 plot((1:size(similarity_cost_history, 2))*per_iteration, similarity_cost_history, 'b-'); hold on; grid on;
 plot((1:size(similarity_cost_history, 2))*per_iteration, similarity_cost_history, 'bo');
 title('History of similarity cost');
@@ -183,11 +203,39 @@ plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
 title('History of TrackingConstraint Jacobians');
 xlabel('Iterations'); ylabel('Gradients magnitude'); 
 
+num_records = size(orien_jacobian_history, 2);
+jacobian_norm = zeros(1, num_records);
+for n = 1 : num_records
+    jacobian_norm(n) = norm(orien_jacobian_history(:, n));
+end
 figure;
-plot((1:size(dmp_update_history, 2))*per_iteration, sum(dmp_update_history), 'b-'); hold on; grid on;
-plot((1:size(dmp_update_history, 2))*per_iteration, sum(dmp_update_history), 'bo');
+plot((1:num_records)*per_iteration, jacobian_norm, 'b-'); hold on; grid on;
+plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
+title('History of DMPOrienConstraint Jacobians');
+xlabel('Iterations'); ylabel('Gradients magnitude'); 
+
+num_records = size(scale_jacobian_history, 2);
+jacobian_norm = zeros(1, num_records);
+for n = 1 : num_records
+    jacobian_norm(n) = norm(scale_jacobian_history(:, n));
+end
+figure;
+plot((1:num_records)*per_iteration, jacobian_norm, 'b-'); hold on; grid on;
+plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
+title('History of DMPScaleConstraint Jacobians');
+xlabel('Iterations'); ylabel('Gradients magnitude'); 
+
+% should use norm() instead of sum(), which is more reasonable
+num_records = size(dmp_update_history, 2);
+jacobian_norm = zeros(1, num_records);
+for n = 1 : num_records
+    jacobian_norm(n) = norm(dmp_update_history(:, n));
+end
+figure;
+plot((1:num_records)*per_iteration, jacobian_norm, 'b-'); hold on; grid on;
+plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
 title('History of DMP updates');
-xlabel('Iterations'); ylabel('Sum of updates on all DOF'); 
+xlabel('Iterations'); ylabel('Norm of updates on all DOF'); 
 
 
 
@@ -217,6 +265,7 @@ disp(['History of condition numbers of J^T*J = ', num2str(cond_nums)]);
 
 
 %% Debug: try to establish a constraint for DMP starts and goals
+% get goals and starts
 lrw_goal_ori = dmp_starts_goals_original(1:3);
 lrw_start_ori = dmp_starts_goals_original(4:6);
 lew_goal_ori = dmp_starts_goals_original(7:9);
@@ -235,8 +284,66 @@ rew_start_new = dmp_starts_goals(16:18);
 rw_goal_new = dmp_starts_goals(19:21);
 rw_start_new = dmp_starts_goals(22:24);
 
+% get vectors pointing from starts to goals
+lrw_vec_ori = lrw_goal_ori - lrw_start_ori;
+lew_vec_ori = lew_goal_ori - lew_start_ori;
+rew_vec_ori = rew_goal_ori - rew_start_ori;
+rw_vec_ori = rw_goal_ori - rw_start_ori;
 
-a = rw_goal_new - rw_start_new;
-b = rw_goal_ori - rw_start_ori;
-th = acos(a'*b/norm(a)/norm(b)) * 180 / pi;
+lrw_vec_new = lrw_goal_new - lrw_start_new;
+lew_vec_new = lew_goal_new - lew_start_new;
+rew_vec_new = rew_goal_new - rew_start_new;
+rw_vec_new = rw_goal_new - rw_start_new;
+
+lrw_ratio = norm(lrw_vec_new) / norm(lrw_vec_ori);
+lew_ratio = norm(lew_vec_new) / norm(lew_vec_ori);
+rew_ratio = norm(rew_vec_new) / norm(rew_vec_ori);
+rw_ratio = norm(rw_vec_new) / norm(rw_vec_ori);
+
+lrw_th = acos(lrw_vec_new'*lrw_vec_ori/norm(lrw_vec_new)/norm(lrw_vec_ori)) * 180 / pi;
+lew_th = acos(lew_vec_new'*lew_vec_ori/norm(lew_vec_new)/norm(lew_vec_ori)) * 180 / pi;
+rew_th = acos(rew_vec_new'*rew_vec_ori/norm(rew_vec_new)/norm(rew_vec_ori)) * 180 / pi;
+rw_th = acos(rw_vec_new'*rw_vec_ori/norm(rw_vec_new)/norm(rw_vec_ori)) * 180 / pi;
+
+
+
+%% Debug: analyze jacobian history
+% raw data, 24-dim
+figure;
+p1 = plot((1:size(orien_jacobian_history, 2))*per_iteration, orien_jacobian_history, 'b-'); hold on; grid on;
+plot((1:size(orien_jacobian_history, 2))*per_iteration, orien_jacobian_history, 'bo'); % 1
+p2 = plot((1:size(scale_jacobian_history, 2))*per_iteration, scale_jacobian_history, 'r-'); 
+plot((1:size(scale_jacobian_history, 2))*per_iteration, scale_jacobian_history, 'ro'); % 2
+p3 = plot((1:size(track_jacobian_history, 2))*per_iteration, track_jacobian_history, 'g-'); 
+plot((1:size(track_jacobian_history, 2))*per_iteration, track_jacobian_history, 'go'); % 3
+p4 = plot((1:size(sim_jacobian_history, 2))*per_iteration, sim_jacobian_history, 'm-'); 
+plot((1:size(sim_jacobian_history, 2))*per_iteration, sim_jacobian_history, 'mo'); % 4 
+title('History of Jacobians w.r.t DMP starts and goals');
+xlabel('Iterations'); ylabel('Jacobians'); 
+legend([p1(1), p2(1), p3(1), p4(1)], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian', 'sim\_jacobian', 'Location', 'NorthEastOutside');
+% 'track_jacobian', 'sim_jacobian', 'Location', 'NorthEastOutside');
+
+
+% norms
+num_records = size(track_jacobian_history, 2);
+track_jacobian_norm = zeros(1, num_records);
+sim_jacobian_norm = zeros(1, num_records);
+orien_jacobian_norm = zeros(1, num_records);
+scale_jacobian_norm = zeros(1, num_records);
+for n = 1 : num_records
+    track_jacobian_norm(n) = norm(track_jacobian_history(:, n));
+    sim_jacobian_norm(n) = norm(sim_jacobian_history(:, n));
+    orien_jacobian_norm(n) = norm(orien_jacobian_history(:, n));
+    scale_jacobian_norm(n) = norm(scale_jacobian_history(:, n));
+end
+figure;
+p1 = plot((1:num_records)*per_iteration, orien_jacobian_norm, 'b-'); hold on; grid on;
+p2 = plot((1:num_records)*per_iteration, scale_jacobian_norm, 'r-');
+p3 = plot((1:num_records)*per_iteration, track_jacobian_norm, 'g-');
+p4 = plot((1:num_records)*per_iteration, sim_jacobian_norm, 'm-');
+title('History of Norms of DMP Jacobians');
+xlabel('Iterations'); ylabel('Norms of jacobians'); 
+legend([p1, p2, p3, p4], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian', 'sim\_jacobian', 'Location', 'NorthEastOutside');
+
+
 
