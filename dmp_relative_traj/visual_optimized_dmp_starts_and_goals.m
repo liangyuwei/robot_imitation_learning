@@ -162,14 +162,14 @@ title('History of finger angle cost');
 xlabel('Iterations'); ylabel('Cost Value'); 
 
 figure;
-plot((1:size(dmp_orien_cost_history, 2))*per_iteration, sum(dmp_orien_cost_history), 'b-'); hold on; grid on;
-plot((1:size(dmp_orien_cost_history, 2))*per_iteration, sum(dmp_orien_cost_history), 'bo');
+plot((1:size(dmp_orien_cost_history, 2))*per_iteration, dmp_orien_cost_history, 'b-'); hold on; grid on;
+plot((1:size(dmp_orien_cost_history, 2))*per_iteration, dmp_orien_cost_history, 'bo');
 title('History of dmp orientation cost');
 xlabel('Iterations'); ylabel('Cost Value'); 
 
 figure;
-plot((1:size(dmp_scale_cost_history, 2))*per_iteration, sum(dmp_scale_cost_history), 'b-'); hold on; grid on;
-plot((1:size(dmp_scale_cost_history, 2))*per_iteration, sum(dmp_scale_cost_history), 'bo');
+plot((1:size(dmp_scale_cost_history, 2))*per_iteration, dmp_scale_cost_history, 'b-'); hold on; grid on;
+plot((1:size(dmp_scale_cost_history, 2))*per_iteration, dmp_scale_cost_history, 'bo');
 title('History of dmp scale cost');
 xlabel('Iterations'); ylabel('Cost Value'); 
 
