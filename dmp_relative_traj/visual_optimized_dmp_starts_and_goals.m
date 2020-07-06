@@ -60,10 +60,10 @@ y_rew = DMP_use_weights(Mu_rew, Sigma_rew, Weights_rew, 50, kP, kV, alpha, dt, n
 y_rw = DMP_use_weights(Mu_rw, Sigma_rw, Weights_rw, 50, kP, kV, alpha, dt, new_goal_rw, new_start_rw, false);
 
 
-%
+%{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
 figure; plot3(y_rw(1,:), y_rw(2,:), y_rw(3,:), 'r-.'); hold on; grid on;
 plot3(r_wrist_pos(1,:), r_wrist_pos(2,:), r_wrist_pos(3,:), 'b-.');
-title('r\_wist\_pos');
+title('r\_wist\_pos');                                                                                                     
 
 figure; plot3(y_lrw(1,:), y_lrw(2,:), y_lrw(3,:), 'r-.'); hold on; grid on;
 plot3(lr_wrist_pos(1,:), lr_wrist_pos(2,:), lr_wrist_pos(3,:), 'b-.');
@@ -106,8 +106,12 @@ xlabel('x'); ylabel('y'); zlabel('z');
 %% Plot the cost history
 per_iteration = 5;
 wrist_pos_cost_history = h5read(file_name, ['/', group_name, '/wrist_pos_cost_history']);
+l_wrist_pos_cost_history = h5read(file_name, ['/', group_name, '/l_wrist_pos_cost_history']);
+r_wrist_pos_cost_history = h5read(file_name, ['/', group_name, '/r_wrist_pos_cost_history']);
 wrist_ori_cost_history = h5read(file_name, ['/', group_name, '/wrist_ori_cost_history']);
 elbow_pos_cost_history = h5read(file_name, ['/', group_name, '/elbow_pos_cost_history']);
+l_elbow_pos_cost_history = h5read(file_name, ['/', group_name, '/l_elbow_pos_cost_history']);
+r_elbow_pos_cost_history = h5read(file_name, ['/', group_name, '/r_elbow_pos_cost_history']);
 finger_cost_history = h5read(file_name, ['/', group_name, '/finger_cost_history']);
 similarity_cost_history = h5read(file_name, ['/', group_name, '/similarity_cost_history']);
 smoothness_cost_history = h5read(file_name, ['/', group_name, '/smoothness_cost_history']);
@@ -141,6 +145,18 @@ figure;
 plot((1:size(wrist_pos_cost_history, 2))*per_iteration, sum(wrist_pos_cost_history), 'b-'); hold on; grid on;
 plot((1:size(wrist_pos_cost_history, 2))*per_iteration, sum(wrist_pos_cost_history), 'bo');
 title('History of wrist position cost');
+xlabel('Iterations'); ylabel('Cost Value'); 
+
+figure;
+plot((1:size(l_wrist_pos_cost_history, 2))*per_iteration, sum(l_wrist_pos_cost_history), 'b-'); hold on; grid on;
+plot((1:size(l_wrist_pos_cost_history, 2))*per_iteration, sum(l_wrist_pos_cost_history), 'bo');
+title('History of left wrist position cost');
+xlabel('Iterations'); ylabel('Cost Value'); 
+
+figure;
+plot((1:size(r_wrist_pos_cost_history, 2))*per_iteration, sum(r_wrist_pos_cost_history), 'b-'); hold on; grid on;
+plot((1:size(r_wrist_pos_cost_history, 2))*per_iteration, sum(r_wrist_pos_cost_history), 'bo');
+title('History of right wrist position cost');
 xlabel('Iterations'); ylabel('Cost Value'); 
 
 figure;
