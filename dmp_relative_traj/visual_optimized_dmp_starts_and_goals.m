@@ -43,6 +43,7 @@ Weights_lew = h5read(ori_file_name, ['/', group_name, '/Weights_lew']);
 Weights_rew = h5read(ori_file_name, ['/', group_name, '/Weights_rew']);
 Weights_rw = h5read(ori_file_name, ['/', group_name, '/Weights_rw']);
 
+
 %% Load optimized DMP starts and goals and reproduce relative position trajectories using the optimized starts and goals 
 dmp_starts_goals = h5read(file_name, ['/', group_name, '/dmp_starts_goals_1']);
 new_goal_lrw = dmp_starts_goals(1:3);
@@ -60,7 +61,7 @@ y_rew = DMP_use_weights(Mu_rew, Sigma_rew, Weights_rew, 50, kP, kV, alpha, dt, n
 y_rw = DMP_use_weights(Mu_rw, Sigma_rw, Weights_rw, 50, kP, kV, alpha, dt, new_goal_rw, new_start_rw, false);
 
 
-%{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+%{
 figure; plot3(y_rw(1,:), y_rw(2,:), y_rw(3,:), 'r-.'); hold on; grid on;
 plot3(r_wrist_pos(1,:), r_wrist_pos(2,:), r_wrist_pos(3,:), 'b-.');
 title('r\_wist\_pos');                                                                                                     
@@ -278,8 +279,6 @@ disp(['History of condition numbers of J^T*J = ', num2str(cond_nums)]);
 % History of condition numbers of J^T*J = 7.388521923723018e+20  2.343177021191475e+20  3.929846188521127e+20  2.947066452778979e+20  3.816431692540564e+20  2.745309753057258e+22
 
 
-
-
 %% Debug: try to establish a constraint for DMP starts and goals
 % get goals and starts
 lrw_goal_ori = dmp_starts_goals_original(1:3);
@@ -360,6 +359,54 @@ p4 = plot((1:num_records)*per_iteration, sim_jacobian_norm, 'm-');
 title('History of Norms of DMP Jacobians');
 xlabel('Iterations'); ylabel('Norms of jacobians'); 
 legend([p1, p2, p3, p4], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian', 'sim\_jacobian', 'Location', 'NorthEastOutside');
+
+
+%% Pre-iteration results - wrist and elbow's actual(executed) position trajectories
+%
+% load pre-iteration results - wrist and elbow's position trajectories
+preiter_l_wrist_pos_traj = h5read(file_name, ['/', group_name, '/preiter_l_wrist_pos_traj']);
+preiter_r_wrist_pos_traj = h5read(file_name, ['/', group_name, '/preiter_r_wrist_pos_traj']);
+preiter_l_elbow_pos_traj = h5read(file_name, ['/', group_name, '/preiter_l_elbow_pos_traj']);
+preiter_r_elbow_pos_traj = h5read(file_name, ['/', group_name, '/preiter_r_elbow_pos_traj']);
+optimed_l_wrist_pos_traj = h5read(file_name, ['/', group_name, '/optimed_l_wrist_pos_traj']);
+optimed_r_wrist_pos_traj = h5read(file_name, ['/', group_name, '/optimed_r_wrist_pos_traj']);
+optimed_l_elbow_pos_traj = h5read(file_name, ['/', group_name, '/optimed_l_elbow_pos_traj']);
+optimed_r_elbow_pos_traj = h5read(file_name, ['/', group_name, '/optimed_r_elbow_pos_traj']);
+
+% 1 - plot pre-iteration result
+figure;
+plot3(l_wrist_pos(1, :), l_wrist_pos(2, :), l_wrist_pos(3, :), 'b--'); hold on; grid on;
+plot3(r_wrist_pos(1, :), r_wrist_pos(2, :), r_wrist_pos(3, :), 'b--'); 
+plot3(l_elbow_pos(1, :), l_elbow_pos(2, :), l_elbow_pos(3, :), 'b--'); 
+plot3(r_elbow_pos(1, :), r_elbow_pos(2, :), r_elbow_pos(3, :), 'b--'); 
+
+plot3(preiter_l_wrist_pos_traj(1, :), preiter_l_wrist_pos_traj(2, :), preiter_l_wrist_pos_traj(3, :), 'r--');
+plot3(preiter_r_wrist_pos_traj(1, :), preiter_r_wrist_pos_traj(2, :), preiter_r_wrist_pos_traj(3, :), 'r--'); 
+plot3(preiter_l_elbow_pos_traj(1, :), preiter_l_elbow_pos_traj(2, :), preiter_l_elbow_pos_traj(3, :), 'r--'); 
+plot3(preiter_r_elbow_pos_traj(1, :), preiter_r_elbow_pos_traj(2, :), preiter_r_elbow_pos_traj(3, :), 'r--'); 
+
+% view(-45, 45);
+% title('Original and pre-iteration optimized trajectories');
+% xlabel('x'); ylabel('y'); zlabel('z'); 
+
+% 2 - plot optimized result 
+% figure;
+% plot3(l_wrist_pos(1, :), l_wrist_pos(2, :), l_wrist_pos(3, :), 'b--'); hold on; grid on;
+% plot3(r_wrist_pos(1, :), r_wrist_pos(2, :), r_wrist_pos(3, :), 'b--'); 
+% plot3(l_elbow_pos(1, :), l_elbow_pos(2, :), l_elbow_pos(3, :), 'b--'); 
+% plot3(r_elbow_pos(1, :), r_elbow_pos(2, :), r_elbow_pos(3, :), 'b--'); 
+
+plot3(optimed_l_wrist_pos_traj(1, :), optimed_l_wrist_pos_traj(2, :), optimed_l_wrist_pos_traj(3, :), 'g--');
+plot3(optimed_r_wrist_pos_traj(1, :), optimed_r_wrist_pos_traj(2, :), optimed_r_wrist_pos_traj(3, :), 'g--'); 
+plot3(optimed_l_elbow_pos_traj(1, :), optimed_l_elbow_pos_traj(2, :), optimed_l_elbow_pos_traj(3, :), 'g--'); 
+plot3(optimed_r_elbow_pos_traj(1, :), optimed_r_elbow_pos_traj(2, :), optimed_r_elbow_pos_traj(3, :), 'g--'); 
+
+view(-45, 45);
+title('Comparison between Original, Pre-iteration optimized and Final optimized trajectories');
+xlabel('x'); ylabel('y'); zlabel('z');
+
+%}
+
 
 
 
