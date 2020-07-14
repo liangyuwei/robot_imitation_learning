@@ -362,7 +362,6 @@ legend([p1, p2, p3, p4], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian'
 
 
 %% Pre-iteration results - wrist and elbow's actual(executed) position trajectories
-%
 % load pre-iteration results - wrist and elbow's position trajectories
 preiter_l_wrist_pos_traj = h5read(file_name, ['/', group_name, '/preiter_l_wrist_pos_traj']);
 preiter_r_wrist_pos_traj = h5read(file_name, ['/', group_name, '/preiter_r_wrist_pos_traj']);
@@ -373,40 +372,159 @@ optimed_r_wrist_pos_traj = h5read(file_name, ['/', group_name, '/optimed_r_wrist
 optimed_l_elbow_pos_traj = h5read(file_name, ['/', group_name, '/optimed_l_elbow_pos_traj']);
 optimed_r_elbow_pos_traj = h5read(file_name, ['/', group_name, '/optimed_r_elbow_pos_traj']);
 
-% 1 - plot pre-iteration result
+% load pre-iteration initial setup
+dmp_starts_goals = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved']);
+new_goal_lrw = dmp_starts_goals(1:3);
+new_start_lrw = dmp_starts_goals(4:6);
+new_goal_lew = dmp_starts_goals(7:9);
+new_start_lew = dmp_starts_goals(10:12);
+new_goal_rew = dmp_starts_goals(13:15);
+new_start_rew = dmp_starts_goals(16:18);
+new_goal_rw = dmp_starts_goals(19:21);
+new_start_rw = dmp_starts_goals(22:24);
+
+% plot pre-iteration target and result
+y_lrw = DMP_use_weights(Mu_lrw, Sigma_lrw, Weights_lrw, 50, kP, kV, alpha, dt, new_goal_lrw, new_start_lrw, false);
+y_lew = DMP_use_weights(Mu_lew, Sigma_lew, Weights_lew, 50, kP, kV, alpha, dt, new_goal_lew, new_start_lew, false);
+y_rew = DMP_use_weights(Mu_rew, Sigma_rew, Weights_rew, 50, kP, kV, alpha, dt, new_goal_rew, new_start_rew, false);
+y_rw = DMP_use_weights(Mu_rw, Sigma_rw, Weights_rw, 50, kP, kV, alpha, dt, new_goal_rw, new_start_rw, false);
+
+y_r_wrist = y_rw;
+y_l_wrist = y_rw + y_lrw;
+y_r_elbow = y_rw + y_rew;
+y_l_elbow = y_l_wrist + y_lew;
+
+figure;
+plot3(l_wrist_pos(1, :), l_wrist_pos(2, :), l_wrist_pos(3, :), 'b--'); hold on; grid on;
+plot3(r_wrist_pos(1, :), r_wrist_pos(2, :), r_wrist_pos(3, :), 'b--'); 
+plot3(l_elbow_pos(1, :), l_elbow_pos(2, :), l_elbow_pos(3, :), 'b--'); 
+plot3(r_elbow_pos(1, :), r_elbow_pos(2, :), r_elbow_pos(3, :), 'b--');  % original imitation data
+
+plot3(y_l_wrist(1, :), y_l_wrist(2, :), y_l_wrist(3, :), 'r--');
+plot3(y_r_wrist(1, :), y_r_wrist(2, :), y_r_wrist(3, :), 'r--'); 
+plot3(y_l_elbow(1, :), y_l_elbow(2, :), y_l_elbow(3, :), 'r--'); 
+plot3(y_r_elbow(1, :), y_r_elbow(2, :), y_r_elbow(3, :), 'r--'); % initial target
+
+plot3(preiter_l_wrist_pos_traj(1, :), preiter_l_wrist_pos_traj(2, :), preiter_l_wrist_pos_traj(3, :), 'g--');
+plot3(preiter_r_wrist_pos_traj(1, :), preiter_r_wrist_pos_traj(2, :), preiter_r_wrist_pos_traj(3, :), 'g--'); 
+plot3(preiter_l_elbow_pos_traj(1, :), preiter_l_elbow_pos_traj(2, :), preiter_l_elbow_pos_traj(3, :), 'g--'); 
+plot3(preiter_r_elbow_pos_traj(1, :), preiter_r_elbow_pos_traj(2, :), preiter_r_elbow_pos_traj(3, :), 'g--');  % pre-iteration results
+
+view(-45, 45);
+% title('Original and reproduced trajectories');
+title('Original, Desired and Pre-iteration optimized trajectories');
+xlabel('x'); ylabel('y'); zlabel('z'); 
+
+
+%% Final optimization results
+% load optimized DMP starts and goals
+dmp_starts_goals = h5read(file_name, ['/', group_name, '/dmp_starts_goals_1']);
+new_goal_lrw = dmp_starts_goals(1:3);
+new_start_lrw = dmp_starts_goals(4:6);
+new_goal_lew = dmp_starts_goals(7:9);
+new_start_lew = dmp_starts_goals(10:12);
+new_goal_rew = dmp_starts_goals(13:15);
+new_start_rew = dmp_starts_goals(16:18);
+new_goal_rw = dmp_starts_goals(19:21);
+new_start_rw = dmp_starts_goals(22:24);
+
+% plot pre-iteration target and result
+y_lrw = DMP_use_weights(Mu_lrw, Sigma_lrw, Weights_lrw, 50, kP, kV, alpha, dt, new_goal_lrw, new_start_lrw, false);
+y_lew = DMP_use_weights(Mu_lew, Sigma_lew, Weights_lew, 50, kP, kV, alpha, dt, new_goal_lew, new_start_lew, false);
+y_rew = DMP_use_weights(Mu_rew, Sigma_rew, Weights_rew, 50, kP, kV, alpha, dt, new_goal_rew, new_start_rew, false);
+y_rw = DMP_use_weights(Mu_rw, Sigma_rw, Weights_rw, 50, kP, kV, alpha, dt, new_goal_rw, new_start_rw, false);
+
+y_r_wrist = y_rw;
+y_l_wrist = y_rw + y_lrw;
+y_r_elbow = y_rw + y_rew;
+y_l_elbow = y_l_wrist + y_lew;
+
+figure;
+% original imitation data
+plot3(l_wrist_pos(1, :), l_wrist_pos(2, :), l_wrist_pos(3, :), 'b--'); hold on; grid on;
+plot3(r_wrist_pos(1, :), r_wrist_pos(2, :), r_wrist_pos(3, :), 'b--'); 
+plot3(l_elbow_pos(1, :), l_elbow_pos(2, :), l_elbow_pos(3, :), 'b--'); 
+plot3(r_elbow_pos(1, :), r_elbow_pos(2, :), r_elbow_pos(3, :), 'b--');  % original imitation data
+
+% DMP trajectories expected to follow
+plot3(y_l_wrist(1, :), y_l_wrist(2, :), y_l_wrist(3, :), 'r--');
+plot3(y_r_wrist(1, :), y_r_wrist(2, :), y_r_wrist(3, :), 'r--'); 
+plot3(y_l_elbow(1, :), y_l_elbow(2, :), y_l_elbow(3, :), 'r--'); 
+plot3(y_r_elbow(1, :), y_r_elbow(2, :), y_r_elbow(3, :), 'r--');  % optimized DMP targets
+
+% actually executed trajectories
+plot3(optimed_l_wrist_pos_traj(1, :), optimed_l_wrist_pos_traj(2, :), optimed_l_wrist_pos_traj(3, :), 'g--');
+plot3(optimed_r_wrist_pos_traj(1, :), optimed_r_wrist_pos_traj(2, :), optimed_r_wrist_pos_traj(3, :), 'g--'); 
+plot3(optimed_l_elbow_pos_traj(1, :), optimed_l_elbow_pos_traj(2, :), optimed_l_elbow_pos_traj(3, :), 'g--'); 
+plot3(optimed_r_elbow_pos_traj(1, :), optimed_r_elbow_pos_traj(2, :), optimed_r_elbow_pos_traj(3, :), 'g--');  % optimized q trajectories
+
+view(-45, 45);
+title('Original, Desired and Final optimized trajectories');
+xlabel('x'); ylabel('y'); zlabel('z');
+
+
+%% Debug for choosing weights for q optimization (tracking), set a reasonable initial position to start with     
+%{
+% expected, desired trajectories
+dmp_starts_goals = dmp_starts_goals_original;
+new_goal_lrw = dmp_starts_goals(1:3);
+new_start_lrw = dmp_starts_goals(4:6);
+new_goal_lew = dmp_starts_goals(7:9);
+new_start_lew = dmp_starts_goals(10:12);
+new_goal_rew = dmp_starts_goals(13:15);
+new_start_rew = dmp_starts_goals(16:18);
+new_goal_rw = dmp_starts_goals(19:21);
+new_start_rw = dmp_starts_goals(22:24);
+
+% translate rw to desired position
+rw_set_start = [0.5, -0.18, 0.5]';
+rw_offset = rw_set_start - new_start_rw;
+new_goal_rw = new_goal_rw + rw_offset;
+new_start_rw = new_start_rw + rw_offset;
+
+
+y_lrw = DMP_use_weights(Mu_lrw, Sigma_lrw, Weights_lrw, 50, kP, kV, alpha, dt, new_goal_lrw, new_start_lrw, false);
+y_lew = DMP_use_weights(Mu_lew, Sigma_lew, Weights_lew, 50, kP, kV, alpha, dt, new_goal_lew, new_start_lew, false);
+y_rew = DMP_use_weights(Mu_rew, Sigma_rew, Weights_rew, 50, kP, kV, alpha, dt, new_goal_rew, new_start_rew, false);
+y_rw = DMP_use_weights(Mu_rw, Sigma_rw, Weights_rw, 50, kP, kV, alpha, dt, new_goal_rw, new_start_rw, false);
+
+y_r_wrist = y_rw;
+y_l_wrist = y_rw + y_lrw;
+y_r_elbow = y_rw + y_rew;
+y_l_elbow = y_l_wrist + y_lew;
+
 figure;
 plot3(l_wrist_pos(1, :), l_wrist_pos(2, :), l_wrist_pos(3, :), 'b--'); hold on; grid on;
 plot3(r_wrist_pos(1, :), r_wrist_pos(2, :), r_wrist_pos(3, :), 'b--'); 
 plot3(l_elbow_pos(1, :), l_elbow_pos(2, :), l_elbow_pos(3, :), 'b--'); 
 plot3(r_elbow_pos(1, :), r_elbow_pos(2, :), r_elbow_pos(3, :), 'b--'); 
 
-plot3(preiter_l_wrist_pos_traj(1, :), preiter_l_wrist_pos_traj(2, :), preiter_l_wrist_pos_traj(3, :), 'r--');
-plot3(preiter_r_wrist_pos_traj(1, :), preiter_r_wrist_pos_traj(2, :), preiter_r_wrist_pos_traj(3, :), 'r--'); 
-plot3(preiter_l_elbow_pos_traj(1, :), preiter_l_elbow_pos_traj(2, :), preiter_l_elbow_pos_traj(3, :), 'r--'); 
-plot3(preiter_r_elbow_pos_traj(1, :), preiter_r_elbow_pos_traj(2, :), preiter_r_elbow_pos_traj(3, :), 'r--'); 
+plot3(y_l_wrist(1, :), y_l_wrist(2, :), y_l_wrist(3, :), 'r--');
+plot3(y_r_wrist(1, :), y_r_wrist(2, :), y_r_wrist(3, :), 'r--'); 
+plot3(y_l_elbow(1, :), y_l_elbow(2, :), y_l_elbow(3, :), 'r--'); 
+plot3(y_r_elbow(1, :), y_r_elbow(2, :), y_r_elbow(3, :), 'r--'); 
 
-% view(-45, 45);
-% title('Original and pre-iteration optimized trajectories');
-% xlabel('x'); ylabel('y'); zlabel('z'); 
-
-% 2 - plot optimized result 
-% figure;
-% plot3(l_wrist_pos(1, :), l_wrist_pos(2, :), l_wrist_pos(3, :), 'b--'); hold on; grid on;
-% plot3(r_wrist_pos(1, :), r_wrist_pos(2, :), r_wrist_pos(3, :), 'b--'); 
-% plot3(l_elbow_pos(1, :), l_elbow_pos(2, :), l_elbow_pos(3, :), 'b--'); 
-% plot3(r_elbow_pos(1, :), r_elbow_pos(2, :), r_elbow_pos(3, :), 'b--'); 
-
-plot3(optimed_l_wrist_pos_traj(1, :), optimed_l_wrist_pos_traj(2, :), optimed_l_wrist_pos_traj(3, :), 'g--');
-plot3(optimed_r_wrist_pos_traj(1, :), optimed_r_wrist_pos_traj(2, :), optimed_r_wrist_pos_traj(3, :), 'g--'); 
-plot3(optimed_l_elbow_pos_traj(1, :), optimed_l_elbow_pos_traj(2, :), optimed_l_elbow_pos_traj(3, :), 'g--'); 
-plot3(optimed_r_elbow_pos_traj(1, :), optimed_r_elbow_pos_traj(2, :), optimed_r_elbow_pos_traj(3, :), 'g--'); 
+plot3(preiter_l_wrist_pos_traj(1, :), preiter_l_wrist_pos_traj(2, :), preiter_l_wrist_pos_traj(3, :), 'g--');
+plot3(preiter_r_wrist_pos_traj(1, :), preiter_r_wrist_pos_traj(2, :), preiter_r_wrist_pos_traj(3, :), 'g--'); 
+plot3(preiter_l_elbow_pos_traj(1, :), preiter_l_elbow_pos_traj(2, :), preiter_l_elbow_pos_traj(3, :), 'g--'); 
+plot3(preiter_r_elbow_pos_traj(1, :), preiter_r_elbow_pos_traj(2, :), preiter_r_elbow_pos_traj(3, :), 'g--'); 
 
 view(-45, 45);
-title('Comparison between Original, Pre-iteration optimized and Final optimized trajectories');
-xlabel('x'); ylabel('y'); zlabel('z');
-
+% title('Original and reproduced trajectories');
+title('Original, desired and pre-iteration optimized trajectories');
+xlabel('x'); ylabel('y'); zlabel('z'); 
 %}
 
+%% Evaluate magnitudes of changes of relative DMPs
+lrw_goal_change = norm(lrw_goal_ori - lrw_goal_new);
+lrw_start_change = norm(lrw_start_ori - lrw_start_new);
 
+lew_goal_change = norm(lew_goal_ori - lew_goal_new);
+lew_start_change = norm(lew_start_ori - lew_start_new);
 
+rew_goal_change = norm(rew_goal_ori - rew_goal_new);
+rew_start_change = norm(rew_start_ori - rew_start_new);
+
+rw_goal_change = norm(rw_goal_ori - rw_goal_new);
+rw_start_change = norm(rw_start_ori - rw_start_new);
 
