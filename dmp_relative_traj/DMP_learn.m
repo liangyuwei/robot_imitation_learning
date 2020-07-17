@@ -13,7 +13,7 @@ num_resampled_points = 50;
 
 %% Load demonstration
 file_name = '../motion-retargeting/test_imi_data_YuMi.h5'; %'test_imi_data_YuMi.h5'; %
-group_name = 'fengren_1';
+group_name = 'gun_2';%'kai_2';%'qie_1';%'kai_1'; %'kai_1'; %'fengren_1';
 
 time = h5read(file_name, ['/', group_name, '/time']);
 l_wrist_pos = resample_traj(time, h5read(file_name, ['/', group_name, '/l_wrist_pos']), num_datapoints, false);
@@ -88,7 +88,7 @@ traj_dataset{1} = r_wrist_pos'; % should be of size Length x DOF!!!
 
 %% Store the learned results
 %
-group_name = 'fengren_1';
+% group_name = 'fengren_1';
 % data about lrw
 h5create(file_name, ['/', group_name, '/Mu_lrw'], size(Mu_lrw));
 h5write(file_name, ['/', group_name, '/Mu_lrw'], Mu_lrw);
@@ -168,7 +168,7 @@ new_goal_lew = l_elbow_wrist_pos(:, end);% + [0.01, 0.0, -0.05]';
 new_start_lew = l_elbow_wrist_pos(:, 1);% + [0.01, -0.01, -0.05]';
 new_goal_rew = r_elbow_wrist_pos(:, end);% + [0.01, 0.02, 0.03]';
 new_start_rew = r_elbow_wrist_pos(:, 1);% + [0.02, 0.01, 0.05]';
-new_goal_rw = r_wrist_pos(:, end) + [-0.02, 0.0, 0.0]';
+new_goal_rw = r_wrist_pos(:, end);% + [-0.02, 0.0, 0.0]';
 new_start_rw = r_wrist_pos(:, 1);% + [-0.01, 0.0, 0.0]';
 % y_lrw = DMP_use_f(f_lrw, nbData, alpha, kP, kV, new_goal_lrw, new_start_lrw);
 % y_lew = DMP_use_f(f_lew, nbData, alpha, kP, kV, new_goal_lew, new_start_lew);

@@ -8,7 +8,7 @@ addpath('../vmp/'); % use resample_traj
 
 ori_file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
 file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity.h5';
-group_name = 'fengren_1';
+group_name = 'kai_2';%'baozhu_1';%'fengren_1';
 
 num_datapoints = 50;
 
@@ -120,6 +120,8 @@ col_cost_history = h5read(file_name, ['/', group_name, '/col_cost_history']);
 pos_limit_cost_history = h5read(file_name, ['/', group_name, '/pos_limit_cost_history']);
 dmp_scale_cost_history = h5read(file_name, ['/', group_name, '/dmp_scale_cost_history']);
 dmp_orien_cost_history = h5read(file_name, ['/', group_name, '/dmp_orien_cost_history']);
+dmp_rel_change_cost_history = h5read(file_name, ['/', group_name, '/dmp_rel_change_cost_history']);
+
 
 % jacobians for DMP starts and goals
 sim_jacobian_history = h5read(file_name, ['/', group_name, '/sim_jacobian_history']);
@@ -134,6 +136,12 @@ figure;
 plot((1:size(col_cost_history, 2))*per_iteration, sum(col_cost_history), 'b-'); hold on; grid on;
 plot((1:size(col_cost_history, 2))*per_iteration, sum(col_cost_history), 'bo');
 title('History of collision cost');
+xlabel('Iterations'); ylabel('Cost Value'); 
+
+figure;
+plot((1:size(pos_limit_cost_history, 2))*per_iteration, sum(pos_limit_cost_history), 'b-'); hold on; grid on;
+plot((1:size(pos_limit_cost_history, 2))*per_iteration, sum(pos_limit_cost_history), 'bo');
+title('History of position limit cost');
 xlabel('Iterations'); ylabel('Cost Value'); 
 
 figure;
@@ -188,6 +196,12 @@ figure;
 plot((1:size(dmp_scale_cost_history, 2))*per_iteration, dmp_scale_cost_history, 'b-'); hold on; grid on;
 plot((1:size(dmp_scale_cost_history, 2))*per_iteration, dmp_scale_cost_history, 'bo');
 title('History of dmp scale cost');
+xlabel('Iterations'); ylabel('Cost Value'); 
+
+figure;
+plot((1:size(dmp_rel_change_cost_history, 2))*per_iteration, dmp_rel_change_cost_history, 'b-'); hold on; grid on;
+plot((1:size(dmp_rel_change_cost_history, 2))*per_iteration, dmp_rel_change_cost_history, 'bo');
+title('History of dmp rel change cost');
 xlabel('Iterations'); ylabel('Cost Value'); 
 
 figure;
@@ -263,8 +277,8 @@ dmp_starts_goals_original = [lr_wrist_pos(:, end); lr_wrist_pos(:, 1);
                              r_wrist_pos(:, end); r_wrist_pos(:, 1)];
 dmp_starts_goals_final = h5read(file_name, ['/', group_name, '/dmp_starts_goals_1']);
 dmp_starts_goals_moved = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved']);
-dmp_starts_goals_moved_optimed = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved_optimed']);
-dmp_starts_goals_moved_pulled = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved_pulled']);
+% dmp_starts_goals_moved_optimed = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved_optimed']);
+% dmp_starts_goals_moved_pulled = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved_pulled']);
 
 
 %% Analyze condition number of J'*J
@@ -318,7 +332,7 @@ rw_ratio = norm(rw_vec_new) / norm(rw_vec_ori);
 lrw_th = acos(lrw_vec_new'*lrw_vec_ori/norm(lrw_vec_new)/norm(lrw_vec_ori)) * 180 / pi;
 lew_th = acos(lew_vec_new'*lew_vec_ori/norm(lew_vec_new)/norm(lew_vec_ori)) * 180 / pi;
 rew_th = acos(rew_vec_new'*rew_vec_ori/norm(rew_vec_new)/norm(rew_vec_ori)) * 180 / pi;
-rw_th = acos(rw_vec_new'*rw_vec_ori/norm(rw_vec_new)/norm(rw_vec_ori)) * 180 / pi;
+rw_th = acos(rw_vec_new'*rw_vec_ori/norm(rw_vec_new)/norm(rw_vec_ori)) * 180 / pi; % in degree !!
 
 
 
@@ -394,6 +408,7 @@ y_l_wrist = y_rw + y_lrw;
 y_r_elbow = y_rw + y_rew;
 y_l_elbow = y_l_wrist + y_lew;
 
+% 1 - with original
 figure;
 plot3(l_wrist_pos(1, :), l_wrist_pos(2, :), l_wrist_pos(3, :), 'b--'); hold on; grid on;
 plot3(r_wrist_pos(1, :), r_wrist_pos(2, :), r_wrist_pos(3, :), 'b--'); 
@@ -413,6 +428,24 @@ plot3(preiter_r_elbow_pos_traj(1, :), preiter_r_elbow_pos_traj(2, :), preiter_r_
 view(-45, 45);
 % title('Original and reproduced trajectories');
 title('Original, Desired and Pre-iteration optimized trajectories');
+xlabel('x'); ylabel('y'); zlabel('z'); 
+
+% 2 - close up
+figure;
+
+plot3(y_l_wrist(1, :), y_l_wrist(2, :), y_l_wrist(3, :), 'r--'); hold on; grid on;
+plot3(y_r_wrist(1, :), y_r_wrist(2, :), y_r_wrist(3, :), 'r--'); 
+plot3(y_l_elbow(1, :), y_l_elbow(2, :), y_l_elbow(3, :), 'r--'); 
+plot3(y_r_elbow(1, :), y_r_elbow(2, :), y_r_elbow(3, :), 'r--'); % initial target
+
+plot3(preiter_l_wrist_pos_traj(1, :), preiter_l_wrist_pos_traj(2, :), preiter_l_wrist_pos_traj(3, :), 'g--');
+plot3(preiter_r_wrist_pos_traj(1, :), preiter_r_wrist_pos_traj(2, :), preiter_r_wrist_pos_traj(3, :), 'g--'); 
+plot3(preiter_l_elbow_pos_traj(1, :), preiter_l_elbow_pos_traj(2, :), preiter_l_elbow_pos_traj(3, :), 'g--'); 
+plot3(preiter_r_elbow_pos_traj(1, :), preiter_r_elbow_pos_traj(2, :), preiter_r_elbow_pos_traj(3, :), 'g--');  % pre-iteration results
+
+view(-45, 45);
+% title('Original and reproduced trajectories');
+title('Desired and Pre-iteration optimized trajectories');
 xlabel('x'); ylabel('y'); zlabel('z'); 
 
 
@@ -439,6 +472,7 @@ y_l_wrist = y_rw + y_lrw;
 y_r_elbow = y_rw + y_rew;
 y_l_elbow = y_l_wrist + y_lew;
 
+% 1 - with original
 figure;
 % original imitation data
 plot3(l_wrist_pos(1, :), l_wrist_pos(2, :), l_wrist_pos(3, :), 'b--'); hold on; grid on;
@@ -460,6 +494,26 @@ plot3(optimed_r_elbow_pos_traj(1, :), optimed_r_elbow_pos_traj(2, :), optimed_r_
 
 view(-45, 45);
 title('Original, Desired and Final optimized trajectories');
+xlabel('x'); ylabel('y'); zlabel('z');
+
+
+% 2 - close up
+figure;
+
+% DMP trajectories expected to follow
+plot3(y_l_wrist(1, :), y_l_wrist(2, :), y_l_wrist(3, :), 'r--'); hold on; grid on;
+plot3(y_r_wrist(1, :), y_r_wrist(2, :), y_r_wrist(3, :), 'r--'); 
+plot3(y_l_elbow(1, :), y_l_elbow(2, :), y_l_elbow(3, :), 'r--'); 
+plot3(y_r_elbow(1, :), y_r_elbow(2, :), y_r_elbow(3, :), 'r--');  % optimized DMP targets
+
+% actually executed trajectories
+plot3(optimed_l_wrist_pos_traj(1, :), optimed_l_wrist_pos_traj(2, :), optimed_l_wrist_pos_traj(3, :), 'g--');
+plot3(optimed_r_wrist_pos_traj(1, :), optimed_r_wrist_pos_traj(2, :), optimed_r_wrist_pos_traj(3, :), 'g--'); 
+plot3(optimed_l_elbow_pos_traj(1, :), optimed_l_elbow_pos_traj(2, :), optimed_l_elbow_pos_traj(3, :), 'g--'); 
+plot3(optimed_r_elbow_pos_traj(1, :), optimed_r_elbow_pos_traj(2, :), optimed_r_elbow_pos_traj(3, :), 'g--');  % optimized q trajectories
+
+view(-45, 45);
+title('Desired and Final optimized trajectories');
 xlabel('x'); ylabel('y'); zlabel('z');
 
 
