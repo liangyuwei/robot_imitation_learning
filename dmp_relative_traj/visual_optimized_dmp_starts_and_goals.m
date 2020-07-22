@@ -8,7 +8,7 @@ addpath('../vmp/'); % use resample_traj
 
 ori_file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
 file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity.h5';
-group_name = 'fengren_1';%'kai_2';%'baozhu_1';%'fengren_1';
+group_name = 'baozhu_1';%'fengren_1';%'kai_2';%'baozhu_1';%'fengren_1';
 
 num_datapoints = 50;
 
@@ -137,81 +137,81 @@ dmp_update_history = h5read(file_name, ['/', group_name, '/dmp_update_history'])
 % plot all
 figure;
 plot((1:size(col_cost_history, 2))*per_iteration, sum(col_cost_history), 'b-'); hold on; grid on;
-plot((1:size(col_cost_history, 2))*per_iteration, sum(col_cost_history), 'bo');
-title('History of collision cost');
-xlabel('Iterations'); ylabel('Cost Value'); 
+% plot((1:size(col_cost_history, 2))*per_iteration, sum(col_cost_history), 'bo');
+title('History of collision cost', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
 figure;
 plot((1:size(pos_limit_cost_history, 2))*per_iteration, sum(pos_limit_cost_history), 'b-'); hold on; grid on;
-plot((1:size(pos_limit_cost_history, 2))*per_iteration, sum(pos_limit_cost_history), 'bo');
-title('History of position limit cost');
-xlabel('Iterations'); ylabel('Cost Value'); 
+% plot((1:size(pos_limit_cost_history, 2))*per_iteration, sum(pos_limit_cost_history), 'bo');
+title('History of position limit cost', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
 figure;
 plot((1:size(smoothness_cost_history, 2))*per_iteration, sum(smoothness_cost_history), 'b-'); hold on; grid on;
-plot((1:size(smoothness_cost_history, 2))*per_iteration, sum(smoothness_cost_history), 'bo');
-title('History of smoothness cost');
-xlabel('Iterations'); ylabel('Cost Value'); 
+% plot((1:size(smoothness_cost_history, 2))*per_iteration, sum(smoothness_cost_history), 'bo');
+title('History of smoothness cost', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
 figure;
 plot((1:size(wrist_pos_cost_history, 2))*per_iteration, sum(wrist_pos_cost_history), 'b-'); hold on; grid on;
-plot((1:size(wrist_pos_cost_history, 2))*per_iteration, sum(wrist_pos_cost_history), 'bo');
-title('History of wrist position cost');
-xlabel('Iterations'); ylabel('Cost Value'); 
+% plot((1:size(wrist_pos_cost_history, 2))*per_iteration, sum(wrist_pos_cost_history), 'bo');
+title('History of wrist position cost', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
 figure;
 plot((1:size(l_wrist_pos_cost_history, 2))*per_iteration, sum(l_wrist_pos_cost_history), 'b-'); hold on; grid on;
-plot((1:size(l_wrist_pos_cost_history, 2))*per_iteration, sum(l_wrist_pos_cost_history), 'bo');
-title('History of left wrist position cost');
-xlabel('Iterations'); ylabel('Cost Value'); 
+% plot((1:size(l_wrist_pos_cost_history, 2))*per_iteration, sum(l_wrist_pos_cost_history), 'bo');
+title('History of left wrist position cost', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
 figure;
 plot((1:size(r_wrist_pos_cost_history, 2))*per_iteration, sum(r_wrist_pos_cost_history), 'b-'); hold on; grid on;
-plot((1:size(r_wrist_pos_cost_history, 2))*per_iteration, sum(r_wrist_pos_cost_history), 'bo');
-title('History of right wrist position cost');
-xlabel('Iterations'); ylabel('Cost Value'); 
+% plot((1:size(r_wrist_pos_cost_history, 2))*per_iteration, sum(r_wrist_pos_cost_history), 'bo');
+title('History of right wrist position cost', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
 figure;
 plot((1:size(wrist_ori_cost_history, 2))*per_iteration, sum(wrist_ori_cost_history), 'b-'); hold on; grid on;
-plot((1:size(wrist_ori_cost_history, 2))*per_iteration, sum(wrist_ori_cost_history), 'bo');
-title('History of wrist orientation cost');
-xlabel('Iterations'); ylabel('Cost Value'); 
+% plot((1:size(wrist_ori_cost_history, 2))*per_iteration, sum(wrist_ori_cost_history), 'bo');
+title('History of wrist orientation cost', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
 figure;
 plot((1:size(elbow_pos_cost_history, 2))*per_iteration, sum(elbow_pos_cost_history), 'b-'); hold on; grid on;
-plot((1:size(elbow_pos_cost_history, 2))*per_iteration, sum(elbow_pos_cost_history), 'bo');
-title('History of elbow position cost');
-xlabel('Iterations'); ylabel('Cost Value'); 
+% plot((1:size(elbow_pos_cost_history, 2))*per_iteration, sum(elbow_pos_cost_history), 'bo');
+title('History of elbow position cost', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
 figure;
 plot((1:size(finger_cost_history, 2))*per_iteration, sum(finger_cost_history), 'b-'); hold on; grid on;
-plot((1:size(finger_cost_history, 2))*per_iteration, sum(finger_cost_history), 'bo');
-title('History of finger angle cost');
-xlabel('Iterations'); ylabel('Cost Value'); 
+% plot((1:size(finger_cost_history, 2))*per_iteration, sum(finger_cost_history), 'bo');
+title('History of finger angle cost', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
 figure;
 plot((1:size(dmp_orien_cost_history, 2))*per_iteration, dmp_orien_cost_history, 'b-'); hold on; grid on;
-plot((1:size(dmp_orien_cost_history, 2))*per_iteration, dmp_orien_cost_history, 'bo');
-title('History of dmp orientation cost');
-xlabel('Iterations'); ylabel('Cost Value'); 
+% plot((1:size(dmp_orien_cost_history, 2))*per_iteration, dmp_orien_cost_history, 'bo');
+title('History of dmp orientation cost', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
 figure;
 plot((1:size(dmp_scale_cost_history, 2))*per_iteration, dmp_scale_cost_history, 'b-'); hold on; grid on;
-plot((1:size(dmp_scale_cost_history, 2))*per_iteration, dmp_scale_cost_history, 'bo');
-title('History of dmp scale cost');
-xlabel('Iterations'); ylabel('Cost Value'); 
+% plot((1:size(dmp_scale_cost_history, 2))*per_iteration, dmp_scale_cost_history, 'bo');
+title('History of dmp scale cost', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
 figure;
 plot((1:size(dmp_rel_change_cost_history, 2))*per_iteration, dmp_rel_change_cost_history, 'b-'); hold on; grid on;
-plot((1:size(dmp_rel_change_cost_history, 2))*per_iteration, dmp_rel_change_cost_history, 'bo');
-title('History of dmp rel change cost');
-xlabel('Iterations'); ylabel('Cost Value'); 
+% plot((1:size(dmp_rel_change_cost_history, 2))*per_iteration, dmp_rel_change_cost_history, 'bo');
+title('History of dmp rel change cost', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
 figure;
 plot((1:size(similarity_cost_history, 2))*per_iteration, similarity_cost_history, 'b-'); hold on; grid on;
-plot((1:size(similarity_cost_history, 2))*per_iteration, similarity_cost_history, 'bo');
-title('History of similarity cost');
-xlabel('Iterations'); ylabel('Cost Value'); 
+% plot((1:size(similarity_cost_history, 2))*per_iteration, similarity_cost_history, 'bo');
+title('History of similarity cost', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
 
 %% Plot jacobian history
@@ -224,9 +224,9 @@ for n = 1 : num_records
 end
 figure;
 plot((1:num_records)*per_iteration, jacobian_norm, 'b-'); hold on; grid on;
-plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
-title('History of SimilarityConstraint Jacobians');
-xlabel('Iterations'); ylabel('Gradients magnitude'); 
+% plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
+title('History of SimilarityConstraint Jacobians', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Gradients magnitude', 'FontSize', 18); 
 
 num_records = size(track_jacobian_history, 2);
 jacobian_norm = zeros(1, num_records);
@@ -235,9 +235,9 @@ for n = 1 : num_records
 end
 figure;
 plot((1:num_records)*per_iteration, jacobian_norm, 'b-'); hold on; grid on;
-plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
-title('History of TrackingConstraint Jacobians');
-xlabel('Iterations'); ylabel('Gradients magnitude'); 
+% plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
+title('History of TrackingConstraint Jacobians', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Gradients magnitude', 'FontSize', 18); 
 
 num_records = size(orien_jacobian_history, 2);
 jacobian_norm = zeros(1, num_records);
@@ -246,9 +246,9 @@ for n = 1 : num_records
 end
 figure;
 plot((1:num_records)*per_iteration, jacobian_norm, 'b-'); hold on; grid on;
-plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
-title('History of DMPOrienConstraint Jacobians');
-xlabel('Iterations'); ylabel('Gradients magnitude'); 
+% plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
+title('History of DMPOrienConstraint Jacobians', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Gradients magnitude', 'FontSize', 18); 
 
 num_records = size(scale_jacobian_history, 2);
 jacobian_norm = zeros(1, num_records);
@@ -257,11 +257,12 @@ for n = 1 : num_records
 end
 figure;
 plot((1:num_records)*per_iteration, jacobian_norm, 'b-'); hold on; grid on;
-plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
-title('History of DMPScaleConstraint Jacobians');
-xlabel('Iterations'); ylabel('Gradients magnitude'); 
+% plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
+title('History of DMPScaleConstraint Jacobians', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Gradients magnitude', 'FontSize', 18); 
 
 % should use norm() instead of sum(), which is more reasonable
+% not exactly the change history, since it is recorded after convergence!!!
 num_records = size(dmp_update_history, 2);
 jacobian_norm = zeros(1, num_records);
 for n = 1 : num_records
@@ -269,9 +270,9 @@ for n = 1 : num_records
 end
 figure;
 plot((1:num_records)*per_iteration, jacobian_norm, 'b-'); hold on; grid on;
-plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
-title('History of DMP updates');
-xlabel('Iterations'); ylabel('Norm of updates on all DOF'); 
+% plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
+title('History of DMP updates', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Norm of updates on all DOF', 'FontSize', 18); 
 
 
 
@@ -280,7 +281,7 @@ dmp_starts_goals_original = [lr_wrist_pos(:, end); lr_wrist_pos(:, 1);
                              l_elbow_wrist_pos(:, end); l_elbow_wrist_pos(:, 1);
                              r_elbow_wrist_pos(:, end); r_elbow_wrist_pos(:, 1);
                              r_wrist_pos(:, end); r_wrist_pos(:, 1)];
-dmp_starts_goals_final = h5read(file_name, ['/', group_name, '/dmp_starts_goals_1']);
+dmp_starts_goals_final = h5read(file_name, ['/', group_name, '/dmp_starts_goals_optimed_', num2str(max_round)]);
 dmp_starts_goals_moved = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved']);
 % dmp_starts_goals_moved_optimed = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved_optimed']);
 % dmp_starts_goals_moved_pulled = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved_pulled']);
@@ -310,14 +311,14 @@ rew_start_ori = dmp_starts_goals_original(16:18);
 rw_goal_ori = dmp_starts_goals_original(19:21);
 rw_start_ori = dmp_starts_goals_original(22:24);
 
-lrw_goal_new = dmp_starts_goals(1:3);
-lrw_start_new = dmp_starts_goals(4:6);
-lew_goal_new = dmp_starts_goals(7:9);
-lew_start_new = dmp_starts_goals(10:12);
-rew_goal_new = dmp_starts_goals(13:15);
-rew_start_new = dmp_starts_goals(16:18);
-rw_goal_new = dmp_starts_goals(19:21);
-rw_start_new = dmp_starts_goals(22:24);
+lrw_goal_new = dmp_starts_goals_final(1:3);
+lrw_start_new = dmp_starts_goals_final(4:6);
+lew_goal_new = dmp_starts_goals_final(7:9);
+lew_start_new = dmp_starts_goals_final(10:12);
+rew_goal_new = dmp_starts_goals_final(13:15);
+rew_start_new = dmp_starts_goals_final(16:18);
+rw_goal_new = dmp_starts_goals_final(19:21);
+rw_start_new = dmp_starts_goals_final(22:24);
 
 % get vectors pointing from starts to goals
 lrw_vec_ori = lrw_goal_ori - lrw_start_ori;
@@ -361,13 +362,13 @@ figure;
 p1 = plot((1:size(orien_jacobian_history, 2))*per_iteration, orien_jacobian_history, 'b-'); hold on; grid on;
 plot((1:size(orien_jacobian_history, 2))*per_iteration, orien_jacobian_history, 'bo'); % 1
 p2 = plot((1:size(scale_jacobian_history, 2))*per_iteration, scale_jacobian_history, 'r-'); 
-plot((1:size(scale_jacobian_history, 2))*per_iteration, scale_jacobian_history, 'ro'); % 2
+% plot((1:size(scale_jacobian_history, 2))*per_iteration, scale_jacobian_history, 'ro'); % 2
 p3 = plot((1:size(track_jacobian_history, 2))*per_iteration, track_jacobian_history, 'g-'); 
-plot((1:size(track_jacobian_history, 2))*per_iteration, track_jacobian_history, 'go'); % 3
+% plot((1:size(track_jacobian_history, 2))*per_iteration, track_jacobian_history, 'go'); % 3
 p4 = plot((1:size(sim_jacobian_history, 2))*per_iteration, sim_jacobian_history, 'm-'); 
-plot((1:size(sim_jacobian_history, 2))*per_iteration, sim_jacobian_history, 'mo'); % 4 
-title('History of Jacobians w.r.t DMP starts and goals');
-xlabel('Iterations'); ylabel('Jacobians'); 
+% plot((1:size(sim_jacobian_history, 2))*per_iteration, sim_jacobian_history, 'mo'); % 4 
+title('History of Jacobians w.r.t DMP starts and goals', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Jacobians', 'FontSize', 18); 
 legend([p1(1), p2(1), p3(1), p4(1)], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian', 'sim\_jacobian', 'Location', 'NorthEastOutside');
 % 'track_jacobian', 'sim_jacobian', 'Location', 'NorthEastOutside');
 
@@ -388,29 +389,29 @@ p1 = plot((1:num_records)*per_iteration, orien_jacobian_norm, 'b-'); hold on; gr
 p2 = plot((1:num_records)*per_iteration, scale_jacobian_norm, 'r-');
 p3 = plot((1:num_records)*per_iteration, track_jacobian_norm, 'g-');
 p4 = plot((1:num_records)*per_iteration, sim_jacobian_norm, 'm-');
-title('History of Norms of DMP Jacobians');
-xlabel('Iterations'); ylabel('Norms of jacobians'); 
+title('History of Norms of DMP Jacobians', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Norms of jacobians', 'FontSize', 18); 
 legend([p1, p2, p3, p4], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian', 'sim\_jacobian', 'Location', 'NorthEastOutside');
 
 
-%% Optimization results of first round (q optimization -> manually move DMP starts and goals -> DMP optimization)
-% 1 - load initial DMP trajs
+%% Optimization results of First Round (q optimization -> manually move DMP starts and goals -> DMP optimization)
+% 1 - load initial DMP trajs (the one set manually in the beginning)
 dmp_starts_goals_initial = h5read(file_name, ['/', group_name, '/dmp_starts_goals_initial']);
 
-new_goal_lrw = dmp_starts_goals(1:3); new_start_lrw = dmp_starts_goals(4:6);
-new_goal_lew = dmp_starts_goals(7:9); new_start_lew = dmp_starts_goals(10:12);
-new_goal_rew = dmp_starts_goals(13:15); new_start_rew = dmp_starts_goals(16:18);
-new_goal_rw = dmp_starts_goals(19:21); new_start_rw = dmp_starts_goals(22:24);
+new_goal_lrw_initial = dmp_starts_goals_initial(1:3); new_start_lrw_initial = dmp_starts_goals_initial(4:6);
+new_goal_lew_initial = dmp_starts_goals_initial(7:9); new_start_lew_initial = dmp_starts_goals_initial(10:12);
+new_goal_rew_initial = dmp_starts_goals_initial(13:15); new_start_rew_initial = dmp_starts_goals_initial(16:18);
+new_goal_rw_initial = dmp_starts_goals_initial(19:21); new_start_rw_initial = dmp_starts_goals_initial(22:24);
 
-y_lrw = DMP_use_weights(Mu_lrw, Sigma_lrw, Weights_lrw, 50, kP, kV, alpha, dt, new_goal_lrw, new_start_lrw, false);
-y_lew = DMP_use_weights(Mu_lew, Sigma_lew, Weights_lew, 50, kP, kV, alpha, dt, new_goal_lew, new_start_lew, false);
-y_rew = DMP_use_weights(Mu_rew, Sigma_rew, Weights_rew, 50, kP, kV, alpha, dt, new_goal_rew, new_start_rew, false);
-y_rw = DMP_use_weights(Mu_rw, Sigma_rw, Weights_rw, 50, kP, kV, alpha, dt, new_goal_rw, new_start_rw, false);
+y_lrw = DMP_use_weights(Mu_lrw, Sigma_lrw, Weights_lrw, 50, kP, kV, alpha, dt, new_goal_lrw_initial, new_start_lrw_initial, false);
+y_lew = DMP_use_weights(Mu_lew, Sigma_lew, Weights_lew, 50, kP, kV, alpha, dt, new_goal_lew_initial, new_start_lew_initial, false);
+y_rew = DMP_use_weights(Mu_rew, Sigma_rew, Weights_rew, 50, kP, kV, alpha, dt, new_goal_rew_initial, new_start_rew_initial, false);
+y_rw = DMP_use_weights(Mu_rw, Sigma_rw, Weights_rw, 50, kP, kV, alpha, dt, new_goal_rw_initial, new_start_rw_initial, false);
 
 y_r_wrist_initial = y_rw;
 y_l_wrist_initial = y_rw + y_lrw;
 y_r_elbow_initial = y_rw + y_rew;
-y_l_elbow_initial = y_l_wrist + y_lew;
+y_l_elbow_initial = y_l_wrist_initial + y_lew;
 
 % 2 - load actual executed trajs after q optimization in the first round
 actual_l_wrist_pos_traj_0 = h5read(file_name, ['/', group_name, '/actual_l_wrist_pos_traj_0']);
@@ -418,75 +419,230 @@ actual_r_wrist_pos_traj_0 = h5read(file_name, ['/', group_name, '/actual_r_wrist
 actual_l_elbow_pos_traj_0 = h5read(file_name, ['/', group_name, '/actual_l_elbow_pos_traj_0']);
 actual_r_elbow_pos_traj_0 = h5read(file_name, ['/', group_name, '/actual_r_elbow_pos_traj_0']);
 
-optimed_l_wrist_pos_traj = h5read(file_name, ['/', group_name, '/optimed_l_wrist_pos_traj']);
-optimed_r_wrist_pos_traj = h5read(file_name, ['/', group_name, '/optimed_r_wrist_pos_traj']);
-optimed_l_elbow_pos_traj = h5read(file_name, ['/', group_name, '/optimed_l_elbow_pos_traj']);
-optimed_r_elbow_pos_traj = h5read(file_name, ['/', group_name, '/optimed_r_elbow_pos_traj']);
+% 2.5 - load actually executed trajs of next round
+actual_l_wrist_pos_traj_1 = h5read(file_name, ['/', group_name, '/actual_l_wrist_pos_traj_1']);
+actual_r_wrist_pos_traj_1 = h5read(file_name, ['/', group_name, '/actual_r_wrist_pos_traj_1']);
+actual_l_elbow_pos_traj_1 = h5read(file_name, ['/', group_name, '/actual_l_elbow_pos_traj_1']);
+actual_r_elbow_pos_traj_1 = h5read(file_name, ['/', group_name, '/actual_r_elbow_pos_traj_1']);
 
-% load pre-iteration initial setup
-dmp_starts_goals = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved']);
-new_goal_lrw = dmp_starts_goals(1:3);
-new_start_lrw = dmp_starts_goals(4:6);
-new_goal_lew = dmp_starts_goals(7:9);
-new_start_lew = dmp_starts_goals(10:12);
-new_goal_rew = dmp_starts_goals(13:15);
-new_start_rew = dmp_starts_goals(16:18);
-new_goal_rw = dmp_starts_goals(19:21);
-new_start_rw = dmp_starts_goals(22:24);
+% 2.75 - the last round, actually executed trajs
+actual_l_wrist_pos_traj_last = h5read(file_name, ['/', group_name, '/actual_l_wrist_pos_traj_', num2str(max_round)]);
+actual_r_wrist_pos_traj_last = h5read(file_name, ['/', group_name, '/actual_r_wrist_pos_traj_', num2str(max_round)]);
+actual_l_elbow_pos_traj_last = h5read(file_name, ['/', group_name, '/actual_l_elbow_pos_traj_', num2str(max_round)]);
+actual_r_elbow_pos_traj_last = h5read(file_name, ['/', group_name, '/actual_r_elbow_pos_traj_', num2str(max_round)]);
 
-% plot pre-iteration target and result
-y_lrw = DMP_use_weights(Mu_lrw, Sigma_lrw, Weights_lrw, 50, kP, kV, alpha, dt, new_goal_lrw, new_start_lrw, false);
-y_lew = DMP_use_weights(Mu_lew, Sigma_lew, Weights_lew, 50, kP, kV, alpha, dt, new_goal_lew, new_start_lew, false);
-y_rew = DMP_use_weights(Mu_rew, Sigma_rew, Weights_rew, 50, kP, kV, alpha, dt, new_goal_rew, new_start_rew, false);
-y_rw = DMP_use_weights(Mu_rw, Sigma_rw, Weights_rw, 50, kP, kV, alpha, dt, new_goal_rw, new_start_rw, false);
+% 3 - load manually moved DMP trajs
+dmp_starts_goals_moved_0 = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved_0']);
 
-y_r_wrist = y_rw;
-y_l_wrist = y_rw + y_lrw;
-y_r_elbow = y_rw + y_rew;
-y_l_elbow = y_l_wrist + y_lew;
+new_goal_lrw_moved_0 = dmp_starts_goals_moved_0(1:3); new_start_lrw_moved_0 = dmp_starts_goals_moved_0(4:6);
+new_goal_lew_moved_0 = dmp_starts_goals_moved_0(7:9); new_start_lew_moved_0 = dmp_starts_goals_moved_0(10:12);
+new_goal_rew_moved_0 = dmp_starts_goals_moved_0(13:15); new_start_rew_moved_0 = dmp_starts_goals_moved_0(16:18);
+new_goal_rw_moved_0 = dmp_starts_goals_moved_0(19:21); new_start_rw_moved_0 = dmp_starts_goals_moved_0(22:24);
 
-% 1 - with original
+y_lrw = DMP_use_weights(Mu_lrw, Sigma_lrw, Weights_lrw, 50, kP, kV, alpha, dt, new_goal_lrw_moved_0, new_start_lrw_moved_0, false);
+y_lew = DMP_use_weights(Mu_lew, Sigma_lew, Weights_lew, 50, kP, kV, alpha, dt, new_goal_lew_moved_0, new_start_lew_moved_0, false);
+y_rew = DMP_use_weights(Mu_rew, Sigma_rew, Weights_rew, 50, kP, kV, alpha, dt, new_goal_rew_moved_0, new_start_rew_moved_0, false);
+y_rw = DMP_use_weights(Mu_rw, Sigma_rw, Weights_rw, 50, kP, kV, alpha, dt, new_goal_rw_moved_0, new_start_rw_moved_0, false);
+
+y_r_wrist_moved_0 = y_rw;
+y_l_wrist_moved_0 = y_rw + y_lrw;
+y_r_elbow_moved_0 = y_rw + y_rew;
+y_l_elbow_moved_0 = y_l_wrist_moved_0 + y_lew;
+
+% 4 - load optimized DMP trajs
+dmp_starts_goals_optimed_0 = h5read(file_name, ['/', group_name, '/dmp_starts_goals_optimed_0']);
+
+new_goal_lrw_optimed_0 = dmp_starts_goals_optimed_0(1:3); new_start_lrw_optimed_0 = dmp_starts_goals_optimed_0(4:6);
+new_goal_lew_optimed_0 = dmp_starts_goals_optimed_0(7:9); new_start_lew_optimed_0 = dmp_starts_goals_optimed_0(10:12);
+new_goal_rew_optimed_0 = dmp_starts_goals_optimed_0(13:15); new_start_rew_optimed_0 = dmp_starts_goals_optimed_0(16:18);
+new_goal_rw_optimed_0 = dmp_starts_goals_optimed_0(19:21); new_start_rw_optimed_0 = dmp_starts_goals_optimed_0(22:24);
+
+y_lrw = DMP_use_weights(Mu_lrw, Sigma_lrw, Weights_lrw, 50, kP, kV, alpha, dt, new_goal_lrw_optimed_0, new_start_lrw_optimed_0, false);
+y_lew = DMP_use_weights(Mu_lew, Sigma_lew, Weights_lew, 50, kP, kV, alpha, dt, new_goal_lew_optimed_0, new_start_lew_optimed_0, false);
+y_rew = DMP_use_weights(Mu_rew, Sigma_rew, Weights_rew, 50, kP, kV, alpha, dt, new_goal_rew_optimed_0, new_start_rew_optimed_0, false);
+y_rw = DMP_use_weights(Mu_rw, Sigma_rw, Weights_rw, 50, kP, kV, alpha, dt, new_goal_rw_optimed_0, new_start_rw_optimed_0, false);
+
+y_r_wrist_optimed_0 = y_rw;
+y_l_wrist_optimed_0 = y_rw + y_lrw;
+y_r_elbow_optimed_0 = y_rw + y_rew;
+y_l_elbow_optimed_0 = y_l_wrist_optimed_0 + y_lew;
+
+% 5 - load last-round optimized DMP trajs
+dmp_starts_goals_optimed_last = h5read(file_name, ['/', group_name, '/dmp_starts_goals_optimed_', num2str(max_round)]);
+
+new_goal_lrw_optimed_last = dmp_starts_goals_optimed_last(1:3); new_start_lrw_optimed_last = dmp_starts_goals_optimed_last(4:6);
+new_goal_lew_optimed_last = dmp_starts_goals_optimed_last(7:9); new_start_lew_optimed_last = dmp_starts_goals_optimed_last(10:12);
+new_goal_rew_optimed_last = dmp_starts_goals_optimed_last(13:15); new_start_rew_optimed_last = dmp_starts_goals_optimed_last(16:18);
+new_goal_rw_optimed_last = dmp_starts_goals_optimed_last(19:21); new_start_rw_optimed_last = dmp_starts_goals_optimed_last(22:24);
+
+y_lrw = DMP_use_weights(Mu_lrw, Sigma_lrw, Weights_lrw, 50, kP, kV, alpha, dt, new_goal_lrw_optimed_last, new_start_lrw_optimed_last, false);
+y_lew = DMP_use_weights(Mu_lew, Sigma_lew, Weights_lew, 50, kP, kV, alpha, dt, new_goal_lew_optimed_last, new_start_lew_optimed_last, false);
+y_rew = DMP_use_weights(Mu_rew, Sigma_rew, Weights_rew, 50, kP, kV, alpha, dt, new_goal_rew_optimed_last, new_start_rew_optimed_last, false);
+y_rw = DMP_use_weights(Mu_rw, Sigma_rw, Weights_rw, 50, kP, kV, alpha, dt, new_goal_rw_optimed_last, new_start_rw_optimed_last, false);
+
+y_r_wrist_optimed_last = y_rw;
+y_l_wrist_optimed_last = y_rw + y_lrw;
+y_r_elbow_optimed_last = y_rw + y_rew;
+y_l_elbow_optimed_last = y_l_wrist_optimed_last + y_lew;
+
+% Fig 1 - Comparison between human demonstrated trajs and initial DMP trajs (with starts and goals manually set)    
 figure;
-plot3(l_wrist_pos(1, :), l_wrist_pos(2, :), l_wrist_pos(3, :), 'b--'); hold on; grid on;
+p1 = plot3(l_wrist_pos(1, :), l_wrist_pos(2, :), l_wrist_pos(3, :), 'b--'); hold on; grid on;
 plot3(r_wrist_pos(1, :), r_wrist_pos(2, :), r_wrist_pos(3, :), 'b--'); 
 plot3(l_elbow_pos(1, :), l_elbow_pos(2, :), l_elbow_pos(3, :), 'b--'); 
 plot3(r_elbow_pos(1, :), r_elbow_pos(2, :), r_elbow_pos(3, :), 'b--');  % original imitation data
 
-plot3(y_l_wrist(1, :), y_l_wrist(2, :), y_l_wrist(3, :), 'r--');
-plot3(y_r_wrist(1, :), y_r_wrist(2, :), y_r_wrist(3, :), 'r--'); 
-plot3(y_l_elbow(1, :), y_l_elbow(2, :), y_l_elbow(3, :), 'r--'); 
-plot3(y_r_elbow(1, :), y_r_elbow(2, :), y_r_elbow(3, :), 'r--'); % initial target
-
-plot3(actual_l_wrist_pos_traj_0(1, :), actual_l_wrist_pos_traj_0(2, :), actual_l_wrist_pos_traj_0(3, :), 'g--');
-plot3(actual_r_wrist_pos_traj_0(1, :), actual_r_wrist_pos_traj_0(2, :), actual_r_wrist_pos_traj_0(3, :), 'g--'); 
-plot3(actual_l_elbow_pos_traj_0(1, :), actual_l_elbow_pos_traj_0(2, :), actual_l_elbow_pos_traj_0(3, :), 'g--'); 
-plot3(actual_r_elbow_pos_traj_0(1, :), actual_r_elbow_pos_traj_0(2, :), actual_r_elbow_pos_traj_0(3, :), 'g--');  % pre-iteration results
+p2 = plot3(y_l_wrist_initial(1, :), y_l_wrist_initial(2, :), y_l_wrist_initial(3, :), 'r--'); hold on; grid on;
+plot3(y_r_wrist_initial(1, :), y_r_wrist_initial(2, :), y_r_wrist_initial(3, :), 'r--'); 
+plot3(y_l_elbow_initial(1, :), y_l_elbow_initial(2, :), y_l_elbow_initial(3, :), 'r--'); 
+plot3(y_r_elbow_initial(1, :), y_r_elbow_initial(2, :), y_r_elbow_initial(3, :), 'r--');  % initial DMP trajs
 
 view(-45, 45);
-% title('Original and reproduced trajectories');
-title('Original, Desired and Pre-iteration optimized trajectories');
-xlabel('x'); ylabel('y'); zlabel('z'); 
+title('Human demonstrated trajectories and Initial DMP trajectories', 'FontSize', 18);
+xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
+legend([p1(1), p2(1)], 'Demonstrated trajs', 'Initial DMP trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
 
-% 2 - close up
+
+% Fig 2 - Comparison between initial DMP trajs and tracked(actually executed) trajs     
+figure;
+p1 = plot3(y_l_wrist_initial(1, :), y_l_wrist_initial(2, :), y_l_wrist_initial(3, :), 'r--'); hold on; grid on;
+plot3(y_r_wrist_initial(1, :), y_r_wrist_initial(2, :), y_r_wrist_initial(3, :), 'r--'); 
+plot3(y_l_elbow_initial(1, :), y_l_elbow_initial(2, :), y_l_elbow_initial(3, :), 'r--'); 
+plot3(y_r_elbow_initial(1, :), y_r_elbow_initial(2, :), y_r_elbow_initial(3, :), 'r--');  % initial DMP trajs
+
+p2 = plot3(actual_l_wrist_pos_traj_0(1, :), actual_l_wrist_pos_traj_0(2, :), actual_l_wrist_pos_traj_0(3, :), 'g--');
+plot3(actual_r_wrist_pos_traj_0(1, :), actual_r_wrist_pos_traj_0(2, :), actual_r_wrist_pos_traj_0(3, :), 'g--'); 
+plot3(actual_l_elbow_pos_traj_0(1, :), actual_l_elbow_pos_traj_0(2, :), actual_l_elbow_pos_traj_0(3, :), 'g--'); 
+plot3(actual_r_elbow_pos_traj_0(1, :), actual_r_elbow_pos_traj_0(2, :), actual_r_elbow_pos_traj_0(3, :), 'g--');  % tracked (actually executed) trajs
+
+view(-45, 45);
+title('Initial DMP trajectories and Tracked (actually executed) trajectories', 'FontSize', 18);
+xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
+legend([p1(1), p2(1)], 'Initial DMP trajs', 'Tracked trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
+
+
+% Fig 3 - Comparison between tracked(actually executed) trajs and moved DMP trajs     
+figure;
+p1 = plot3(actual_l_wrist_pos_traj_0(1, :), actual_l_wrist_pos_traj_0(2, :), actual_l_wrist_pos_traj_0(3, :), 'g--'); hold on; grid on;
+plot3(actual_r_wrist_pos_traj_0(1, :), actual_r_wrist_pos_traj_0(2, :), actual_r_wrist_pos_traj_0(3, :), 'g--'); 
+plot3(actual_l_elbow_pos_traj_0(1, :), actual_l_elbow_pos_traj_0(2, :), actual_l_elbow_pos_traj_0(3, :), 'g--'); 
+plot3(actual_r_elbow_pos_traj_0(1, :), actual_r_elbow_pos_traj_0(2, :), actual_r_elbow_pos_traj_0(3, :), 'g--');  % tracked (actually executed) trajs
+
+p2 = plot3(y_l_wrist_moved_0(1, :), y_l_wrist_moved_0(2, :), y_l_wrist_moved_0(3, :), 'r-*');
+plot3(y_r_wrist_moved_0(1, :), y_r_wrist_moved_0(2, :), y_r_wrist_moved_0(3, :), 'r-*'); 
+plot3(y_l_elbow_moved_0(1, :), y_l_elbow_moved_0(2, :), y_l_elbow_moved_0(3, :), 'r-*'); 
+plot3(y_r_elbow_moved_0(1, :), y_r_elbow_moved_0(2, :), y_r_elbow_moved_0(3, :), 'r-*'); % moved DMP trajs
+
+p3 = plot3(y_l_wrist_initial(1, :), y_l_wrist_initial(2, :), y_l_wrist_initial(3, :), 'r--'); 
+plot3(y_r_wrist_initial(1, :), y_r_wrist_initial(2, :), y_r_wrist_initial(3, :), 'r--'); 
+plot3(y_l_elbow_initial(1, :), y_l_elbow_initial(2, :), y_l_elbow_initial(3, :), 'r--'); 
+plot3(y_r_elbow_initial(1, :), y_r_elbow_initial(2, :), y_r_elbow_initial(3, :), 'r--');  % initial DMP trajs
+ 
+view(-45, 45);
+title('Tracked (actually executed) trajs, Moved DMP trajs and Initial DMP trajs', 'FontSize', 18);
+xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
+legend([p1(1), p2(1), p3(1)], 'Tracked trajs', 'Moved DMP trajs', 'Initial DMP trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
+
+
+% Fig 4 - Comparison between Moved DMP trajs and Optimed DMP trajs
 figure;
 
-plot3(y_l_wrist(1, :), y_l_wrist(2, :), y_l_wrist(3, :), 'r--'); hold on; grid on;
-plot3(y_r_wrist(1, :), y_r_wrist(2, :), y_r_wrist(3, :), 'r--'); 
-plot3(y_l_elbow(1, :), y_l_elbow(2, :), y_l_elbow(3, :), 'r--'); 
-plot3(y_r_elbow(1, :), y_r_elbow(2, :), y_r_elbow(3, :), 'r--'); % initial target
+p1 = plot3(y_l_wrist_moved_0(1, :), y_l_wrist_moved_0(2, :), y_l_wrist_moved_0(3, :), 'r-*'); hold on; grid on;
+plot3(y_r_wrist_moved_0(1, :), y_r_wrist_moved_0(2, :), y_r_wrist_moved_0(3, :), 'r-*'); 
+plot3(y_l_elbow_moved_0(1, :), y_l_elbow_moved_0(2, :), y_l_elbow_moved_0(3, :), 'r-*'); 
+plot3(y_r_elbow_moved_0(1, :), y_r_elbow_moved_0(2, :), y_r_elbow_moved_0(3, :), 'r-*'); % moved DMP trajs
 
-plot3(actual_l_wrist_pos_traj_0(1, :), actual_l_wrist_pos_traj_0(2, :), actual_l_wrist_pos_traj_0(3, :), 'g--');
-plot3(actual_r_wrist_pos_traj_0(1, :), actual_r_wrist_pos_traj_0(2, :), actual_r_wrist_pos_traj_0(3, :), 'g--'); 
-plot3(actual_l_elbow_pos_traj_0(1, :), actual_l_elbow_pos_traj_0(2, :), actual_l_elbow_pos_traj_0(3, :), 'g--'); 
-plot3(actual_r_elbow_pos_traj_0(1, :), actual_r_elbow_pos_traj_0(2, :), actual_r_elbow_pos_traj_0(3, :), 'g--');  % pre-iteration results
+p2 = plot3(y_l_wrist_optimed_0(1, :), y_l_wrist_optimed_0(2, :), y_l_wrist_optimed_0(3, :), 'r--'); 
+plot3(y_r_wrist_optimed_0(1, :), y_r_wrist_optimed_0(2, :), y_r_wrist_optimed_0(3, :), 'r--'); 
+plot3(y_l_elbow_optimed_0(1, :), y_l_elbow_optimed_0(2, :), y_l_elbow_optimed_0(3, :), 'r--'); 
+plot3(y_r_elbow_optimed_0(1, :), y_r_elbow_optimed_0(2, :), y_r_elbow_optimed_0(3, :), 'r--'); % optimed DMP trajs
 
 view(-45, 45);
-% title('Original and reproduced trajectories');
-title('Desired and Pre-iteration optimized trajectories');
-xlabel('x'); ylabel('y'); zlabel('z'); 
+title('Moved DMP trajs and Optimized DMP trajs', 'FontSize', 18);
+xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
+legend([p1(1), p2(1)], 'Moved DMP trajs', 'Optimed DMP trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
+
+
+% Fig 5 - Comparison between Tracked trajs and Optimed DMP trajs
+figure;
+
+p1 = plot3(actual_l_wrist_pos_traj_0(1, :), actual_l_wrist_pos_traj_0(2, :), actual_l_wrist_pos_traj_0(3, :), 'g--'); hold on; grid on;
+plot3(actual_r_wrist_pos_traj_0(1, :), actual_r_wrist_pos_traj_0(2, :), actual_r_wrist_pos_traj_0(3, :), 'g--'); 
+plot3(actual_l_elbow_pos_traj_0(1, :), actual_l_elbow_pos_traj_0(2, :), actual_l_elbow_pos_traj_0(3, :), 'g--'); 
+plot3(actual_r_elbow_pos_traj_0(1, :), actual_r_elbow_pos_traj_0(2, :), actual_r_elbow_pos_traj_0(3, :), 'g--');  % tracked (actually executed) trajs
+
+p2 = plot3(y_l_wrist_optimed_0(1, :), y_l_wrist_optimed_0(2, :), y_l_wrist_optimed_0(3, :), 'r--'); 
+plot3(y_r_wrist_optimed_0(1, :), y_r_wrist_optimed_0(2, :), y_r_wrist_optimed_0(3, :), 'r--'); 
+plot3(y_l_elbow_optimed_0(1, :), y_l_elbow_optimed_0(2, :), y_l_elbow_optimed_0(3, :), 'r--'); 
+plot3(y_r_elbow_optimed_0(1, :), y_r_elbow_optimed_0(2, :), y_r_elbow_optimed_0(3, :), 'r--'); % optimed DMP trajs
+
+view(-45, 45);
+title('Tracked (actually executed) trajs and Optimized DMP trajs', 'FontSize', 18);
+xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
+legend([p1(1), p2(1)], 'Tracked trajs', 'Optimed DMP trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
+
+
+% Fig 6 - Comparison between Optimed DMP trajs and next-round tracked trajs
+figure;
+
+p1 = plot3(y_l_wrist_optimed_0(1, :), y_l_wrist_optimed_0(2, :), y_l_wrist_optimed_0(3, :), 'r--'); hold on; grid on;
+plot3(y_r_wrist_optimed_0(1, :), y_r_wrist_optimed_0(2, :), y_r_wrist_optimed_0(3, :), 'r--'); 
+plot3(y_l_elbow_optimed_0(1, :), y_l_elbow_optimed_0(2, :), y_l_elbow_optimed_0(3, :), 'r--'); 
+plot3(y_r_elbow_optimed_0(1, :), y_r_elbow_optimed_0(2, :), y_r_elbow_optimed_0(3, :), 'r--'); % optimed DMP trajs
+
+p2 = plot3(actual_l_wrist_pos_traj_1(1, :), actual_l_wrist_pos_traj_1(2, :), actual_l_wrist_pos_traj_1(3, :), 'g--'); hold on; grid on;
+plot3(actual_r_wrist_pos_traj_1(1, :), actual_r_wrist_pos_traj_1(2, :), actual_r_wrist_pos_traj_1(3, :), 'g--'); 
+plot3(actual_l_elbow_pos_traj_1(1, :), actual_l_elbow_pos_traj_1(2, :), actual_l_elbow_pos_traj_1(3, :), 'g--'); 
+plot3(actual_r_elbow_pos_traj_1(1, :), actual_r_elbow_pos_traj_1(2, :), actual_r_elbow_pos_traj_1(3, :), 'g--');  % tracked (actually executed) trajs
+
+view(-45, 45);
+title('Optimized DMP trajs and Next-round Tracked trajs', 'FontSize', 18);
+xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
+legend([p1(1), p2(1)], 'Optimed DMP trajs', 'Next-round Tracked trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
+
+
+% Fig 7 - Comparison between Optimed DMP trajs and last-round tracked trajs
+figure;
+
+p1 = plot3(y_l_wrist_optimed_0(1, :), y_l_wrist_optimed_0(2, :), y_l_wrist_optimed_0(3, :), 'r--'); hold on; grid on;
+plot3(y_r_wrist_optimed_0(1, :), y_r_wrist_optimed_0(2, :), y_r_wrist_optimed_0(3, :), 'r--'); 
+plot3(y_l_elbow_optimed_0(1, :), y_l_elbow_optimed_0(2, :), y_l_elbow_optimed_0(3, :), 'r--'); 
+plot3(y_r_elbow_optimed_0(1, :), y_r_elbow_optimed_0(2, :), y_r_elbow_optimed_0(3, :), 'r--'); % optimed DMP trajs
+
+p2 = plot3(actual_l_wrist_pos_traj_last(1, :), actual_l_wrist_pos_traj_last(2, :), actual_l_wrist_pos_traj_last(3, :), 'g--'); hold on; grid on;
+plot3(actual_r_wrist_pos_traj_last(1, :), actual_r_wrist_pos_traj_last(2, :), actual_r_wrist_pos_traj_last(3, :), 'g--'); 
+plot3(actual_l_elbow_pos_traj_last(1, :), actual_l_elbow_pos_traj_last(2, :), actual_l_elbow_pos_traj_last(3, :), 'g--'); 
+plot3(actual_r_elbow_pos_traj_last(1, :), actual_r_elbow_pos_traj_last(2, :), actual_r_elbow_pos_traj_last(3, :), 'g--');  % tracked (actually executed) trajs
+
+view(-45, 45);
+title('Optimized DMP trajs and Last-round Tracked trajs', 'FontSize', 18);
+xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
+legend([p1(1), p2(1)], 'Optimed DMP trajs', 'Last-round Tracked trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
+
+
+% Fig 8 - Comparison between First-round tracked trajs and last-round tracked trajs
+figure;
+
+p1 = plot3(actual_l_wrist_pos_traj_0(1, :), actual_l_wrist_pos_traj_0(2, :), actual_l_wrist_pos_traj_0(3, :), 'g-*'); hold on; grid on;
+plot3(actual_r_wrist_pos_traj_0(1, :), actual_r_wrist_pos_traj_0(2, :), actual_r_wrist_pos_traj_0(3, :), 'g-*'); 
+plot3(actual_l_elbow_pos_traj_0(1, :), actual_l_elbow_pos_traj_0(2, :), actual_l_elbow_pos_traj_0(3, :), 'g-*'); 
+plot3(actual_r_elbow_pos_traj_0(1, :), actual_r_elbow_pos_traj_0(2, :), actual_r_elbow_pos_traj_0(3, :), 'g-*');  % First-round tracked (actually executed) trajs
+
+p2 = plot3(actual_l_wrist_pos_traj_last(1, :), actual_l_wrist_pos_traj_last(2, :), actual_l_wrist_pos_traj_last(3, :), 'g--'); 
+plot3(actual_r_wrist_pos_traj_last(1, :), actual_r_wrist_pos_traj_last(2, :), actual_r_wrist_pos_traj_last(3, :), 'g--'); 
+plot3(actual_l_elbow_pos_traj_last(1, :), actual_l_elbow_pos_traj_last(2, :), actual_l_elbow_pos_traj_last(3, :), 'g--'); 
+plot3(actual_r_elbow_pos_traj_last(1, :), actual_r_elbow_pos_traj_last(2, :), actual_r_elbow_pos_traj_last(3, :), 'g--');  % Last-round tracked (actually executed) trajs
+
+view(-45, 45);
+title('First-round Tracked trajs and Last-round Tracked trajs', 'FontSize', 18);
+xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
+legend([p1(1), p2(1)], 'First-round Tracked trajs', 'Last-round Tracked trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
+
+
 
 
 %% Final optimization results
+%{
 % load optimized DMP starts and goals
 dmp_starts_goals = h5read(file_name, ['/', group_name, '/dmp_starts_goals_1']);
 new_goal_lrw = dmp_starts_goals(1:3);
@@ -524,14 +680,15 @@ plot3(y_l_elbow(1, :), y_l_elbow(2, :), y_l_elbow(3, :), 'r--');
 plot3(y_r_elbow(1, :), y_r_elbow(2, :), y_r_elbow(3, :), 'r--');  % optimized DMP targets
 
 % actually executed trajectories
-plot3(optimed_l_wrist_pos_traj(1, :), optimed_l_wrist_pos_traj(2, :), optimed_l_wrist_pos_traj(3, :), 'g--');
-plot3(optimed_r_wrist_pos_traj(1, :), optimed_r_wrist_pos_traj(2, :), optimed_r_wrist_pos_traj(3, :), 'g--'); 
-plot3(optimed_l_elbow_pos_traj(1, :), optimed_l_elbow_pos_traj(2, :), optimed_l_elbow_pos_traj(3, :), 'g--'); 
-plot3(optimed_r_elbow_pos_traj(1, :), optimed_r_elbow_pos_traj(2, :), optimed_r_elbow_pos_traj(3, :), 'g--');  % optimized q trajectories
+% plot3(optimed_l_wrist_pos_traj(1, :), optimed_l_wrist_pos_traj(2, :), optimed_l_wrist_pos_traj(3, :), 'g--');
+% plot3(optimed_r_wrist_pos_traj(1, :), optimed_r_wrist_pos_traj(2, :), optimed_r_wrist_pos_traj(3, :), 'g--'); 
+% plot3(optimed_l_elbow_pos_traj(1, :), optimed_l_elbow_pos_traj(2, :), optimed_l_elbow_pos_traj(3, :), 'g--'); 
+% plot3(optimed_r_elbow_pos_traj(1, :), optimed_r_elbow_pos_traj(2, :), optimed_r_elbow_pos_traj(3, :), 'g--');  % optimized q trajectories
 
 view(-45, 45);
-title('Original, Desired and Final optimized trajectories');
-xlabel('x'); ylabel('y'); zlabel('z');
+% title('Original, Desired and Final optimized trajectories', 'FontSize', 18);
+title('Original, Final optimized trajectories', 'FontSize', 18);
+xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
 
 
 % 2 - close up
@@ -550,8 +707,8 @@ plot3(optimed_l_elbow_pos_traj(1, :), optimed_l_elbow_pos_traj(2, :), optimed_l_
 plot3(optimed_r_elbow_pos_traj(1, :), optimed_r_elbow_pos_traj(2, :), optimed_r_elbow_pos_traj(3, :), 'g--');  % optimized q trajectories
 
 view(-45, 45);
-title('Desired and Final optimized trajectories');
-xlabel('x'); ylabel('y'); zlabel('z');
+title('Desired and Final optimized trajectories', 'FontSize', 18);
+xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
 
 
 %% Debug for choosing weights for q optimization (tracking), set a reasonable initial position to start with     
@@ -607,5 +764,5 @@ xlabel('x'); ylabel('y'); zlabel('z');
 %}
 
 
-
+%}
 

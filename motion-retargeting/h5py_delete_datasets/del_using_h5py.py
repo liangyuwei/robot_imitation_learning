@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
 
     ### For clearing original starts and goals
-    '''
+    
     # Preparations
     group_name = 'fengren_1'
     del_dataset_list_prefix = ['lrw',
@@ -89,10 +89,10 @@ if __name__ == '__main__':
                     del f[group_name+'/'+del_dataset_prefix+del_dataset_suffix]
 
     print('Deletion done.')    
-    '''
+    
     
     ### For clearing resampled quaternion and glove angle trajectories
-    '''
+    
     # Preparations
     group_name = 'fengren_1'
     del_dataset_list_prefix = ['l',
@@ -108,8 +108,29 @@ if __name__ == '__main__':
                     del f[group_name+'/'+del_dataset_prefix+del_dataset_suffix]
 
     print('Deletion done.')      
-    '''
     
+    
+    ### For clearing robot setting and adjusted movements(for debug)
+    
+    # Preparations
+    group_name = 'fengren_1'
+    del_dataset_list_prefix = ['l_',
+                               'r_']
+    del_dataset_list_suffix = ['wrist',
+                               'elbow',
+                               'shoulder']
+
+    with h5py.File(file_name, 'a') as f:
+        # robot setting
+        if ('robot_hand_length' in f[group_name].keys()):
+          del f[group_name+'/robot_hand_length']
+        # check the kill list of adjusted movements
+        for del_dataset_prefix in del_dataset_list_prefix:
+            for del_dataset_suffix in del_dataset_list_suffix:
+                if (del_dataset_prefix+del_dataset_suffix+'_pos_adjusted' in f[group_name].keys()):
+                    del f[group_name+'/'+del_dataset_prefix+del_dataset_suffix+'_pos_adjusted']
+
+    print('Deletion done.')      
     
     
     
