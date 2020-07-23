@@ -8,7 +8,7 @@ addpath('../vmp/'); % use resample_traj
 
 ori_file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
 file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity.h5';
-group_name = 'baozhu_1';%'fengren_1';%'kai_2';%'baozhu_1';%'fengren_1';
+group_name = 'fengren_1';%'kai_2';%'baozhu_1';%'fengren_1';
 
 num_datapoints = 50;
 
@@ -22,10 +22,10 @@ max_round = h5read(file_name, ['/', group_name, '/max_round']); % for ease of di
 
 %% Prepare the original data for comparison
 time = h5read(ori_file_name, ['/', group_name, '/time']);
-l_wrist_pos = resample_traj(time, h5read(ori_file_name, ['/', group_name, '/l_wrist_pos']), num_datapoints, false);
-l_elbow_pos = resample_traj(time, h5read(ori_file_name, ['/', group_name, '/l_elbow_pos']), num_datapoints, false);
-r_wrist_pos = resample_traj(time, h5read(ori_file_name, ['/', group_name, '/r_wrist_pos']), num_datapoints, false);
-r_elbow_pos = resample_traj(time, h5read(ori_file_name, ['/', group_name, '/r_elbow_pos']), num_datapoints, false); % input should be DOF x length
+l_wrist_pos = resample_traj(time, h5read(ori_file_name, ['/', group_name, '/l_wrist_pos_adjusted']), num_datapoints, false);
+l_elbow_pos = resample_traj(time, h5read(ori_file_name, ['/', group_name, '/l_elbow_pos_adjusted']), num_datapoints, false);
+r_wrist_pos = resample_traj(time, h5read(ori_file_name, ['/', group_name, '/r_wrist_pos_adjusted']), num_datapoints, false);
+r_elbow_pos = resample_traj(time, h5read(ori_file_name, ['/', group_name, '/r_elbow_pos_adjusted']), num_datapoints, false); % input should be DOF x length
 
 lr_wrist_pos = l_wrist_pos - r_wrist_pos;
 l_elbow_wrist_pos = l_elbow_pos - l_wrist_pos;
@@ -117,7 +117,7 @@ elbow_pos_cost_history = h5read(file_name, ['/', group_name, '/elbow_pos_cost_hi
 l_elbow_pos_cost_history = h5read(file_name, ['/', group_name, '/l_elbow_pos_cost_history']);
 r_elbow_pos_cost_history = h5read(file_name, ['/', group_name, '/r_elbow_pos_cost_history']);
 finger_cost_history = h5read(file_name, ['/', group_name, '/finger_cost_history']);
-similarity_cost_history = h5read(file_name, ['/', group_name, '/similarity_cost_history']);
+% similarity_cost_history = h5read(file_name, ['/', group_name, '/similarity_cost_history']);
 smoothness_cost_history = h5read(file_name, ['/', group_name, '/smoothness_cost_history']);
 col_cost_history = h5read(file_name, ['/', group_name, '/col_cost_history']);
 pos_limit_cost_history = h5read(file_name, ['/', group_name, '/pos_limit_cost_history']);
@@ -126,7 +126,7 @@ dmp_orien_cost_history = h5read(file_name, ['/', group_name, '/dmp_orien_cost_hi
 dmp_rel_change_cost_history = h5read(file_name, ['/', group_name, '/dmp_rel_change_cost_history']);
 
 % jacobians for DMP starts and goals
-sim_jacobian_history = h5read(file_name, ['/', group_name, '/sim_jacobian_history']);
+% sim_jacobian_history = h5read(file_name, ['/', group_name, '/sim_jacobian_history']);
 track_jacobian_history = h5read(file_name, ['/', group_name, '/track_jacobian_history']);
 orien_jacobian_history = h5read(file_name, ['/', group_name, '/orien_jacobian_history']);
 scale_jacobian_history = h5read(file_name, ['/', group_name, '/scale_jacobian_history']);
@@ -207,26 +207,26 @@ plot((1:size(dmp_rel_change_cost_history, 2))*per_iteration, dmp_rel_change_cost
 title('History of dmp rel change cost', 'FontSize', 18);
 xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
-figure;
-plot((1:size(similarity_cost_history, 2))*per_iteration, similarity_cost_history, 'b-'); hold on; grid on;
-% plot((1:size(similarity_cost_history, 2))*per_iteration, similarity_cost_history, 'bo');
-title('History of similarity cost', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+% figure;
+% plot((1:size(similarity_cost_history, 2))*per_iteration, similarity_cost_history, 'b-'); hold on; grid on;
+% % plot((1:size(similarity_cost_history, 2))*per_iteration, similarity_cost_history, 'bo');
+% title('History of similarity cost', 'FontSize', 18);
+% xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
 
 %% Plot jacobian history
 % pre-processing before displaying jacobian
-dmp_starts_goals_dof = size(sim_jacobian_history, 1);
-num_records = size(sim_jacobian_history, 2);
-jacobian_norm = zeros(1, num_records);
-for n = 1 : num_records
-    jacobian_norm(n) = norm(sim_jacobian_history(:, n));
-end
-figure;
-plot((1:num_records)*per_iteration, jacobian_norm, 'b-'); hold on; grid on;
-% plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
-title('History of SimilarityConstraint Jacobians', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Gradients magnitude', 'FontSize', 18); 
+% dmp_starts_goals_dof = size(sim_jacobian_history, 1);
+% num_records = size(sim_jacobian_history, 2);
+% jacobian_norm = zeros(1, num_records);
+% for n = 1 : num_records
+%     jacobian_norm(n) = norm(sim_jacobian_history(:, n));
+% end
+% figure;
+% plot((1:num_records)*per_iteration, jacobian_norm, 'b-'); hold on; grid on;
+% % plot((1:num_records)*per_iteration, jacobian_norm, 'bo');
+% title('History of SimilarityConstraint Jacobians', 'FontSize', 18);
+% xlabel('Iterations', 'FontSize', 18); ylabel('Gradients magnitude', 'FontSize', 18); 
 
 num_records = size(track_jacobian_history, 2);
 jacobian_norm = zeros(1, num_records);
@@ -365,22 +365,22 @@ p2 = plot((1:size(scale_jacobian_history, 2))*per_iteration, scale_jacobian_hist
 % plot((1:size(scale_jacobian_history, 2))*per_iteration, scale_jacobian_history, 'ro'); % 2
 p3 = plot((1:size(track_jacobian_history, 2))*per_iteration, track_jacobian_history, 'g-'); 
 % plot((1:size(track_jacobian_history, 2))*per_iteration, track_jacobian_history, 'go'); % 3
-p4 = plot((1:size(sim_jacobian_history, 2))*per_iteration, sim_jacobian_history, 'm-'); 
+% p4 = plot((1:size(sim_jacobian_history, 2))*per_iteration, sim_jacobian_history, 'm-'); 
 % plot((1:size(sim_jacobian_history, 2))*per_iteration, sim_jacobian_history, 'mo'); % 4 
 title('History of Jacobians w.r.t DMP starts and goals', 'FontSize', 18);
 xlabel('Iterations', 'FontSize', 18); ylabel('Jacobians', 'FontSize', 18); 
-legend([p1(1), p2(1), p3(1), p4(1)], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian', 'sim\_jacobian', 'Location', 'NorthEastOutside');
+legend([p1(1), p2(1), p3(1)], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian', 'Location', 'NorthEastOutside');
 % 'track_jacobian', 'sim_jacobian', 'Location', 'NorthEastOutside');
 
 % norms
 num_records = size(track_jacobian_history, 2);
 track_jacobian_norm = zeros(1, num_records);
-sim_jacobian_norm = zeros(1, num_records);
+% sim_jacobian_norm = zeros(1, num_records);
 orien_jacobian_norm = zeros(1, num_records);
 scale_jacobian_norm = zeros(1, num_records);
 for n = 1 : num_records
     track_jacobian_norm(n) = norm(track_jacobian_history(:, n));
-    sim_jacobian_norm(n) = norm(sim_jacobian_history(:, n));
+%     sim_jacobian_norm(n) = norm(sim_jacobian_history(:, n));
     orien_jacobian_norm(n) = norm(orien_jacobian_history(:, n));
     scale_jacobian_norm(n) = norm(scale_jacobian_history(:, n));
 end
@@ -388,10 +388,10 @@ figure;
 p1 = plot((1:num_records)*per_iteration, orien_jacobian_norm, 'b-'); hold on; grid on;
 p2 = plot((1:num_records)*per_iteration, scale_jacobian_norm, 'r-');
 p3 = plot((1:num_records)*per_iteration, track_jacobian_norm, 'g-');
-p4 = plot((1:num_records)*per_iteration, sim_jacobian_norm, 'm-');
+% p4 = plot((1:num_records)*per_iteration, sim_jacobian_norm, 'm-');
 title('History of Norms of DMP Jacobians', 'FontSize', 18);
 xlabel('Iterations', 'FontSize', 18); ylabel('Norms of jacobians', 'FontSize', 18); 
-legend([p1, p2, p3, p4], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian', 'sim\_jacobian', 'Location', 'NorthEastOutside');
+legend([p1, p2, p3], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian', 'Location', 'NorthEastOutside');
 
 
 %% Optimization results of First Round (q optimization -> manually move DMP starts and goals -> DMP optimization)

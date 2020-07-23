@@ -13,7 +13,7 @@ num_resampled_points = 50;
 
 %% Load demonstration
 file_name = '../motion-retargeting/test_imi_data_YuMi.h5'; %'test_imi_data_YuMi.h5'; %
-group_name = 'baozhu_1';%'fengren_1';%'gun_2';%'kai_2';%'qie_1';%'kai_1'; %'kai_1'; %'fengren_1';
+group_name = 'fengren_10';%'gun_2';%'kai_2';%'qie_1';%'kai_1'; %'kai_1'; %'fengren_1';
 
 time = h5read(file_name, ['/', group_name, '/time']);
 
@@ -36,7 +36,7 @@ human_hand_length = h5read(file_name, ['/', group_name, '/demonstrator_hand_leng
 % human wrist position + human wrist orientation + human hand length --> human hand tip traj
 % robot wrist position <-- human wrist orientation + robotic hand length <----|     
 robot_hand_axis = [0, 0, 1]'; % along z-axis
-robot_hand_length = 0.278; % 27.8 cm according to documentation; (there might be a base which is not included in the model, be careful..)
+robot_hand_length = 0.2; %0.278; %0.20; % 0.195 according to rviz simulation... % 27.8 cm according to documentation; (there might be a base which is not included in the model, be careful..)
 l_wrist_pos_inferred = zeros(size(l_hand_tip_pos));
 r_wrist_pos_inferred = zeros(size(r_hand_tip_pos));
 for n = 1 : size(l_hand_tip_pos, 2)
@@ -391,8 +391,9 @@ for i = 1:length
     quat = rotm2quat(rotm);
     r_wrist_quat(:, i) = quat';
 end
-l_wrist_quat_resampled = resample_traj(time, l_wrist_quat, num_resampled_points, false);
-r_wrist_quat_resampled = resample_traj(time, r_wrist_quat, num_resampled_points, false);
+% note that output from rotm2quat() is of the form [w, x, y, z]
+l_wrist_quat_resampled = resample_traj(time, l_wrist_quat, num_resampled_points, true); 
+r_wrist_quat_resampled = resample_traj(time, r_wrist_quat, num_resampled_points, true); % set true for quaternion data...
 
 
 % resampled glove angle trajectories
@@ -417,4 +418,121 @@ h5create(file_name, ['/', group_name, '/r_glove_angle_resampled'], size(r_glove_
 h5write(file_name, ['/', group_name, '/r_glove_angle_resampled'], r_glove_angle_resampled);
 
 
+%% Checking out the performance of the best tracking wrist_pos by directly calling compute_cartesian_path()
+% original DMP starts and goals
+lrw_goal_ori = lr_wrist_pos(:, end);
+lrw_start_ori = lr_wrist_pos(:, 1);
+lew_goal_ori = l_elbow_wrist_pos(:, end);
+lew_start_ori = l_elbow_wrist_pos(:, 1);
+rew_goal_ori = r_elbow_wrist_pos(:, end);
+rew_start_ori = r_elbow_wrist_pos(:, 1);
+rw_goal_ori = r_wrist_pos_robot(:, end);
+rw_start_ori = r_wrist_pos_robot(:, 1);
 
+% manually set initial position
+% lw_set_start = [0.409, 0.181, 0.191]'; 
+le_set_start = [0.218, 0.310, 0.378]'; 
+rw_set_start = [0.410, -0.179, 0.191]'; 
+re_set_start = [0.218, -0.310, 0.377]';
+
+% adjust rw start to ensure rw start and lw start symmetric to x-z plane
+lw_set_start = rw_set_start + lrw_start_ori; 
+dist_y = abs(lw_set_start(2) - rw_set_start(2));
+lw_set_start(2) = dist_y/2;
+rw_set_start(2) = -dist_y/2; 
+
+% compute relative DMPs' starts
+lrw_set_start = lw_set_start - rw_set_start;
+lew_set_start = le_set_start - lw_set_start;
+rew_set_start = re_set_start - rw_set_start;
+
+% compute offsets
+lrw_offset = lrw_set_start - lrw_start_ori;
+lew_offset = lew_set_start - lew_start_ori;
+rew_offset = rew_set_start - rew_start_ori;
+rw_offset = rw_set_start - rw_start_ori;
+
+% apply offsets to get initially set DMP starts and goals
+lrw_goal_new = lrw_goal_ori + lrw_offset;
+lrw_start_new = lrw_start_ori + lrw_offset;
+lew_goal_new = lew_goal_ori + lew_offset;
+lew_start_new = lew_start_ori + lew_offset;
+rew_goal_new = rew_goal_ori + rew_offset;
+rew_start_new = rew_start_ori + rew_offset;
+rw_goal_new = rw_goal_ori + rw_offset;
+rw_start_new = rw_start_ori + rw_offset;
+
+% get vectors pointing from starts to goals
+lrw_vec_ori = lrw_goal_ori - lrw_start_ori;
+lew_vec_ori = lew_goal_ori - lew_start_ori;
+rew_vec_ori = rew_goal_ori - rew_start_ori;
+rw_vec_ori = rw_goal_ori - rw_start_ori;
+
+lrw_vec_new = lrw_goal_new - lrw_start_new;
+lew_vec_new = lew_goal_new - lew_start_new;
+rew_vec_new = rew_goal_new - rew_start_new;
+rw_vec_new = rw_goal_new - rw_start_new;
+
+% constraints-related values
+lrw_ratio = norm(lrw_vec_new) / norm(lrw_vec_ori)
+lew_ratio = norm(lew_vec_new) / norm(lew_vec_ori)
+rew_ratio = norm(rew_vec_new) / norm(rew_vec_ori)
+rw_ratio = norm(rw_vec_new) / norm(rw_vec_ori)
+
+lrw_th = acos(lrw_vec_new'*lrw_vec_ori/norm(lrw_vec_new)/norm(lrw_vec_ori)) * 180 / pi
+lew_th = acos(lew_vec_new'*lew_vec_ori/norm(lew_vec_new)/norm(lew_vec_ori)) * 180 / pi
+rew_th = acos(rew_vec_new'*rew_vec_ori/norm(rew_vec_new)/norm(rew_vec_ori)) * 180 / pi
+rw_th = acos(rw_vec_new'*rw_vec_ori/norm(rw_vec_new)/norm(rw_vec_ori)) * 180 / pi % in degree !!
+
+% Evaluate magnitudes of changes of relative DMPs
+lrw_goal_change = norm(lrw_goal_ori - lrw_goal_new)
+lrw_start_change = norm(lrw_start_ori - lrw_start_new)
+
+lew_goal_change = norm(lew_goal_ori - lew_goal_new)
+lew_start_change = norm(lew_start_ori - lew_start_new)
+
+rew_goal_change = norm(rew_goal_ori - rew_goal_new)
+rew_start_change = norm(rew_start_ori - rew_start_new)
+
+rw_goal_change = norm(rw_goal_ori - rw_goal_new)
+rw_start_change = norm(rw_start_ori - rw_start_new)
+
+
+% Use DMP to generate wrist trajs for compute_cartesian_path to track
+new_goal_lrw = lrw_goal_new; new_start_lrw = lrw_start_new;
+new_goal_lew = lew_goal_new; new_start_lew = lew_start_new;
+new_goal_rew = rew_goal_new; new_start_rew = rew_start_new;
+new_goal_rw = rw_goal_new; new_start_rw = rw_start_new;
+
+y_lrw = DMP_use_weights(Mu_lrw, Sigma_lrw, Weights_lrw, num_resampled_points, kP, kV, alpha, dt, new_goal_lrw, new_start_lrw, false);
+y_lew = DMP_use_weights(Mu_lew, Sigma_lew, Weights_lew, num_resampled_points, kP, kV, alpha, dt, new_goal_lew, new_start_lew, false);
+y_rew = DMP_use_weights(Mu_rew, Sigma_rew, Weights_rew, num_resampled_points, kP, kV, alpha, dt, new_goal_rew, new_start_rew, false);
+y_rw = DMP_use_weights(Mu_rw, Sigma_rw, Weights_rw, num_resampled_points, kP, kV, alpha, dt, new_goal_rw, new_start_rw, false);
+
+y_r_wrist_set = y_rw;
+y_l_wrist_set = y_rw + y_lrw;
+y_r_elbow_set = y_rw + y_rew;
+y_l_elbow_set = y_l_wrist_set + y_lew;
+
+
+% display 
+figure;
+plot3(l_wrist_pos_human(1, :), l_wrist_pos_human(2, :), l_wrist_pos_human(3, :), 'b-'); hold on; grid on;
+plot3(r_wrist_pos_human(1, :), r_wrist_pos_human(2, :), r_wrist_pos_human(3, :), 'b-'); 
+plot3(l_elbow_pos_human(1, :), l_elbow_pos_human(2, :), l_elbow_pos_human(3, :), 'b-'); 
+plot3(r_elbow_pos_human(1, :), r_elbow_pos_human(2, :), r_elbow_pos_human(3, :), 'b-');  % human demonstrated movement
+plot3(y_l_wrist_set(1, :), y_l_wrist_set(2, :), y_l_wrist_set(3, :), 'r-');
+plot3(y_r_wrist_set(1, :), y_r_wrist_set(2, :), y_r_wrist_set(3, :), 'r-'); 
+plot3(y_l_elbow_set(1, :), y_l_elbow_set(2, :), y_l_elbow_set(3, :), 'r-'); 
+plot3(y_r_elbow_set(1, :), y_r_elbow_set(2, :), y_r_elbow_set(3, :), 'r-');  % DMP initial setup for optimization
+view(-45, 45);
+title('Original trajectories and DMP generated initial trajectories', 'FontSize', 16);
+xlabel('x', 'FontSize', 16); ylabel('y', 'FontSize', 16); zlabel('z', 'FontSize', 16); 
+
+
+% store for compute_cartesian_path to track
+h5create(file_name, ['/', group_name, '/l_wrist_pos_to_track'], size(y_l_wrist_set));
+h5write(file_name, ['/', group_name, '/l_wrist_pos_to_track'], y_l_wrist_set);
+
+h5create(file_name, ['/', group_name, '/r_wrist_pos_to_track'], size(y_r_wrist_set));
+h5write(file_name, ['/', group_name, '/r_wrist_pos_to_track'], y_r_wrist_set);

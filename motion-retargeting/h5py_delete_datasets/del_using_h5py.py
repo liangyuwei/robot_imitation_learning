@@ -4,7 +4,7 @@ if __name__ == '__main__':
 
     ### Preparations
     file_name = './test_imi_data_YuMi.h5'
-
+    group_name = 'fengren_1'
 
     ### For generating new trainging datasets
     '''
@@ -49,7 +49,6 @@ if __name__ == '__main__':
     
     ### For clearing learned DMP weights and others
     # Preparations
-    group_name = 'fengren_1'
     del_dataset_list_prefix = ['Mu',
                                'Sigma',
                                'Weights',
@@ -73,7 +72,6 @@ if __name__ == '__main__':
     ### For clearing original starts and goals
     
     # Preparations
-    group_name = 'fengren_1'
     del_dataset_list_prefix = ['lrw',
                                'lew',
                                'rew',
@@ -94,7 +92,6 @@ if __name__ == '__main__':
     ### For clearing resampled quaternion and glove angle trajectories
     
     # Preparations
-    group_name = 'fengren_1'
     del_dataset_list_prefix = ['l',
                                'r']
     del_dataset_list_suffix = ['_wrist_quat_resampled',
@@ -113,7 +110,6 @@ if __name__ == '__main__':
     ### For clearing robot setting and adjusted movements(for debug)
     
     # Preparations
-    group_name = 'fengren_1'
     del_dataset_list_prefix = ['l_',
                                'r_']
     del_dataset_list_suffix = ['wrist',
