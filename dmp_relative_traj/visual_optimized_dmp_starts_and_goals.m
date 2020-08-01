@@ -577,7 +577,7 @@ plot3(y_l_elbow_optimed_0(1, :), y_l_elbow_optimed_0(2, :), y_l_elbow_optimed_0(
 plot3(y_r_elbow_optimed_0(1, :), y_r_elbow_optimed_0(2, :), y_r_elbow_optimed_0(3, :), 'r--'); % optimed DMP trajs
 
 view(-45, 45);
-title('Tracked (actually executed) trajs and Optimized DMP trajs', 'FontSize', 18);
+title('First-round Tracked (actually executed) trajs and Optimized DMP trajs', 'FontSize', 18);
 xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
 legend([p1(1), p2(1)], 'Tracked trajs', 'Optimed DMP trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
 
@@ -596,7 +596,7 @@ plot3(actual_l_elbow_pos_traj_1(1, :), actual_l_elbow_pos_traj_1(2, :), actual_l
 plot3(actual_r_elbow_pos_traj_1(1, :), actual_r_elbow_pos_traj_1(2, :), actual_r_elbow_pos_traj_1(3, :), 'g--');  % tracked (actually executed) trajs
 
 view(-45, 45);
-title('Optimized DMP trajs and Next-round Tracked trajs', 'FontSize', 18);
+title('First-round Optimized DMP trajs and Next-round Tracked trajs', 'FontSize', 18);
 xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
 legend([p1(1), p2(1)], 'Optimed DMP trajs', 'Next-round Tracked trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
 
@@ -615,7 +615,7 @@ plot3(actual_l_elbow_pos_traj_last(1, :), actual_l_elbow_pos_traj_last(2, :), ac
 plot3(actual_r_elbow_pos_traj_last(1, :), actual_r_elbow_pos_traj_last(2, :), actual_r_elbow_pos_traj_last(3, :), 'g--');  % tracked (actually executed) trajs
 
 view(-45, 45);
-title('Optimized DMP trajs and Last-round Tracked trajs', 'FontSize', 18);
+title('First-round Optimized DMP trajs and Last-round Tracked trajs', 'FontSize', 18);
 xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
 legend([p1(1), p2(1)], 'Optimed DMP trajs', 'Last-round Tracked trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
 
@@ -623,10 +623,10 @@ legend([p1(1), p2(1)], 'Optimed DMP trajs', 'Last-round Tracked trajs', 'Locatio
 % Fig 8 - Comparison between First-round tracked trajs and last-round tracked trajs
 figure;
 
-p1 = plot3(actual_l_wrist_pos_traj_0(1, :), actual_l_wrist_pos_traj_0(2, :), actual_l_wrist_pos_traj_0(3, :), 'g-*'); hold on; grid on;
-plot3(actual_r_wrist_pos_traj_0(1, :), actual_r_wrist_pos_traj_0(2, :), actual_r_wrist_pos_traj_0(3, :), 'g-*'); 
-plot3(actual_l_elbow_pos_traj_0(1, :), actual_l_elbow_pos_traj_0(2, :), actual_l_elbow_pos_traj_0(3, :), 'g-*'); 
-plot3(actual_r_elbow_pos_traj_0(1, :), actual_r_elbow_pos_traj_0(2, :), actual_r_elbow_pos_traj_0(3, :), 'g-*');  % First-round tracked (actually executed) trajs
+p1 = plot3(actual_l_wrist_pos_traj_0(1, :), actual_l_wrist_pos_traj_0(2, :), actual_l_wrist_pos_traj_0(3, :), 'r--'); hold on; grid on;
+plot3(actual_r_wrist_pos_traj_0(1, :), actual_r_wrist_pos_traj_0(2, :), actual_r_wrist_pos_traj_0(3, :), 'r--'); 
+plot3(actual_l_elbow_pos_traj_0(1, :), actual_l_elbow_pos_traj_0(2, :), actual_l_elbow_pos_traj_0(3, :), 'r--'); 
+plot3(actual_r_elbow_pos_traj_0(1, :), actual_r_elbow_pos_traj_0(2, :), actual_r_elbow_pos_traj_0(3, :), 'r--');  % First-round tracked (actually executed) trajs
 
 p2 = plot3(actual_l_wrist_pos_traj_last(1, :), actual_l_wrist_pos_traj_last(2, :), actual_l_wrist_pos_traj_last(3, :), 'g--'); 
 plot3(actual_r_wrist_pos_traj_last(1, :), actual_r_wrist_pos_traj_last(2, :), actual_r_wrist_pos_traj_last(3, :), 'g--'); 
