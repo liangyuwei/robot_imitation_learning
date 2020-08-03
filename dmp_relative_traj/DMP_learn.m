@@ -13,7 +13,7 @@ num_resampled_points = 50;
 
 %% Load demonstration
 file_name = '../motion-retargeting/test_imi_data_YuMi.h5'; %'test_imi_data_YuMi.h5'; %
-group_name = 'baozhu_1';%'fengren_10';%'gun_2';%'kai_2';%'qie_1';%'kai_1'; %'kai_1'; %'fengren_1';
+group_name = 'fengren_1';%'fengren_10';%'gun_2';%'kai_2';%'qie_1';%'kai_1'; %'kai_1'; %'fengren_1';
 
 time = h5read(file_name, ['/', group_name, '/time']);
 
@@ -22,6 +22,9 @@ r_wrist_pos_human = resample_traj(time, h5read(file_name, ['/', group_name, '/r_
 
 l_elbow_pos_human = resample_traj(time, h5read(file_name, ['/', group_name, '/l_elbow_pos']), num_datapoints, false);
 r_elbow_pos_human = resample_traj(time, h5read(file_name, ['/', group_name, '/r_elbow_pos']), num_datapoints, false); % input should be DOF x length
+
+l_shoulder_pos_human = resample_traj(time, h5read(file_name, ['/', group_name, '/l_shoulder_pos']), num_datapoints, false);
+r_shoulder_pos_human = resample_traj(time, h5read(file_name, ['/', group_name, '/r_shoulder_pos']), num_datapoints, false); % original shoulder trajectories
 
 l_wrist_ori = h5read(file_name, ['/', group_name, '/l_wrist_ori']);
 r_wrist_ori = h5read(file_name, ['/', group_name, '/r_wrist_ori']);
@@ -55,18 +58,24 @@ r_wrist_pos_robot = resample_traj(time, r_wrist_pos_inferred, num_datapoints, fa
 
 % debug:
 figure;
-plot3(l_wrist_pos_human(1, :), l_wrist_pos_human(2, :), l_wrist_pos_human(3, :), 'b--'); hold on; grid on;
-plot3(r_wrist_pos_human(1, :), r_wrist_pos_human(2, :), r_wrist_pos_human(3, :), 'b--');
-plot3(l_wrist_pos_robot(1, :), l_wrist_pos_robot(2, :), l_wrist_pos_robot(3, :), 'b-'); 
-plot3(r_wrist_pos_robot(1, :), r_wrist_pos_robot(2, :), r_wrist_pos_robot(3, :), 'b-');
-plot3(l_elbow_pos_human(1, :), l_elbow_pos_human(2, :), l_elbow_pos_human(3, :), 'g-');
-plot3(r_elbow_pos_human(1, :), r_elbow_pos_human(2, :), r_elbow_pos_human(3, :), 'g-');
-plot3(l_hand_tip_pos(1, :), l_hand_tip_pos(2, :), l_hand_tip_pos(3, :), 'r-');
-plot3(r_hand_tip_pos(1, :), r_hand_tip_pos(2, :), r_hand_tip_pos(3, :), 'r-');
-title('Human wrist movement and modified wrist movement');
-view(-45, 45);
-xlabel('x'); ylabel('y'); zlabel('z');
-
+p1 = plot3(l_wrist_pos_human(1, :), l_wrist_pos_human(2, :), l_wrist_pos_human(3, :), 'b-'); hold on; grid on;
+plot3(r_wrist_pos_human(1, :), r_wrist_pos_human(2, :), r_wrist_pos_human(3, :), 'b-'); % wrist
+p2 = plot3(l_elbow_pos_human(1, :), l_elbow_pos_human(2, :), l_elbow_pos_human(3, :), 'g-');
+plot3(r_elbow_pos_human(1, :), r_elbow_pos_human(2, :), r_elbow_pos_human(3, :), 'g-'); % elbow
+p3 = plot3(l_shoulder_pos_human(1, :), l_shoulder_pos_human(2, :), l_shoulder_pos_human(3, :), 'y-');
+plot3(r_shoulder_pos_human(1, :), r_shoulder_pos_human(2, :), r_shoulder_pos_human(3, :), 'y-'); % shoulder
+p4 = plot3(l_hand_tip_pos(1, :), l_hand_tip_pos(2, :), l_hand_tip_pos(3, :), 'r-');
+plot3(r_hand_tip_pos(1, :), r_hand_tip_pos(2, :), r_hand_tip_pos(3, :), 'r-'); % handtip
+p5 = plot3(l_wrist_pos_robot(1, :), l_wrist_pos_robot(2, :), l_wrist_pos_robot(3, :), 'b--'); 
+plot3(r_wrist_pos_robot(1, :), r_wrist_pos_robot(2, :), r_wrist_pos_robot(3, :), 'b--'); % adjusted wrist
+title('Human wrist movement and modified wrist movement', 'FontSize', 16);
+%view(-45, 45);
+view(45, 45);
+xlabel('x', 'FontSize', 16); ylabel('y', 'FontSize', 16); zlabel('z', 'FontSize', 16); 
+legend([p1(1), p2(1), p3(1), p4(1), p5(1)], ...
+        'Original Wrist Traj', 'Original Elbow Traj', 'Original Shoulder Traj', ...
+        'Original HandTip Traj', 'Adjusted Wrist Traj', ...
+        'Location', 'NorthEastOutside');
 
 % compute relative trajectories for DMP learning
 % here the relative relationship between wrist and elbow is actually modified manually, but we could also say that relative relationsh between hand tip and elbow is preserved...     
@@ -89,8 +98,6 @@ l_elbow_pos_adjusted = resample_traj(time_expanded, l_wrist_pos_robot + l_elbow_
 r_elbow_pos_adjusted = resample_traj(time_expanded, r_wrist_pos_robot + r_elbow_wrist_pos, ori_num_datapoints, false);
 
 % shoulder
-l_shoulder_pos_human = resample_traj(time, h5read(file_name, ['/', group_name, '/l_shoulder_pos']), num_datapoints, false);
-r_shoulder_pos_human = resample_traj(time, h5read(file_name, ['/', group_name, '/r_shoulder_pos']), num_datapoints, false); % original shoulder trajectories
 l_shoulder_elbow_pos = l_shoulder_pos_human - l_elbow_pos_human;
 r_shoulder_elbow_pos = r_shoulder_pos_human - r_elbow_pos_human; % shoulder-elbow relative traj
 l_shoulder_pos_adjusted = resample_traj(time_expanded, l_wrist_pos_robot + l_elbow_wrist_pos + l_shoulder_elbow_pos, ...
@@ -117,6 +124,7 @@ p6 = plot3(l_shoulder_pos_adjusted(1, :), l_shoulder_pos_adjusted(2, :), l_shoul
 plot3(r_shoulder_pos_adjusted(1, :), r_shoulder_pos_adjusted(2, :), r_shoulder_pos_adjusted(3, :), 'y--'); % shoulder
 
 title('Human demonstrated and Adjusted movements', 'FontSize', 16);
+view(45, 45,);
 xlabel('x', 'FontSize', 16); ylabel('y', 'FontSize', 16); zlabel('z', 'FontSize', 16); 
 legend([p1(1), p2(1), p3(1), p4(1), p5(1), p6(1)], ...
        'Original Wrist Traj', 'Original Elbow Traj', 'Original Shoulder Traj', ...
@@ -184,7 +192,7 @@ traj_dataset{1} = r_wrist_pos_robot'; % should be of size Length x DOF!!!
 
 
 %% Store the learned results
-%
+%{
 % robot setting
 h5create(file_name, ['/', group_name, '/robot_hand_length'], size(robot_hand_length));
 h5write(file_name, ['/', group_name, '/robot_hand_length'], robot_hand_length);

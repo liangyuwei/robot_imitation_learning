@@ -85,3 +85,23 @@ J * dq
 dx
 
 
+
+%% Robot jacobians for tracking
+J_wrist = [];
+
+J_elbow = [];
+
+dx_wrist = []';
+
+dx_elbow = []';
+
+
+dq_wrist = []';
+
+dq_elbow = []';
+
+
+
+
+
+

@@ -7,8 +7,8 @@ addpath('./m_fcts/');
 addpath('../vmp/'); % use resample_traj
 
 ori_file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
-file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity.h5';
-group_name = 'fengren_1';%'kai_2';%'baozhu_1';%'fengren_1';
+file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity-baozhu_1-one_round-col_0.h5';
+group_name = 'baozhu_1';%'kai_2';%'baozhu_1';%'fengren_1';
 
 num_datapoints = 50;
 
@@ -282,7 +282,7 @@ dmp_starts_goals_original = [lr_wrist_pos(:, end); lr_wrist_pos(:, 1);
                              r_elbow_wrist_pos(:, end); r_elbow_wrist_pos(:, 1);
                              r_wrist_pos(:, end); r_wrist_pos(:, 1)];
 dmp_starts_goals_final = h5read(file_name, ['/', group_name, '/dmp_starts_goals_optimed_', num2str(max_round)]);
-dmp_starts_goals_moved = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved']);
+% dmp_starts_goals_moved = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved']);
 % dmp_starts_goals_moved_optimed = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved_optimed']);
 % dmp_starts_goals_moved_pulled = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved_pulled']);
 
@@ -432,6 +432,7 @@ actual_l_elbow_pos_traj_last = h5read(file_name, ['/', group_name, '/actual_l_el
 actual_r_elbow_pos_traj_last = h5read(file_name, ['/', group_name, '/actual_r_elbow_pos_traj_', num2str(max_round)]);
 
 % 3 - load manually moved DMP trajs
+%{
 dmp_starts_goals_moved_0 = h5read(file_name, ['/', group_name, '/dmp_starts_goals_moved_0']);
 
 new_goal_lrw_moved_0 = dmp_starts_goals_moved_0(1:3); new_start_lrw_moved_0 = dmp_starts_goals_moved_0(4:6);
@@ -448,6 +449,8 @@ y_r_wrist_moved_0 = y_rw;
 y_l_wrist_moved_0 = y_rw + y_lrw;
 y_r_elbow_moved_0 = y_rw + y_rew;
 y_l_elbow_moved_0 = y_l_wrist_moved_0 + y_lew;
+
+%}
 
 % 4 - load optimized DMP trajs
 dmp_starts_goals_optimed_0 = h5read(file_name, ['/', group_name, '/dmp_starts_goals_optimed_0']);
@@ -521,7 +524,8 @@ xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize'
 legend([p1(1), p2(1)], 'Initial DMP trajs', 'Tracked trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
 
 
-% Fig 3 - Comparison between tracked(actually executed) trajs and moved DMP trajs     
+% Fig 3 - Comparison between tracked(actually executed) trajs and moved DMP trajs  
+%{
 figure;
 p1 = plot3(actual_l_wrist_pos_traj_0(1, :), actual_l_wrist_pos_traj_0(2, :), actual_l_wrist_pos_traj_0(3, :), 'g--'); hold on; grid on;
 plot3(actual_r_wrist_pos_traj_0(1, :), actual_r_wrist_pos_traj_0(2, :), actual_r_wrist_pos_traj_0(3, :), 'g--'); 
@@ -542,9 +546,10 @@ view(-45, 45);
 title('Tracked (actually executed) trajs, Moved DMP trajs and Initial DMP trajs', 'FontSize', 18);
 xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
 legend([p1(1), p2(1), p3(1)], 'Tracked trajs', 'Moved DMP trajs', 'Initial DMP trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
-
+%}
 
 % Fig 4 - Comparison between Moved DMP trajs and Optimed DMP trajs
+%{
 figure;
 
 p1 = plot3(y_l_wrist_moved_0(1, :), y_l_wrist_moved_0(2, :), y_l_wrist_moved_0(3, :), 'r-*'); hold on; grid on;
@@ -561,7 +566,7 @@ view(-45, 45);
 title('Moved DMP trajs and Optimized DMP trajs', 'FontSize', 18);
 xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
 legend([p1(1), p2(1)], 'Moved DMP trajs', 'Optimed DMP trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
-
+%}
 
 % Fig 5 - Comparison between Tracked trajs and Optimed DMP trajs
 figure;
