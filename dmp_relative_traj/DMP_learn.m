@@ -109,10 +109,11 @@ r_shoulder_pos_adjusted = resample_traj(time_expanded, r_wrist_pos_robot + r_elb
 % debug: original and adjusted movements
 figure;
 
-p1 = plot3(l_wrist_pos_human(1, :), l_wrist_pos_human(2, :), l_wrist_pos_human(3, :), 'b-'); hold on; grid on;
-plot3(r_wrist_pos_human(1, :), r_wrist_pos_human(2, :), r_wrist_pos_human(3, :), 'b-');  % wrist
-p2 = plot3(l_elbow_pos_human(1, :), l_elbow_pos_human(2, :), l_elbow_pos_human(3, :), 'g-'); 
-plot3(r_elbow_pos_human(1, :), r_elbow_pos_human(2, :), r_elbow_pos_human(3, :), 'g-'); % elbow
+p1 = plot3(l_wrist_pos_human(1, :), l_wrist_pos_human(2, :), l_wrist_pos_human(3, :), 'r-', 'LineWidth', 1.5); hold on; grid on;
+plot3(r_wrist_pos_human(1, :), r_wrist_pos_human(2, :), r_wrist_pos_human(3, :), 'b-', 'LineWidth', 1.5);  % wrist
+p2 = plot3(l_elbow_pos_human(1, :), l_elbow_pos_human(2, :), l_elbow_pos_human(3, :), 'g-', 'LineWidth', 1.5); 
+plot3(r_elbow_pos_human(1, :), r_elbow_pos_human(2, :), r_elbow_pos_human(3, :), 'g-', 'LineWidth', 1.5); % elbow
+
 p3 = plot3(l_shoulder_pos_human(1, :), l_shoulder_pos_human(2, :), l_shoulder_pos_human(3, :), 'y-');
 plot3(r_shoulder_pos_human(1, :), r_shoulder_pos_human(2, :), r_shoulder_pos_human(3, :), 'y-'); % shoulder
 
@@ -124,7 +125,7 @@ p6 = plot3(l_shoulder_pos_adjusted(1, :), l_shoulder_pos_adjusted(2, :), l_shoul
 plot3(r_shoulder_pos_adjusted(1, :), r_shoulder_pos_adjusted(2, :), r_shoulder_pos_adjusted(3, :), 'y--'); % shoulder
 
 title('Human demonstrated and Adjusted movements', 'FontSize', 16);
-view(45, 45,);
+view(45, 45);
 xlabel('x', 'FontSize', 16); ylabel('y', 'FontSize', 16); zlabel('z', 'FontSize', 16); 
 legend([p1(1), p2(1), p3(1), p4(1), p5(1), p6(1)], ...
        'Original Wrist Traj', 'Original Elbow Traj', 'Original Shoulder Traj', ...
@@ -192,7 +193,7 @@ traj_dataset{1} = r_wrist_pos_robot'; % should be of size Length x DOF!!!
 
 
 %% Store the learned results
-%{
+%
 % robot setting
 h5create(file_name, ['/', group_name, '/robot_hand_length'], size(robot_hand_length));
 h5write(file_name, ['/', group_name, '/robot_hand_length'], robot_hand_length);
@@ -427,6 +428,7 @@ h5write(file_name, ['/', group_name, '/r_glove_angle_resampled'], r_glove_angle_
 
 
 %% Checking out the performance of the best tracking wrist_pos by directly calling compute_cartesian_path()
+%{
 % original DMP starts and goals
 lrw_goal_ori = lr_wrist_pos(:, end);
 lrw_start_ori = lr_wrist_pos(:, 1);
@@ -544,3 +546,6 @@ h5write(file_name, ['/', group_name, '/l_wrist_pos_to_track'], y_l_wrist_set);
 
 h5create(file_name, ['/', group_name, '/r_wrist_pos_to_track'], size(y_r_wrist_set));
 h5write(file_name, ['/', group_name, '/r_wrist_pos_to_track'], y_r_wrist_set);
+
+%}
+

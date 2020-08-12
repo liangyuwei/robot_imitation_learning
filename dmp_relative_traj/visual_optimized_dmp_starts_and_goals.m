@@ -7,8 +7,8 @@ addpath('./m_fcts/');
 addpath('../vmp/'); % use resample_traj
 
 ori_file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
-file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity-baozhu_1-one_round-col_0.h5';
-group_name = 'baozhu_1';%'kai_2';%'baozhu_1';%'fengren_1';
+file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity.h5';
+group_name = 'gun_2';%'kai_2';%'baozhu_1';%'fengren_1';
 
 num_datapoints = 50;
 
@@ -420,10 +420,10 @@ actual_l_elbow_pos_traj_0 = h5read(file_name, ['/', group_name, '/actual_l_elbow
 actual_r_elbow_pos_traj_0 = h5read(file_name, ['/', group_name, '/actual_r_elbow_pos_traj_0']);
 
 % 2.5 - load actually executed trajs of next round
-actual_l_wrist_pos_traj_1 = h5read(file_name, ['/', group_name, '/actual_l_wrist_pos_traj_1']);
-actual_r_wrist_pos_traj_1 = h5read(file_name, ['/', group_name, '/actual_r_wrist_pos_traj_1']);
-actual_l_elbow_pos_traj_1 = h5read(file_name, ['/', group_name, '/actual_l_elbow_pos_traj_1']);
-actual_r_elbow_pos_traj_1 = h5read(file_name, ['/', group_name, '/actual_r_elbow_pos_traj_1']);
+% actual_l_wrist_pos_traj_1 = h5read(file_name, ['/', group_name, '/actual_l_wrist_pos_traj_1']);
+% actual_r_wrist_pos_traj_1 = h5read(file_name, ['/', group_name, '/actual_r_wrist_pos_traj_1']);
+% actual_l_elbow_pos_traj_1 = h5read(file_name, ['/', group_name, '/actual_l_elbow_pos_traj_1']);
+% actual_r_elbow_pos_traj_1 = h5read(file_name, ['/', group_name, '/actual_r_elbow_pos_traj_1']);
 
 % 2.75 - the last round, actually executed trajs
 actual_l_wrist_pos_traj_last = h5read(file_name, ['/', group_name, '/actual_l_wrist_pos_traj_', num2str(max_round)]);
@@ -524,6 +524,13 @@ xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize'
 legend([p1(1), p2(1)], 'Initial DMP trajs', 'Tracked trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
 
 
+% split view of each dof
+plot_3d_subplots(y_l_wrist_initial, actual_l_wrist_pos_traj_0, 'Left Wrist Pos', 'Initial DMP traj', 'Tracked trajs');
+plot_3d_subplots(y_l_elbow_initial, actual_l_elbow_pos_traj_0, 'Left Elbow Pos', 'Initial DMP traj', 'Tracked trajs');
+plot_3d_subplots(y_r_wrist_initial, actual_r_wrist_pos_traj_0, 'Right Wrist Pos', 'Initial DMP traj', 'Tracked trajs');
+plot_3d_subplots(y_r_elbow_initial, actual_r_elbow_pos_traj_0, 'Right Elbow Pos', 'Initial DMP traj', 'Tracked trajs');
+
+
 % Fig 3 - Comparison between tracked(actually executed) trajs and moved DMP trajs  
 %{
 figure;
@@ -588,6 +595,7 @@ legend([p1(1), p2(1)], 'Tracked trajs', 'Optimed DMP trajs', 'Location', 'NorthE
 
 
 % Fig 6 - Comparison between Optimed DMP trajs and next-round tracked trajs
+%{
 figure;
 
 p1 = plot3(y_l_wrist_optimed_0(1, :), y_l_wrist_optimed_0(2, :), y_l_wrist_optimed_0(3, :), 'r--'); hold on; grid on;
@@ -604,7 +612,7 @@ view(-45, 45);
 title('First-round Optimized DMP trajs and Next-round Tracked trajs', 'FontSize', 18);
 xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
 legend([p1(1), p2(1)], 'Optimed DMP trajs', 'Next-round Tracked trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
-
+%}
 
 % Fig 7 - Comparison between Optimed DMP trajs and last-round tracked trajs
 figure;

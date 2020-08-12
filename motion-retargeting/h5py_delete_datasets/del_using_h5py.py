@@ -4,7 +4,7 @@ if __name__ == '__main__':
 
     ### Preparations
     file_name = './test_imi_data_YuMi.h5'
-    group_name = 'fengren_1'
+    group_name = 'kai_1'
 
     ### For generating new trainging datasets
     '''
