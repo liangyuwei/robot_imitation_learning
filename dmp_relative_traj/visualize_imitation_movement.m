@@ -33,6 +33,16 @@ for n = 1 : num_datapoints
 end
 
 
+% for debug
+
+l_wrist_quat_resampled = h5read(ori_file_name, ['/', group_name, '/l_wrist_quat_resampled']);
+r_wrist_quat_resampled = h5read(ori_file_name, ['/', group_name, '/r_wrist_quat_resampled']);
+for n = 1 : size(l_wrist_quat_resampled, 2)
+    l_wrist_rot(:, :, n) = quat2rotm(l_wrist_quat_resampled(:, n)');
+    r_wrist_rot(:, :, n) = quat2rotm(r_wrist_quat_resampled(:, n)');
+end
+%}
+
 %% Display the trajectories
 figure;
 arrow_length = 0.05;
@@ -46,7 +56,8 @@ for n = 1 : num_datapoints
     plot3(l_elbow_pos(1, :), l_elbow_pos(2, :), l_elbow_pos(3, :), 'b--'); 
     plot3(r_elbow_pos(1, :), r_elbow_pos(2, :), r_elbow_pos(3, :), 'b--');  % original imitation data
     title('Demonstrated Movement under robots'' local reference frames ');
-    view(45, 45);
+%     view(45, 45);
+    view(120, 60);
     xlabel('x'); ylabel('y'); zlabel('z');
     
     % draw local frames

@@ -8,7 +8,7 @@ addpath('../vmp/'); % use resample_traj
 
 ori_file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
 file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity.h5';
-group_name = 'gun_2';%'kai_2';%'baozhu_1';%'fengren_1';
+group_name = 'fengren_1';%'kai_2';%'baozhu_1';%'fengren_1';
 
 num_datapoints = 50;
 
@@ -778,4 +778,30 @@ xlabel('x'); ylabel('y'); zlabel('z');
 
 
 %}
+
+
+
+%% Display joint trajectories for analysis
+% plot the original joint trajectories
+arm_traj_1 = h5read(file_name, ['/', group_name, '/arm_traj_1']);
+plot_joints_subplots(arm_traj_1(1:7, :), 'Left Arm');
+plot_joints_subplots(arm_traj_1(8:14, :), 'Right Arm');
+plot_joints_subplots(arm_traj_1(15:26, :), 'Left Hand');
+plot_joints_subplots(arm_traj_1(27:38, :), 'Right Hand');
+
+% do smoothing and plot the comparison
+arm_traj_1_smoothed = zeros(size(arm_traj_1, 1), size(1:0.5:num_datapoints, 2));
+for i = 1 : size(arm_traj_1, 1)
+    arm_traj_1_smoothed(i, :) = interp1(1:num_datapoints, arm_traj_1(i, :), 1:0.5:num_datapoints, 'spline'); % cubic?
+end
+plot_joints_comp_subplots(arm_traj_1(1:7, :), arm_traj_1_smoothed(1:7, :), 'Left Arm', 'Ori Traj', 'Smoothed Traj');
+plot_joints_comp_subplots(arm_traj_1(8:14, :), arm_traj_1_smoothed(8:14, :), 'Right Arm', 'Ori Traj', 'Smoothed Traj');
+plot_joints_comp_subplots(arm_traj_1(15:26, :), arm_traj_1_smoothed(15:26, :), 'Left Hand', 'Ori Traj', 'Smoothed Traj');
+plot_joints_comp_subplots(arm_traj_1(27:38, :), arm_traj_1_smoothed(27:38, :), 'Right Hand', 'Ori Traj', 'Smoothed Traj');
+
+
+
+
+
+
 

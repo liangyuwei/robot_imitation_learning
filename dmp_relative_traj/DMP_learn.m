@@ -12,8 +12,8 @@ num_resampled_points = 50;
 
 
 %% Load demonstration
-file_name = '../motion-retargeting/test_imi_data_YuMi.h5'; %'test_imi_data_YuMi.h5'; %
-group_name = 'fengren_1';%'fengren_10';%'gun_2';%'kai_2';%'qie_1';%'kai_1'; %'kai_1'; %'fengren_1';
+file_name = '../motion-retargeting/test_nullspace_YuMi.h5'; %test_imi_data_YuMi.h5'; %'test_imi_data_YuMi.h5'; %
+group_name = 'gun_2';%'fengren_10';%'gun_2';%'kai_2';%'qie_1';%'kai_1'; %'kai_1'; %'fengren_1';
 
 time = h5read(file_name, ['/', group_name, '/time']);
 
@@ -193,7 +193,7 @@ traj_dataset{1} = r_wrist_pos_robot'; % should be of size Length x DOF!!!
 
 
 %% Store the learned results
-%
+%{
 % robot setting
 h5create(file_name, ['/', group_name, '/robot_hand_length'], size(robot_hand_length));
 h5write(file_name, ['/', group_name, '/robot_hand_length'], robot_hand_length);
@@ -285,6 +285,7 @@ h5write(file_name, ['/', group_name, '/rw_start'], r_wrist_pos_robot(:, 1)); % s
 
 
 %% Reproduce trajectory
+%{
 new_goal_lrw = lr_wrist_pos(:, end);% + [0.01, -0.01, 0.05]';
 new_start_lrw = lr_wrist_pos(:, 1);% + [-0.01, 0.01, 0.05]';
 new_goal_lew = l_elbow_wrist_pos(:, end);% + [0.01, 0.0, -0.05]';
@@ -297,6 +298,44 @@ new_start_rw = r_wrist_pos_robot(:, 1);% + [-0.01, 0.0, 0.0]';
 % y_lew = DMP_use_f(f_lew, nbData, alpha, kP, kV, new_goal_lew, new_start_lew);
 % y_rew = DMP_use_f(f_rew, nbData, alpha, kP, kV, new_goal_rew, new_start_rew);
 % y_rw = DMP_use_f(f_rw, nbData, alpha, kP, kV, new_goal_rw, new_start_rw);
+%}
+
+% setting for nullspace test
+%
+% 1 - new initial
+l_wrist_pos_new_init = [0.409259 0.181061 0.190676]';
+l_elbow_pos_new_init = [0.218174 0.309546 0.377905]';
+r_wrist_pos_new_init = [0.409914 -0.179371  0.190834]';
+r_elbow_pos_new_init = [0.218785 -0.308805  0.377362]';
+% 2 - original initial and goal
+l_wrist_pos_ori_init = l_wrist_pos_robot(:, 1);
+l_elbow_pos_ori_init = l_elbow_pos_human(:, 1);
+r_wrist_pos_ori_init = r_wrist_pos_robot(:, 1);
+r_elbow_pos_ori_init = r_elbow_pos_human(:, 1);
+l_wrist_pos_ori_goal = l_wrist_pos_robot(:, end);
+l_elbow_pos_ori_goal = l_elbow_pos_human(:, end);
+r_wrist_pos_ori_goal = r_wrist_pos_robot(:, end);
+r_elbow_pos_ori_goal = r_elbow_pos_human(:, end);
+% 3 - compute offsets
+l_wrist_pos_new_offset = l_wrist_pos_new_init - l_wrist_pos_ori_init;
+l_elbow_pos_new_offset = l_elbow_pos_new_init - l_elbow_pos_ori_init;
+r_wrist_pos_new_offset = r_wrist_pos_new_init - r_wrist_pos_ori_init;
+r_elbow_pos_new_offset = r_elbow_pos_new_init - r_elbow_pos_ori_init;
+% 4 - get new goals
+l_wrist_pos_new_goal = l_wrist_pos_ori_goal + l_wrist_pos_new_offset;
+l_elbow_pos_new_goal = l_elbow_pos_ori_goal + l_elbow_pos_new_offset;
+r_wrist_pos_new_goal = r_wrist_pos_ori_goal + r_wrist_pos_new_offset;
+r_elbow_pos_new_goal = r_elbow_pos_ori_goal + r_elbow_pos_new_offset;
+% 5 - assign to DMP starts and goals
+new_goal_lrw = l_wrist_pos_new_goal - r_wrist_pos_new_goal;
+new_start_lrw = l_wrist_pos_new_init - r_wrist_pos_new_init;
+new_goal_lew = l_elbow_pos_new_goal - l_wrist_pos_new_goal;
+new_start_lew = l_elbow_pos_new_init - l_wrist_pos_new_init;
+new_goal_rew = r_elbow_pos_new_goal - r_wrist_pos_new_goal;
+new_start_rew = r_elbow_pos_new_init - r_wrist_pos_new_init;
+new_goal_rw = r_wrist_pos_new_goal;
+new_start_rw = r_wrist_pos_new_init;
+%}
 
 y_lrw = DMP_use_weights(Mu_lrw, Sigma_lrw, Weights_lrw, num_resampled_points, kP, kV, alpha, dt, new_goal_lrw, new_start_lrw, false);
 y_lew = DMP_use_weights(Mu_lew, Sigma_lew, Weights_lew, num_resampled_points, kP, kV, alpha, dt, new_goal_lew, new_start_lew, false);
@@ -351,6 +390,19 @@ view(-45, 45);
 title('Human demonstrated and DMP generated trajectories', 'FontSize', 16);
 % title('Original and generalized trajectories', 'FontSize', 18);
 xlabel('x', 'FontSize', 16); ylabel('y', 'FontSize', 16); zlabel('z', 'FontSize', 16); 
+
+
+% store test data for nullspace code
+%
+h5create(file_name, ['/', group_name, '/l_wrist_pos_nullspace'], size(y_l_wrist));
+h5write(file_name, ['/', group_name, '/l_wrist_pos_nullspace'], y_l_wrist);
+h5create(file_name, ['/', group_name, '/r_wrist_pos_nullspace'], size(y_r_wrist));
+h5write(file_name, ['/', group_name, '/r_wrist_pos_nullspace'], y_r_wrist);
+h5create(file_name, ['/', group_name, '/l_elbow_pos_nullspace'], size(y_l_elbow));
+h5write(file_name, ['/', group_name, '/l_elbow_pos_nullspace'], y_l_elbow);
+h5create(file_name, ['/', group_name, '/r_elbow_pos_nullspace'], size(y_r_elbow));
+h5write(file_name, ['/', group_name, '/r_elbow_pos_nullspace'], y_r_elbow);
+%}
 
 
 %% display modified human movement(wrist inferred according to hand length) and DMP generated movement
