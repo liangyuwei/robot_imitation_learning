@@ -12,7 +12,7 @@ num_resampled_points = 50;
 
 
 %% Load demonstration
-file_name = '../motion-retargeting/test_nullspace_YuMi.h5'; %test_imi_data_YuMi.h5'; %'test_imi_data_YuMi.h5'; %
+file_name = '../motion-retargeting/test_nullspace_symmetric_YuMi.h5'; %test_imi_data_YuMi.h5'; %'test_imi_data_YuMi.h5'; %
 group_name = 'gun_2';%'fengren_10';%'gun_2';%'kai_2';%'qie_1';%'kai_1'; %'kai_1'; %'fengren_1';
 
 time = h5read(file_name, ['/', group_name, '/time']);
@@ -300,10 +300,10 @@ new_start_rw = r_wrist_pos_robot(:, 1);% + [-0.01, 0.0, 0.0]';
 % y_rw = DMP_use_f(f_rw, nbData, alpha, kP, kV, new_goal_rw, new_start_rw);
 %}
 
-% setting for nullspace test
-%
+% 1 - setting 1 for nullspace test
+%{
 % 1 - new initial
-l_wrist_pos_new_init = [0.409259 0.181061 0.190676]';
+l_wrist_pos_new_init = %[0.409259 0.181061 0.190676]';
 l_elbow_pos_new_init = [0.218174 0.309546 0.377905]';
 r_wrist_pos_new_init = [0.409914 -0.179371  0.190834]';
 r_elbow_pos_new_init = [0.218785 -0.308805  0.377362]';
@@ -336,6 +336,36 @@ new_start_rew = r_elbow_pos_new_init - r_wrist_pos_new_init;
 new_goal_rw = r_wrist_pos_new_goal;
 new_start_rw = r_wrist_pos_new_init;
 %}
+
+% 2 - setting 2 for nullspace test
+% 1 - set initial for relative trajs
+le_set_start = [0.218, 0.310, 0.378]';
+rw_set_start = [0.410, -0.179, 0.191]';
+re_set_start = [0.218, -0.310, 0.377]';
+lw_set_start = rw_set_start + lr_wrist_pos(:, 1); % add with lrw data
+% 2 - adjust lw and rw start to make them symmetric to x-z plane
+dist_y = abs(lw_set_start(2) - rw_set_start(2));
+lw_set_start(2) = dist_y / 2.0;
+rw_set_start(2) = -dist_y / 2.0;
+% 3 - compute offsets
+lrw_set_start = lw_set_start - rw_set_start;
+lew_set_start = le_set_start - lw_set_start;
+rew_set_start = re_set_start - rw_set_start;
+lrw_tmp_offset = lrw_set_start - lr_wrist_pos(:, 1);
+lew_tmp_offset = lew_set_start - l_elbow_wrist_pos(:, 1);
+rew_tmp_offset = rew_set_start - r_elbow_wrist_pos(:, 1);
+rw_tmp_offset = rw_set_start - r_wrist_pos_robot(:, 1);
+% 4 - assign new goals and starts 
+new_goal_lrw = lr_wrist_pos(:, end) + lrw_tmp_offset;
+new_start_lrw = lr_wrist_pos(:, 1) + lrw_tmp_offset;
+new_goal_lew = l_elbow_wrist_pos(:, end) + lew_tmp_offset;
+new_start_lew = l_elbow_wrist_pos(:, 1) + lew_tmp_offset;
+new_goal_rew = r_elbow_wrist_pos(:, end) + rew_tmp_offset;
+new_start_rew = r_elbow_wrist_pos(:, 1) + rew_tmp_offset;
+new_goal_rw = r_wrist_pos_robot(:, end) + rw_tmp_offset;
+new_start_rw = r_wrist_pos_robot(:, 1) + rw_tmp_offset;
+%}
+
 
 y_lrw = DMP_use_weights(Mu_lrw, Sigma_lrw, Weights_lrw, num_resampled_points, kP, kV, alpha, dt, new_goal_lrw, new_start_lrw, false);
 y_lew = DMP_use_weights(Mu_lew, Sigma_lew, Weights_lew, num_resampled_points, kP, kV, alpha, dt, new_goal_lew, new_start_lew, false);
