@@ -18,9 +18,9 @@ for d = 1 : DOF
 %     legend([p1(1), p2(1)], legend_1, legend_2, 'Location', 'NorthEastOutside', 'FontSize', 16); % Location might not be available in 2016b
 end
 % for MATLAB 2019b
-sgtitle(title_name, 'FontSize', 16); % title for a grid of subplots
+% sgtitle(title_name, 'FontSize', 16); % title for a grid of subplots
 % for MATLAB 2016b
-% suptitle(title_name); % title for a grid of subplots
+suptitle(title_name); % title for a grid of subplots
 
 
 end

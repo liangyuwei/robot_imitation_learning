@@ -8,7 +8,7 @@ addpath('../vmp/'); % use resample_traj
 
 ori_file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
 file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity.h5';
-group_name = 'fengren_1';%'kai_2';%'baozhu_1';%'fengren_1';
+group_name = 'gun_2';%'kai_2';%'baozhu_1';%'fengren_1';
 
 num_datapoints = 50;
 
@@ -117,6 +117,8 @@ elbow_pos_cost_history = h5read(file_name, ['/', group_name, '/elbow_pos_cost_hi
 l_elbow_pos_cost_history = h5read(file_name, ['/', group_name, '/l_elbow_pos_cost_history']);
 r_elbow_pos_cost_history = h5read(file_name, ['/', group_name, '/r_elbow_pos_cost_history']);
 finger_cost_history = h5read(file_name, ['/', group_name, '/finger_cost_history']);
+l_finger_cost_history = h5read(file_name, ['/', group_name, '/l_finger_cost_history']);
+r_finger_cost_history = h5read(file_name, ['/', group_name, '/r_finger_cost_history']);
 % similarity_cost_history = h5read(file_name, ['/', group_name, '/similarity_cost_history']);
 smoothness_cost_history = h5read(file_name, ['/', group_name, '/smoothness_cost_history']);
 col_cost_history = h5read(file_name, ['/', group_name, '/col_cost_history']);
@@ -187,6 +189,18 @@ figure;
 plot((1:size(finger_cost_history, 2))*per_iteration, sum(finger_cost_history), 'b-'); hold on; grid on;
 % plot((1:size(finger_cost_history, 2))*per_iteration, sum(finger_cost_history), 'bo');
 title('History of finger angle cost', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+
+figure;
+plot((1:size(l_finger_cost_history, 2))*per_iteration, sum(l_finger_cost_history), 'b-'); hold on; grid on;
+% plot((1:size(finger_cost_history, 2))*per_iteration, sum(finger_cost_history), 'bo');
+title('History of left finger angle cost', 'FontSize', 18);
+xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+
+figure;
+plot((1:size(r_finger_cost_history, 2))*per_iteration, sum(r_finger_cost_history), 'b-'); hold on; grid on;
+% plot((1:size(finger_cost_history, 2))*per_iteration, sum(finger_cost_history), 'bo');
+title('History of right finger angle cost', 'FontSize', 18);
 xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
 figure;
@@ -369,7 +383,7 @@ p3 = plot((1:size(track_jacobian_history, 2))*per_iteration, track_jacobian_hist
 % plot((1:size(sim_jacobian_history, 2))*per_iteration, sim_jacobian_history, 'mo'); % 4 
 title('History of Jacobians w.r.t DMP starts and goals', 'FontSize', 18);
 xlabel('Iterations', 'FontSize', 18); ylabel('Jacobians', 'FontSize', 18); 
-legend([p1(1), p2(1), p3(1)], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian', 'Location', 'NorthEastOutside');
+legend([p1(1), p2(1), p3(1)], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian');%, 'Location', 'NorthEastOutside');
 % 'track_jacobian', 'sim_jacobian', 'Location', 'NorthEastOutside');
 
 % norms
@@ -391,7 +405,7 @@ p3 = plot((1:num_records)*per_iteration, track_jacobian_norm, 'g-');
 % p4 = plot((1:num_records)*per_iteration, sim_jacobian_norm, 'm-');
 title('History of Norms of DMP Jacobians', 'FontSize', 18);
 xlabel('Iterations', 'FontSize', 18); ylabel('Norms of jacobians', 'FontSize', 18); 
-legend([p1, p2, p3], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian', 'Location', 'NorthEastOutside');
+legend([p1, p2, p3], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian');%, 'Location', 'NorthEastOutside');
 
 
 %% Optimization results of First Round (q optimization -> manually move DMP starts and goals -> DMP optimization)
@@ -503,7 +517,7 @@ plot3(y_r_elbow_initial(1, :), y_r_elbow_initial(2, :), y_r_elbow_initial(3, :),
 view(-45, 45);
 title('Human demonstrated trajectories and Initial DMP trajectories', 'FontSize', 18);
 xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
-legend([p1(1), p2(1)], 'Demonstrated trajs', 'Initial DMP trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
+legend([p1(1), p2(1)], 'Demonstrated trajs', 'Initial DMP trajs');%, 'Location', 'NorthEastOutside', 'FontSize', 16);
 
 
 % Fig 2 - Comparison between initial DMP trajs and tracked(actually executed) trajs     
@@ -521,7 +535,7 @@ plot3(actual_r_elbow_pos_traj_0(1, :), actual_r_elbow_pos_traj_0(2, :), actual_r
 view(-45, 45);
 title('Initial DMP trajectories and Tracked (actually executed) trajectories', 'FontSize', 18);
 xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
-legend([p1(1), p2(1)], 'Initial DMP trajs', 'Tracked trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
+legend([p1(1), p2(1)], 'Initial DMP trajs', 'Tracked trajs');%, 'Location', 'NorthEastOutside', 'FontSize', 16);
 
 
 % split view of each dof
@@ -591,7 +605,7 @@ plot3(y_r_elbow_optimed_0(1, :), y_r_elbow_optimed_0(2, :), y_r_elbow_optimed_0(
 view(-45, 45);
 title('First-round Tracked (actually executed) trajs and Optimized DMP trajs', 'FontSize', 18);
 xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
-legend([p1(1), p2(1)], 'Tracked trajs', 'Optimed DMP trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
+legend([p1(1), p2(1)], 'Tracked trajs', 'Optimed DMP trajs');%, 'Location', 'NorthEastOutside', 'FontSize', 16);
 
 
 % Fig 6 - Comparison between Optimed DMP trajs and next-round tracked trajs
@@ -630,7 +644,7 @@ plot3(actual_r_elbow_pos_traj_last(1, :), actual_r_elbow_pos_traj_last(2, :), ac
 view(-45, 45);
 title('First-round Optimized DMP trajs and Last-round Tracked trajs', 'FontSize', 18);
 xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
-legend([p1(1), p2(1)], 'Optimed DMP trajs', 'Last-round Tracked trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
+legend([p1(1), p2(1)], 'Optimed DMP trajs', 'Last-round Tracked trajs');%, 'Location', 'NorthEastOutside', 'FontSize', 16);
 
 
 % Fig 8 - Comparison between First-round tracked trajs and last-round tracked trajs
@@ -649,7 +663,7 @@ plot3(actual_r_elbow_pos_traj_last(1, :), actual_r_elbow_pos_traj_last(2, :), ac
 view(-45, 45);
 title('First-round Tracked trajs and Last-round Tracked trajs', 'FontSize', 18);
 xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
-legend([p1(1), p2(1)], 'First-round Tracked trajs', 'Last-round Tracked trajs', 'Location', 'NorthEastOutside', 'FontSize', 16);
+legend([p1(1), p2(1)], 'First-round Tracked trajs', 'Last-round Tracked trajs');%, 'Location', 'NorthEastOutside', 'FontSize', 16);
 
 
 
