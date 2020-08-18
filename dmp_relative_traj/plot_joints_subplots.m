@@ -15,9 +15,9 @@ for d = 1 : DOF
     xlabel('t', 'FontSize', 16); ylabel(['J', num2str(d)], 'FontSize', 16);
 end
 % for MATLAB 2019b
-% sgtitle(title_name, 'FontSize', 16); % title for a grid of subplots
+sgtitle(title_name, 'FontSize', 16); % title for a grid of subplots
 % for MATLAB 2016b
-suptitle(title_name); % title for a grid of subplots
+% suptitle(title_name); % title for a grid of subplots
 
 
 end

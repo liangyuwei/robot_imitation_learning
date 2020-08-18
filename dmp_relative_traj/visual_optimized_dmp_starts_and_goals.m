@@ -539,10 +539,10 @@ legend([p1(1), p2(1)], 'Initial DMP trajs', 'Tracked trajs');%, 'Location', 'Nor
 
 
 % split view of each dof
-plot_3d_subplots(y_l_wrist_initial, actual_l_wrist_pos_traj_0, 'Left Wrist Pos', 'Initial DMP traj', 'Tracked trajs');
-plot_3d_subplots(y_l_elbow_initial, actual_l_elbow_pos_traj_0, 'Left Elbow Pos', 'Initial DMP traj', 'Tracked trajs');
-plot_3d_subplots(y_r_wrist_initial, actual_r_wrist_pos_traj_0, 'Right Wrist Pos', 'Initial DMP traj', 'Tracked trajs');
-plot_3d_subplots(y_r_elbow_initial, actual_r_elbow_pos_traj_0, 'Right Elbow Pos', 'Initial DMP traj', 'Tracked trajs');
+% plot_3d_subplots(y_l_wrist_initial, actual_l_wrist_pos_traj_0, 'Left Wrist Pos', 'Initial DMP traj', 'Tracked trajs');
+% plot_3d_subplots(y_l_elbow_initial, actual_l_elbow_pos_traj_0, 'Left Elbow Pos', 'Initial DMP traj', 'Tracked trajs');
+% plot_3d_subplots(y_r_wrist_initial, actual_r_wrist_pos_traj_0, 'Right Wrist Pos', 'Initial DMP traj', 'Tracked trajs');
+% plot_3d_subplots(y_r_elbow_initial, actual_r_elbow_pos_traj_0, 'Right Elbow Pos', 'Initial DMP traj', 'Tracked trajs');
 
 
 % Fig 3 - Comparison between tracked(actually executed) trajs and moved DMP trajs  
@@ -796,6 +796,7 @@ xlabel('x'); ylabel('y'); zlabel('z');
 
 
 %% Display joint trajectories for analysis
+%{
 % plot the original joint trajectories
 arm_traj_1 = h5read(file_name, ['/', group_name, '/arm_traj_1']);
 plot_joints_subplots(arm_traj_1(1:7, :), 'Left Arm');
@@ -813,7 +814,7 @@ plot_joints_comp_subplots(arm_traj_1(8:14, :), arm_traj_1_smoothed(8:14, :), 'Ri
 plot_joints_comp_subplots(arm_traj_1(15:26, :), arm_traj_1_smoothed(15:26, :), 'Left Hand', 'Ori Traj', 'Smoothed Traj');
 plot_joints_comp_subplots(arm_traj_1(27:38, :), arm_traj_1_smoothed(27:38, :), 'Right Hand', 'Ori Traj', 'Smoothed Traj');
 
-
+%}
 
 
 
