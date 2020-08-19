@@ -3,8 +3,8 @@ import h5py
 if __name__ == '__main__':
 
     ### Preparations
-    file_name = './test_imi_data_YuMi.h5'
-    group_name = 'fengren_1'
+    file_name = './mocap_ik_results_YuMi_g2o_similarity-sparse-collision-checking.h5'#'./test_imi_data_YuMi.h5'
+    group_name = 'gun_2'#'fengren_1'
 
     print('Deleting data of group '+group_name+'...')
 
@@ -131,6 +131,21 @@ if __name__ == '__main__':
     print('Deletion done.')      
     
     
+    ### For clearing interpolated optimized joint trajectories
     
+    # Preparations
+    del_dataset_list_prefix = ['arm_traj_1']
+    del_dataset_list_suffix = ['_linear',
+                               '_spline',
+                               '_pchip']
+
+    with h5py.File(file_name, 'a') as f:
+        # check the kill list of adjusted movements
+        for del_dataset_prefix in del_dataset_list_prefix:
+            for del_dataset_suffix in del_dataset_list_suffix:
+                if (del_dataset_prefix+del_dataset_suffix in f[group_name].keys()):
+                    del f[group_name+'/'+del_dataset_prefix+del_dataset_suffix]
+
+    print('Deletion done.') 
     
     
