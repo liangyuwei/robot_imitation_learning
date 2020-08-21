@@ -3,8 +3,8 @@ import h5py
 if __name__ == '__main__':
 
     ### Preparations
-    file_name = './mocap_ik_results_YuMi_g2o_similarity-sparse-collision-checking.h5'#'./test_imi_data_YuMi.h5'
-    group_name = 'gun_2'#'fengren_1'
+    file_name = './test_imi_data_YuMi.h5'
+    group_name = 'zhenli_9'#'fengren_1'
 
     print('Deleting data of group '+group_name+'...')
 

@@ -13,7 +13,7 @@ num_resampled_points = 50;
 
 %% Load demonstration
 file_name = '../motion-retargeting/test_imi_data_YuMi.h5'; %test_imi_data_YuMi.h5'; %'test_imi_data_YuMi.h5'; %
-group_name = 'gun_2';%'fengren_10';%'gun_2';%'kai_2';%'qie_1';%'kai_1'; %'kai_1'; %'fengren_1';
+group_name = 'kaoqin_2';%'fengren_10';%'gun_2';%'kai_2';%'qie_1';%'kai_1'; %'kai_1'; %'fengren_1';
 
 time = h5read(file_name, ['/', group_name, '/time']);
 
@@ -193,7 +193,7 @@ traj_dataset{1} = r_wrist_pos_robot'; % should be of size Length x DOF!!!
 
 
 %% Store the learned results
-%{
+
 % robot setting
 h5create(file_name, ['/', group_name, '/robot_hand_length'], size(robot_hand_length));
 h5write(file_name, ['/', group_name, '/robot_hand_length'], robot_hand_length);
@@ -338,6 +338,7 @@ new_start_rw = r_wrist_pos_new_init;
 %}
 
 % 2 - setting 2 for nullspace test
+%
 % 1 - set initial for relative trajs
 le_set_start = [0.218, 0.310, 0.378]';
 rw_set_start = [0.410, -0.179, 0.191]';
