@@ -4,7 +4,7 @@ if __name__ == '__main__':
 
     ### Preparations
     file_name = './test_imi_data_YuMi.h5'
-    group_name = 'zhenli_9'#'fengren_1'
+    group_name = 'kaoqin_2'#'fengren_1'
 
     print('Deleting data of group '+group_name+'...')
 
@@ -148,4 +148,23 @@ if __name__ == '__main__':
 
     print('Deletion done.') 
     
+
+
+    ### For clearing robot setting and adjusted movements(for debug)
+    
+    # Preparations
+    del_dataset_list_prefix = ['l_wrist_pos',
+                               'r_wrist_pos',
+                               'l_elbow_pos',
+                               'r_elbow_pos']
+    del_dataset_list_suffix = ['_nullspace']
+
+    with h5py.File(file_name, 'a') as f:
+        # check the kill list of adjusted movements
+        for del_dataset_prefix in del_dataset_list_prefix:
+            for del_dataset_suffix in del_dataset_list_suffix:
+                if (del_dataset_prefix+del_dataset_suffix in f[group_name].keys()):
+                    del f[group_name+'/'+del_dataset_prefix+del_dataset_suffix]
+
+    print('Deletion done.')      
     

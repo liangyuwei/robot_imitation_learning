@@ -13,7 +13,7 @@ num_resampled_points = 50;
 
 %% Load demonstration
 file_name = '../motion-retargeting/test_imi_data_YuMi.h5'; %test_imi_data_YuMi.h5'; %'test_imi_data_YuMi.h5'; %
-group_name = 'kaoqin_2';%'fengren_10';%'gun_2';%'kai_2';%'qie_1';%'kai_1'; %'kai_1'; %'fengren_1';
+group_name = 'zhenli_9';%'fengren_10';%'gun_2';%'kai_2';%'qie_1';%'kai_1'; %'kai_1'; %'fengren_1';
 
 time = h5read(file_name, ['/', group_name, '/time']);
 

@@ -2,7 +2,7 @@
 
 
 %% Prep
-file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity-dense_collision_checking.h5';
+file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity.h5';
 
 group_name = 'gun_2';
 

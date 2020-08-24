@@ -229,6 +229,7 @@ xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18);
 
 
 %% Plot jacobian history
+%{
 % pre-processing before displaying jacobian
 % dmp_starts_goals_dof = size(sim_jacobian_history, 1);
 % num_records = size(sim_jacobian_history, 2);
@@ -288,6 +289,7 @@ plot((1:num_records)*per_iteration, jacobian_norm, 'b-'); hold on; grid on;
 title('History of DMP updates', 'FontSize', 18);
 xlabel('Iterations', 'FontSize', 18); ylabel('Norm of updates on all DOF', 'FontSize', 18); 
 
+%}
 
 
 %% The change of DMP starts and goals
