@@ -255,12 +255,16 @@ x_fit = min([r_elec_min(4), x, x_linear]) : 10 : max([r_elec_max(4), x, x_linear
 % (no need to do extra fitting since the angle data is a linearly interpolated result. 
 % All we need is to see its whole landscape.)
 y_linear_fit = interp1(double(x_linear), y_linear, double(x_fit), 'linear');
+
 % 1 - way 1: spline fitting
 y_fit = spline(double(x), double(y), double(x_fit));
 % y_linear_fit = spline(double(x_linear), double(y_linear), double(x_fit));
+
 % 2 - way 2: polynomial fitting
-n = 1; % order of magnitude
-[p, s] = polyfit()
+n = 2; %1; % order of magnitude
+[p, s] = polyfit(double(x), y, n);
+y_fit = polyval(p, double(x_fit));
+
 % plot the fitted result
 figure;
 p1 = plot(r_index_s3_90_elec, r_index_s3_angle(1)*ones(1, size(r_index_s3_90_elec ,2)), 'r.'); hold on; grid on;
@@ -322,16 +326,87 @@ plot(1:size(l_index_s3_90_angle_mapped_from_elec, 2), l_index_s3_90_angle_mapped
 %}
 
 % display the relation between electrical signal and 
-l_index_s3_angle = 180 - [90, 120, 150]; 
+l_index_s3_angle = 180 - [90, 120, 150, 180]; 
 % l_index_s3_elec = [median(l_index_s3_90_elec_clamped), median(l_index_s3_120_elec_clamped), median(l_index_s3_150_elec_clamped)];
 
+
+
 figure;
-plot(l_index_s3_90_elec, l_index_s3_angle(1)*ones(1, size(l_index_s3_90_elec ,2)), 'r.'); hold on; grid on;
+p1 = plot(l_index_s3_90_elec, l_index_s3_angle(1)*ones(1, size(l_index_s3_90_elec ,2)), 'r.'); hold on; grid on;
 plot(l_index_s3_120_elec, l_index_s3_angle(2)*ones(1, size(l_index_s3_120_elec, 2)), 'r.');
 plot(l_index_s3_150_elec, l_index_s3_angle(3)*ones(1, size(l_index_s3_150_elec, 2)), 'r.');
-plot(l_index_s3_90_elec_clamped, l_index_s3_90_angle, 'b.'); hold on; grid on;
-plot(l_index_s3_120_elec_clamped, l_index_s3_120_angle, 'b.');
-plot(l_index_s3_150_elec_clamped, l_index_s3_150_angle, 'b.');
+plot(l_all_0_elec(4, :), l_index_s3_angle(4)*ones(1, size(l_all_0_elec(4, :), 2)), 'r.');
+
+p2 = plot(l_index_s3_90_elec, l_index_s3_90_angle, 'b.'); hold on; grid on;
+plot(l_index_s3_120_elec, l_index_s3_120_angle, 'b.');
+plot(l_index_s3_150_elec, l_index_s3_150_angle, 'b.');
+plot(l_all_0_elec(4, :), l_all_0_angle(4, :), 'b.');
 xlabel('Electrical signal'); ylabel('Joint angle / degree');
 title('Left Index S3 Joint');
+legend([p1(1), p2(1)], 'Ground Truth', 'Linearly Mapped Result', 'Location', 'NorthEastOutside');
+
+
+% fit a curve to the data
+% prepare data
+x = [mean(l_index_s3_90_elec), ...
+     mean(l_index_s3_120_elec), ...
+     mean(l_index_s3_150_elec), ...
+     mean(l_all_0_elec(4, :))];
+y = [l_index_s3_angle(1), ... %*ones(1, size(l_index_s3_90_elec ,2)), ...
+     l_index_s3_angle(2), ... %*ones(1, size(l_index_s3_120_elec ,2)), ...
+     l_index_s3_angle(3), ... %*ones(1, size(l_index_s3_150_elec ,2)), ...
+     l_index_s3_angle(4)]; %*ones(1, size(l_all_0_elec(4, :) ,2))];
+x_linear = [l_index_s3_90_elec, ...
+            l_index_s3_120_elec, ...
+            l_index_s3_150_elec, ...
+            l_all_0_elec(4, :)];
+[x_linear, IA, IC] = unique(x_linear);
+y_linear = [l_index_s3_90_angle, ...
+            l_index_s3_120_angle, ...
+            l_index_s3_150_angle, ...
+            l_all_0_angle(4, :)];
+y_linear = y_linear(IA); % remove duplicate points?        
+x_fit = min([l_elec_min(4), x, x_linear]) : 10 : max([l_elec_max(4), x, x_linear]);
+% perform linear interpolation for the linearly mapped data points 
+% (no need to do extra fitting since the angle data is a linearly interpolated result. 
+% All we need is to see its whole landscape.)
+y_linear_fit = interp1(double(x_linear), y_linear, double(x_fit), 'linear');
+
+% 1 - way 1: spline fitting (doesn't allow duplicate values for the first input)
+% y_fit = spline(double(x), double(y), double(x_fit));
+
+% 2 - way 2: polynomial fitting (allows duplicate values for x)
+n = 2; % order of magnitude
+[p, s] = polyfit(double(x), y, n);
+y_fit = polyval(p, double(x_fit));
+
+% 3 - way 3: piecewise cubic Hermite interpolating polynomial, i.e. pchip
+% y_fit = pchip(double(x), double(y), double(x_fit));
+
+% 4 - interp1
+% y_fit = interp1(double(x), double(y), double(x_fit), 'makima'); %'previous'); %'next'); %'nearest'); %'pchip'); %'cubic'); %'spline'); %'linear');
+
+% plot the fitted result
+figure;
+p1 = plot(l_index_s3_90_elec, l_index_s3_angle(1)*ones(1, size(l_index_s3_90_elec ,2)), 'r.'); hold on; grid on;
+plot(l_index_s3_120_elec, l_index_s3_angle(2)*ones(1, size(l_index_s3_120_elec, 2)), 'r.');
+plot(l_index_s3_150_elec, l_index_s3_angle(3)*ones(1, size(l_index_s3_150_elec, 2)), 'r.');
+plot(l_all_0_elec(4, :), l_index_s3_angle(4)*ones(1, size(l_all_0_elec(4, :), 2)), 'r.');
+
+p2 = plot(l_index_s3_90_elec, l_index_s3_90_angle, 'b.'); hold on; grid on;
+plot(l_index_s3_120_elec, l_index_s3_120_angle, 'b.');
+plot(l_index_s3_150_elec, l_index_s3_150_angle, 'b.');
+plot(l_all_0_elec(4, :), l_all_0_angle(4, :), 'b.');
+
+p3 = plot(x_fit, y_fit, 'r-');
+p4 = plot(x_fit, y_linear_fit, 'b-');
+
+xlabel('Electrical signal', 'FontSize', 16); ylabel('Joint angle / degree', 'FontSize', 16);
+title('Left Index S3 Joint');
+legend([p1(1), p2(1), p3(1), p4(1)], 'Ground Truth', 'Linearly Mapped Result', ...
+                                     'Fitted Curve - Ground Truth', 'Fitted Curve - Linearly Mapped Result', ...
+                                     'Location', 'NorthEastOutside', 'FontSize', 14);
+
+
+
 
