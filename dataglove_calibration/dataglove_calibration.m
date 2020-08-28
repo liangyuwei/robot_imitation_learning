@@ -41,13 +41,11 @@ l_test_seq_1_elec = h5read(calib_file_name, '/l_test_seq_1/glove_elec');
 r_test_seq_1_angle = h5read(calib_file_name, '/r_test_seq_1/glove_angle');
 r_test_seq_1_elec = h5read(calib_file_name, '/r_test_seq_1/glove_elec');
 
-
 figure;
 plot(1:size(l_test_seq_1_elec, 2), l_test_seq_1_elec(2, :), 'b-'); hold on; grid on;
 plot(1:size(l_test_seq_1_angle, 2), l_test_seq_1_angle(2, :), 'r-');
 xlabel('frame'); ylabel('Electrical Signal');
 title('Left Thumb S1 Electrical Signal');
-
 
 
 
@@ -286,8 +284,7 @@ legend([p1(1), p2(1), p3(1), p4(1)], 'Ground Truth', 'Linearly Mapped Result', .
                                      'Fitted Curve - Ground Truth', 'Fitted Curve - Linearly Mapped Result', ...
                                      'Location', 'NorthEastOutside', 'FontSize', 14);
 
-
-
+                                 
 %% Load left index finger and display
 % load angle and the corresponding electrical signal data
 l_index_s3_90_angle = h5read(calib_file_name, '/l_index_s3_90/glove_angle'); 
@@ -370,13 +367,13 @@ x_fit = min([l_elec_min(4), x, x_linear]) : 10 : max([l_elec_max(4), x, x_linear
 % perform linear interpolation for the linearly mapped data points 
 % (no need to do extra fitting since the angle data is a linearly interpolated result. 
 % All we need is to see its whole landscape.)
-y_linear_fit = interp1(double(x_linear), y_linear, double(x_fit), 'linear');
+% y_linear_fit = interp1(double(x_linear), y_linear, double(x_fit), 'linear');
 
 % 1 - way 1: spline fitting (doesn't allow duplicate values for the first input)
 % y_fit = spline(double(x), double(y), double(x_fit));
 
 % 2 - way 2: polynomial fitting (allows duplicate values for x)
-n = 2; % order of magnitude
+n = 3; % order of magnitude
 [p, s] = polyfit(double(x), y, n);
 y_fit = polyval(p, double(x_fit));
 
@@ -407,6 +404,73 @@ legend([p1(1), p2(1), p3(1), p4(1)], 'Ground Truth', 'Linearly Mapped Result', .
                                      'Fitted Curve - Ground Truth', 'Fitted Curve - Linearly Mapped Result', ...
                                      'Location', 'NorthEastOutside', 'FontSize', 14);
 
+
+%% Calibrate index S3 joint data according to calibration data                               
+% load test sequence data
+l_test_seq_1_angle = h5read(calib_file_name, '/l_test_seq_1/glove_angle');
+l_test_seq_1_elec = h5read(calib_file_name, '/l_test_seq_1/glove_elec');
+r_test_seq_1_angle = h5read(calib_file_name, '/r_test_seq_1/glove_angle');
+r_test_seq_1_elec = h5read(calib_file_name, '/r_test_seq_1/glove_elec');
+
+% get raw index s3 joint data
+l_test_seq_1_index_s3_angle = l_test_seq_1_angle(4, :);
+l_test_seq_1_index_s3_elec = l_test_seq_1_elec(4, :);
+% l_test_seq_1_index_s3_elec_clamped = max(min(l_test_seq_1_index_s3_elec, l_elec_max(4)), l_elec_min(4));
+
+r_test_seq_1_index_s3_angle = r_test_seq_1_angle(4, :);
+r_test_seq_1_index_s3_elec = r_test_seq_1_elec(4, :);
+% r_test_seq_1_index_s3_elec_clamped = max(min(r_test_seq_1_index_s3_elec, r_elec_max(4)), r_elec_min(4));
+
+% get calibration data
+x_l_index_s3 = [mean(l_index_s3_90_elec), ...
+     mean(l_index_s3_120_elec), ...
+     mean(l_index_s3_150_elec), ...
+     mean(l_all_0_elec(4, :))];
+y_l_index_s3 = [l_index_s3_angle(1), ...%*ones(1, size(l_index_s3_90_elec ,2)), ...
+     l_index_s3_angle(2), ...%*ones(1, size(l_index_s3_120_elec ,2)), ...
+     l_index_s3_angle(3), ...%*ones(1, size(l_index_s3_150_elec ,2)), ...
+     l_index_s3_angle(4)]; %*ones(1, size(l_all_0_elec(4, :) ,2))];
+x_r_index_s3 = [mean(r_index_s3_90_elec), ...
+     mean(r_index_s3_120_elec), ...
+     mean(r_index_s3_150_elec), ...
+     mean(r_all_0_elec(4, :))];
+y_r_index_s3 = [r_index_s3_angle(1), ...%*ones(1, size(r_index_s3_90_elec ,2)), ...
+     r_index_s3_angle(2), ...%*ones(1, size(r_index_s3_120_elec ,2)), ...
+     r_index_s3_angle(3), ...%*ones(1, size(r_index_s3_150_elec ,2)), ...
+     r_index_s3_angle(4)];%*ones(1, size(r_all_0_elec(4, :) ,2))];
+
+% fit polynomials for calibration
+n = 2;
+[p_l, s_l] = polyfit(double(x_l_index_s3), double(y_l_index_s3), n);
+[p_r, s_r] = polyfit(double(x_r_index_s3), double(y_r_index_s3), n);
+
+% calibrate the raw data
+l_test_seq_1_index_s3_angle_calib = polyval(p_l, double(l_test_seq_1_index_s3_elec));
+% r_test_seq_1_index_s3_angle_calib = polyval(p_r, double(r_test_seq_1_index_s3_elec));
+% l_test_seq_1_index_s3_angle_calib = interp1(double(x_l_index_s3), double(y_l_index_s3), double(max(min(l_test_seq_1_index_s3_elec, max(x_l_index_s3)), min(x_l_index_s3))), 'linear');
+% r_test_seq_1_index_s3_angle_calib = interp1(double(x_r_index_s3), double(y_r_index_s3), double(max(min(r_test_seq_1_index_s3_elec, max(x_r_index_s3)), min(x_r_index_s3))), 'linear');
+% l_test_seq_1_index_s3_angle_calib = spline(double(x_l_index_s3), double(y_l_index_s3), double(l_test_seq_1_index_s3_elec));
+r_test_seq_1_index_s3_angle_calib = spline(double(x_r_index_s3), double(y_r_index_s3), double(r_test_seq_1_index_s3_elec));
+
+
+% display the results for comparison
+num_points = size(l_test_seq_1_index_s3_elec, 2);
+% raw
+% l_test_seq_1_index_s3_angle_mapped = linear_map(l_test_seq_1_index_s3_elec_clamped, l_elec_min(4), l_elec_max(4), l_angle_min(4), l_angle_max(4));
+% r_test_seq_1_index_s3_angle_mapped = linear_map(r_test_seq_1_index_s3_elec_clamped, r_elec_min(4), r_elec_max(4), r_angle_min(4), r_angle_max(4));
+figure;
+p1 = plot(1:num_points, l_test_seq_1_index_s3_angle, 'b-'); hold on; grid on;
+p2 = plot(1:num_points, r_test_seq_1_index_s3_angle, 'r-'); 
+xlabel('Points'); ylabel('Angle');
+title('Linearly Mapped Left and Right Index S3 Joint');
+legend([p1(1), p2(1)], 'Left Index S3', 'Right Index S3', 'Location', 'NorthEastOutside');
+% calibrated
+figure;
+p1 = plot(1:num_points, l_test_seq_1_index_s3_angle_calib, 'b-'); hold on; grid on;
+p2 = plot(1:num_points, r_test_seq_1_index_s3_angle_calib, 'r-'); 
+xlabel('Points'); ylabel('Angle');
+title('Calibrated Left and Right Index S3 Joint');
+legend([p1(1), p2(1)], 'Left Index S3', 'Right Index S3', 'Location', 'NorthEastOutside');
 
 
 
