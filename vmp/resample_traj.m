@@ -1,5 +1,5 @@
 function resampled_traj = resample_traj(original_timestamps, original_traj, num_resampled_points, quat_or_not)
-%% This function resamples to same size and then normalizes to 0-1
+%% This function resamples to same size.
 % input: DOF x length
 % output: DOF x num_resampled_points
 

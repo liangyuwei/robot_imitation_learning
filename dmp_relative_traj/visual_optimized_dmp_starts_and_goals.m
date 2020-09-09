@@ -19,6 +19,9 @@ dt = 0.04;
 
 max_round = h5read(file_name, ['/', group_name, '/max_round']); % for ease of display
 
+title_font_size = 18; %16;
+label_font_size = 14; %16;
+
 
 %% Prepare the original data for comparison
 time = h5read(ori_file_name, ['/', group_name, '/time']);
@@ -108,28 +111,28 @@ xlabel('x'); ylabel('y'); zlabel('z');
 
 
 %% Plot the cost history
-per_iteration = 1;
-wrist_pos_cost_history = h5read(file_name, ['/', group_name, '/wrist_pos_cost_history']);
-l_wrist_pos_cost_history = h5read(file_name, ['/', group_name, '/l_wrist_pos_cost_history']);
-r_wrist_pos_cost_history = h5read(file_name, ['/', group_name, '/r_wrist_pos_cost_history']);
-wrist_ori_cost_history = h5read(file_name, ['/', group_name, '/wrist_ori_cost_history']);
-elbow_pos_cost_history = h5read(file_name, ['/', group_name, '/elbow_pos_cost_history']);
-l_elbow_pos_cost_history = h5read(file_name, ['/', group_name, '/l_elbow_pos_cost_history']);
-r_elbow_pos_cost_history = h5read(file_name, ['/', group_name, '/r_elbow_pos_cost_history']);
+per_iteration = 20;%1;
+wrist_pos_cost_history = h5read(file_name, ['/', group_name, '/wrist_pos_cost_history_q_optim']);
+l_wrist_pos_cost_history = h5read(file_name, ['/', group_name, '/l_wrist_pos_cost_history_q_optim']);
+r_wrist_pos_cost_history = h5read(file_name, ['/', group_name, '/r_wrist_pos_cost_history_q_optim']);
+wrist_ori_cost_history = h5read(file_name, ['/', group_name, '/wrist_ori_cost_history_q_optim']);
+elbow_pos_cost_history = h5read(file_name, ['/', group_name, '/elbow_pos_cost_history_q_optim']);
+l_elbow_pos_cost_history = h5read(file_name, ['/', group_name, '/l_elbow_pos_cost_history_q_optim']);
+r_elbow_pos_cost_history = h5read(file_name, ['/', group_name, '/r_elbow_pos_cost_history_q_optim']);
 finger_cost_history = h5read(file_name, ['/', group_name, '/finger_cost_history']);
 l_finger_cost_history = h5read(file_name, ['/', group_name, '/l_finger_cost_history']);
 r_finger_cost_history = h5read(file_name, ['/', group_name, '/r_finger_cost_history']);
 % similarity_cost_history = h5read(file_name, ['/', group_name, '/similarity_cost_history']);
 smoothness_cost_history = h5read(file_name, ['/', group_name, '/smoothness_cost_history']);
 col_cost_history = h5read(file_name, ['/', group_name, '/col_cost_history']);
-pos_limit_cost_history = h5read(file_name, ['/', group_name, '/pos_limit_cost_history']);
+% pos_limit_cost_history = h5read(file_name, ['/', group_name, '/pos_limit_cost_history']);
 dmp_scale_cost_history = h5read(file_name, ['/', group_name, '/dmp_scale_cost_history']);
 dmp_orien_cost_history = h5read(file_name, ['/', group_name, '/dmp_orien_cost_history']);
 dmp_rel_change_cost_history = h5read(file_name, ['/', group_name, '/dmp_rel_change_cost_history']);
 
 % jacobians for DMP starts and goals
 % sim_jacobian_history = h5read(file_name, ['/', group_name, '/sim_jacobian_history']);
-track_jacobian_history = h5read(file_name, ['/', group_name, '/track_jacobian_history']);
+% track_jacobian_history = h5read(file_name, ['/', group_name, '/track_jacobian_history']);
 orien_jacobian_history = h5read(file_name, ['/', group_name, '/orien_jacobian_history']);
 scale_jacobian_history = h5read(file_name, ['/', group_name, '/scale_jacobian_history']);
 
@@ -140,86 +143,86 @@ dmp_update_history = h5read(file_name, ['/', group_name, '/dmp_update_history'])
 figure;
 plot((1:size(col_cost_history, 2))*per_iteration, sum(col_cost_history), 'b-'); hold on; grid on;
 % plot((1:size(col_cost_history, 2))*per_iteration, sum(col_cost_history), 'bo');
-title('History of collision cost', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+title('History of collision cost', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('Iterations', 'FontSize', label_font_size); ylabel('Cost Value', 'FontSize', label_font_size); 
 
-figure;
-plot((1:size(pos_limit_cost_history, 2))*per_iteration, sum(pos_limit_cost_history), 'b-'); hold on; grid on;
-% plot((1:size(pos_limit_cost_history, 2))*per_iteration, sum(pos_limit_cost_history), 'bo');
-title('History of position limit cost', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+% figure;
+% plot((1:size(pos_limit_cost_history, 2))*per_iteration, sum(pos_limit_cost_history), 'b-'); hold on; grid on;
+% % plot((1:size(pos_limit_cost_history, 2))*per_iteration, sum(pos_limit_cost_history), 'bo');
+% title('History of position limit cost', 'FontSize', 18);
+% xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
 
 figure;
 plot((1:size(smoothness_cost_history, 2))*per_iteration, sum(smoothness_cost_history), 'b-'); hold on; grid on;
 % plot((1:size(smoothness_cost_history, 2))*per_iteration, sum(smoothness_cost_history), 'bo');
-title('History of smoothness cost', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+title('History of smoothness cost', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('Iterations', 'FontSize', label_font_size); ylabel('Cost Value', 'FontSize', label_font_size); 
 
 figure;
 plot((1:size(wrist_pos_cost_history, 2))*per_iteration, sum(wrist_pos_cost_history), 'b-'); hold on; grid on;
 % plot((1:size(wrist_pos_cost_history, 2))*per_iteration, sum(wrist_pos_cost_history), 'bo');
-title('History of wrist position cost', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+title('History of wrist position cost', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('Iterations', 'FontSize', label_font_size); ylabel('Cost Value', 'FontSize', label_font_size); 
 
 figure;
 plot((1:size(l_wrist_pos_cost_history, 2))*per_iteration, sum(l_wrist_pos_cost_history), 'b-'); hold on; grid on;
 % plot((1:size(l_wrist_pos_cost_history, 2))*per_iteration, sum(l_wrist_pos_cost_history), 'bo');
-title('History of left wrist position cost', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+title('History of left wrist position cost', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('Iterations', 'FontSize', label_font_size); ylabel('Cost Value', 'FontSize', label_font_size); 
 
 figure;
 plot((1:size(r_wrist_pos_cost_history, 2))*per_iteration, sum(r_wrist_pos_cost_history), 'b-'); hold on; grid on;
 % plot((1:size(r_wrist_pos_cost_history, 2))*per_iteration, sum(r_wrist_pos_cost_history), 'bo');
-title('History of right wrist position cost', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+title('History of right wrist position cost', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('Iterations', 'FontSize', label_font_size); ylabel('Cost Value', 'FontSize', label_font_size); 
 
 figure;
 plot((1:size(wrist_ori_cost_history, 2))*per_iteration, sum(wrist_ori_cost_history), 'b-'); hold on; grid on;
 % plot((1:size(wrist_ori_cost_history, 2))*per_iteration, sum(wrist_ori_cost_history), 'bo');
-title('History of wrist orientation cost', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+title('History of wrist orientation cost', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('Iterations', 'FontSize', label_font_size); ylabel('Cost Value', 'FontSize', label_font_size); 
 
 figure;
 plot((1:size(elbow_pos_cost_history, 2))*per_iteration, sum(elbow_pos_cost_history), 'b-'); hold on; grid on;
 % plot((1:size(elbow_pos_cost_history, 2))*per_iteration, sum(elbow_pos_cost_history), 'bo');
-title('History of elbow position cost', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+title('History of elbow position cost', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('Iterations', 'FontSize', label_font_size); ylabel('Cost Value', 'FontSize', label_font_size); 
 
 figure;
 plot((1:size(finger_cost_history, 2))*per_iteration, sum(finger_cost_history), 'b-'); hold on; grid on;
 % plot((1:size(finger_cost_history, 2))*per_iteration, sum(finger_cost_history), 'bo');
-title('History of finger angle cost', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+title('History of finger angle cost', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('Iterations', 'FontSize', label_font_size); ylabel('Cost Value', 'FontSize', label_font_size); 
 
 figure;
 plot((1:size(l_finger_cost_history, 2))*per_iteration, sum(l_finger_cost_history), 'b-'); hold on; grid on;
 % plot((1:size(finger_cost_history, 2))*per_iteration, sum(finger_cost_history), 'bo');
-title('History of left finger angle cost', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+title('History of left finger angle cost', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('Iterations', 'FontSize', label_font_size); ylabel('Cost Value', 'FontSize', label_font_size); 
 
 figure;
 plot((1:size(r_finger_cost_history, 2))*per_iteration, sum(r_finger_cost_history), 'b-'); hold on; grid on;
 % plot((1:size(finger_cost_history, 2))*per_iteration, sum(finger_cost_history), 'bo');
-title('History of right finger angle cost', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+title('History of right finger angle cost', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('Iterations', 'FontSize', label_font_size); ylabel('Cost Value', 'FontSize', label_font_size); 
 
 figure;
 plot((1:size(dmp_orien_cost_history, 2))*per_iteration, dmp_orien_cost_history, 'b-'); hold on; grid on;
 % plot((1:size(dmp_orien_cost_history, 2))*per_iteration, dmp_orien_cost_history, 'bo');
-title('History of dmp orientation cost', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+title('History of dmp orientation cost', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('Iterations', 'FontSize', label_font_size); ylabel('Cost Value', 'FontSize', label_font_size); 
 
 figure;
 plot((1:size(dmp_scale_cost_history, 2))*per_iteration, dmp_scale_cost_history, 'b-'); hold on; grid on;
 % plot((1:size(dmp_scale_cost_history, 2))*per_iteration, dmp_scale_cost_history, 'bo');
-title('History of dmp scale cost', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+title('History of dmp scale cost', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('Iterations', 'FontSize', label_font_size); ylabel('Cost Value', 'FontSize', label_font_size); 
 
 figure;
 plot((1:size(dmp_rel_change_cost_history, 2))*per_iteration, dmp_rel_change_cost_history, 'b-'); hold on; grid on;
 % plot((1:size(dmp_rel_change_cost_history, 2))*per_iteration, dmp_rel_change_cost_history, 'bo');
-title('History of dmp rel change cost', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Cost Value', 'FontSize', 18); 
+title('History of dmp rel change cost', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('Iterations', 'FontSize', label_font_size); ylabel('Cost Value', 'FontSize', label_font_size); 
 
 % figure;
 % plot((1:size(similarity_cost_history, 2))*per_iteration, similarity_cost_history, 'b-'); hold on; grid on;
@@ -374,28 +377,28 @@ rw_start_change = norm(rw_start_ori - rw_start_new)
 
 %% Debug: analyze jacobian history
 % raw data, 24-dim
-figure;
-p1 = plot((1:size(orien_jacobian_history, 2))*per_iteration, orien_jacobian_history, 'b-'); hold on; grid on;
-plot((1:size(orien_jacobian_history, 2))*per_iteration, orien_jacobian_history, 'bo'); % 1
-p2 = plot((1:size(scale_jacobian_history, 2))*per_iteration, scale_jacobian_history, 'r-'); 
-% plot((1:size(scale_jacobian_history, 2))*per_iteration, scale_jacobian_history, 'ro'); % 2
-p3 = plot((1:size(track_jacobian_history, 2))*per_iteration, track_jacobian_history, 'g-'); 
-% plot((1:size(track_jacobian_history, 2))*per_iteration, track_jacobian_history, 'go'); % 3
-% p4 = plot((1:size(sim_jacobian_history, 2))*per_iteration, sim_jacobian_history, 'm-'); 
-% plot((1:size(sim_jacobian_history, 2))*per_iteration, sim_jacobian_history, 'mo'); % 4 
-title('History of Jacobians w.r.t DMP starts and goals', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Jacobians', 'FontSize', 18); 
-legend([p1(1), p2(1), p3(1)], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian');%, 'Location', 'NorthEastOutside');
-% 'track_jacobian', 'sim_jacobian', 'Location', 'NorthEastOutside');
+% figure;
+% p1 = plot((1:size(orien_jacobian_history, 2))*per_iteration, orien_jacobian_history, 'b-'); hold on; grid on;
+% plot((1:size(orien_jacobian_history, 2))*per_iteration, orien_jacobian_history, 'bo'); % 1
+% p2 = plot((1:size(scale_jacobian_history, 2))*per_iteration, scale_jacobian_history, 'r-'); 
+% % plot((1:size(scale_jacobian_history, 2))*per_iteration, scale_jacobian_history, 'ro'); % 2
+% p3 = plot((1:size(track_jacobian_history, 2))*per_iteration, track_jacobian_history, 'g-'); 
+% % plot((1:size(track_jacobian_history, 2))*per_iteration, track_jacobian_history, 'go'); % 3
+% % p4 = plot((1:size(sim_jacobian_history, 2))*per_iteration, sim_jacobian_history, 'm-'); 
+% % plot((1:size(sim_jacobian_history, 2))*per_iteration, sim_jacobian_history, 'mo'); % 4 
+% title('History of Jacobians w.r.t DMP starts and goals', 'FontSize', 18);
+% xlabel('Iterations', 'FontSize', 18); ylabel('Jacobians', 'FontSize', 18); 
+% legend([p1(1), p2(1), p3(1)], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian');%, 'Location', 'NorthEastOutside');
+% % 'track_jacobian', 'sim_jacobian', 'Location', 'NorthEastOutside');
 
 % norms
-num_records = size(track_jacobian_history, 2);
-track_jacobian_norm = zeros(1, num_records);
+num_records = size(orien_jacobian_history, 2);
+% track_jacobian_norm = zeros(1, num_records);
 % sim_jacobian_norm = zeros(1, num_records);
 orien_jacobian_norm = zeros(1, num_records);
 scale_jacobian_norm = zeros(1, num_records);
 for n = 1 : num_records
-    track_jacobian_norm(n) = norm(track_jacobian_history(:, n));
+%     track_jacobian_norm(n) = norm(track_jacobian_history(:, n));
 %     sim_jacobian_norm(n) = norm(sim_jacobian_history(:, n));
     orien_jacobian_norm(n) = norm(orien_jacobian_history(:, n));
     scale_jacobian_norm(n) = norm(scale_jacobian_history(:, n));
@@ -403,11 +406,11 @@ end
 figure;
 p1 = plot((1:num_records)*per_iteration, orien_jacobian_norm, 'b-'); hold on; grid on;
 p2 = plot((1:num_records)*per_iteration, scale_jacobian_norm, 'r-');
-p3 = plot((1:num_records)*per_iteration, track_jacobian_norm, 'g-');
+% p3 = plot((1:num_records)*per_iteration, track_jacobian_norm, 'g-');
 % p4 = plot((1:num_records)*per_iteration, sim_jacobian_norm, 'm-');
-title('History of Norms of DMP Jacobians', 'FontSize', 18);
-xlabel('Iterations', 'FontSize', 18); ylabel('Norms of jacobians', 'FontSize', 18); 
-legend([p1, p2, p3], 'orien\_jacobian', 'scale\_jacobian', 'track\_jacobian');%, 'Location', 'NorthEastOutside');
+title('History of Norms of DMP Jacobians', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('Iterations', 'FontSize', label_font_size); ylabel('Norms of jacobians', 'FontSize', label_font_size); 
+legend([p1, p2], 'orien\_jacobian', 'scale\_jacobian', 'Location', 'NorthEastOutside');
 
 
 %% Optimization results of First Round (q optimization -> manually move DMP starts and goals -> DMP optimization)
@@ -517,8 +520,8 @@ plot3(y_l_elbow_initial(1, :), y_l_elbow_initial(2, :), y_l_elbow_initial(3, :),
 plot3(y_r_elbow_initial(1, :), y_r_elbow_initial(2, :), y_r_elbow_initial(3, :), 'r--');  % initial DMP trajs
 
 view(-45, 45);
-title('Human demonstrated trajectories and Initial DMP trajectories', 'FontSize', 18);
-xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
+title('Human demonstrated trajectories and Initial DMP trajectories', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('x', 'FontSize', label_font_size); ylabel('y', 'FontSize', label_font_size); zlabel('z', 'FontSize', label_font_size); 
 legend([p1(1), p2(1)], 'Demonstrated trajs', 'Initial DMP trajs');%, 'Location', 'NorthEastOutside', 'FontSize', 16);
 
 
@@ -535,8 +538,8 @@ plot3(actual_l_elbow_pos_traj_0(1, :), actual_l_elbow_pos_traj_0(2, :), actual_l
 plot3(actual_r_elbow_pos_traj_0(1, :), actual_r_elbow_pos_traj_0(2, :), actual_r_elbow_pos_traj_0(3, :), 'g--');  % tracked (actually executed) trajs
 
 view(-45, 45);
-title('Initial DMP trajectories and Tracked (actually executed) trajectories', 'FontSize', 18);
-xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
+title('Initial DMP trajectories and Tracked (actually executed) trajectories', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('x', 'FontSize', label_font_size); ylabel('y', 'FontSize', label_font_size); zlabel('z', 'FontSize', label_font_size); 
 legend([p1(1), p2(1)], 'Initial DMP trajs', 'Tracked trajs');%, 'Location', 'NorthEastOutside', 'FontSize', 16);
 
 
@@ -605,8 +608,8 @@ plot3(y_l_elbow_optimed_0(1, :), y_l_elbow_optimed_0(2, :), y_l_elbow_optimed_0(
 plot3(y_r_elbow_optimed_0(1, :), y_r_elbow_optimed_0(2, :), y_r_elbow_optimed_0(3, :), 'r--'); % optimed DMP trajs
 
 view(-45, 45);
-title('First-round Tracked (actually executed) trajs and Optimized DMP trajs', 'FontSize', 18);
-xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
+title('First-round Tracked (actually executed) trajs and Optimized DMP trajs', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('x', 'FontSize', label_font_size); ylabel('y', 'FontSize', label_font_size); zlabel('z', 'FontSize', label_font_size); 
 legend([p1(1), p2(1)], 'Tracked trajs', 'Optimed DMP trajs');%, 'Location', 'NorthEastOutside', 'FontSize', 16);
 
 
@@ -644,8 +647,8 @@ plot3(actual_l_elbow_pos_traj_last(1, :), actual_l_elbow_pos_traj_last(2, :), ac
 plot3(actual_r_elbow_pos_traj_last(1, :), actual_r_elbow_pos_traj_last(2, :), actual_r_elbow_pos_traj_last(3, :), 'g--');  % tracked (actually executed) trajs
 
 view(-45, 45);
-title('First-round Optimized DMP trajs and Last-round Tracked trajs', 'FontSize', 18);
-xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
+title('First-round Optimized DMP trajs and Last-round Tracked trajs', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('x', 'FontSize', label_font_size); ylabel('y', 'FontSize', label_font_size); zlabel('z', 'FontSize', label_font_size); 
 legend([p1(1), p2(1)], 'Optimed DMP trajs', 'Last-round Tracked trajs');%, 'Location', 'NorthEastOutside', 'FontSize', 16);
 
 
@@ -663,8 +666,8 @@ plot3(actual_l_elbow_pos_traj_last(1, :), actual_l_elbow_pos_traj_last(2, :), ac
 plot3(actual_r_elbow_pos_traj_last(1, :), actual_r_elbow_pos_traj_last(2, :), actual_r_elbow_pos_traj_last(3, :), 'g--');  % Last-round tracked (actually executed) trajs
 
 view(-45, 45);
-title('First-round Tracked trajs and Last-round Tracked trajs', 'FontSize', 18);
-xlabel('x', 'FontSize', 18); ylabel('y', 'FontSize', 18); zlabel('z', 'FontSize', 18); 
+title('First-round Tracked trajs and Last-round Tracked trajs', 'FontSize', title_font_size, 'FontWeight', 'normal');
+xlabel('x', 'FontSize', label_font_size); ylabel('y', 'FontSize', label_font_size); zlabel('z', 'FontSize', label_font_size); 
 legend([p1(1), p2(1)], 'First-round Tracked trajs', 'Last-round Tracked trajs');%, 'Location', 'NorthEastOutside', 'FontSize', 16);
 
 

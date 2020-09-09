@@ -4,7 +4,7 @@
 %% Prep
 file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity.h5';
 
-group_name = 'kaoqin_2';
+group_name = 'gun_2';
 
 arm_traj_1 = h5read(file_name, ['/', group_name, '/arm_traj_1']);
 
