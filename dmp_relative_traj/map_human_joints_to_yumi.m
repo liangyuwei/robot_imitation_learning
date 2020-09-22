@@ -4,8 +4,8 @@
 %% Load human joint data
 file_name = '../motion-retargeting/test_imi_data.h5'; % the original demonstrations that are not transformed to YuMi's local frames
 group_name = 'gun_2';
-l_joint_angles_ik = h5read(file_name, ['/', group_name, '/l_joint_angles_ik']);
-r_joint_angles_ik = h5read(file_name, ['/', group_name, '/r_joint_angles_ik']);
+l_joint_angles_ik = h5read(file_name, ['/', group_name, '/l_joint_angles_optim_ik']); %'/l_joint_angles_ik']);
+r_joint_angles_ik = h5read(file_name, ['/', group_name, '/r_joint_angles_optim_ik']); %'/r_joint_angles_ik']);
 
 
 %% Prep
@@ -74,10 +74,10 @@ end
 
 
 %% Store the results
-h5create(file_name, ['/', group_name, '/l_joint_angles_ik_yumi'], size(l_joint_angles_ik_yumi));
-h5write(file_name, ['/', group_name, '/l_joint_angles_ik_yumi'], l_joint_angles_ik_yumi);
+h5create(file_name, ['/', group_name, '/l_joint_angles_optim_ik_yumi'], size(l_joint_angles_ik_yumi));
+h5write(file_name, ['/', group_name, '/l_joint_angles_optim_ik_yumi'], l_joint_angles_ik_yumi);
 
-h5create(file_name, ['/', group_name, '/r_joint_angles_ik_yumi'], size(r_joint_angles_ik_yumi));
-h5write(file_name, ['/', group_name, '/r_joint_angles_ik_yumi'], r_joint_angles_ik_yumi);
+h5create(file_name, ['/', group_name, '/r_joint_angles_optim_ik_yumi'], size(r_joint_angles_ik_yumi));
+h5write(file_name, ['/', group_name, '/r_joint_angles_optim_ik_yumi'], r_joint_angles_ik_yumi);
 
 
