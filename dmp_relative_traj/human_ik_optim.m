@@ -43,6 +43,8 @@ global shoulder_pos upperarm_length forearm_length left_or_right
 global elbow_pos_goal wrist_pos_goal wrist_rot_goal
 
 % iterate to perform FK for each path point
+l_cost_history = zeros(num_datapoints, 1);
+r_cost_history = zeros(num_datapoints, 1);
 for n = 1 : num_datapoints
     % debug information
     disp(['>>>> Tracking path point ', num2str(n), '/', num2str(num_datapoints), '...']);
@@ -60,6 +62,7 @@ for n = 1 : num_datapoints
     % start optimization
     [xl, fl] = fmincon(@human_ik_cost, x0_l, [], [], [], [], lb, ub);
     x0_l = xl;
+    l_cost_history(n) = fl;
     % store the result
     l_joint_angle(:, n) = xl;
     
@@ -76,13 +79,18 @@ for n = 1 : num_datapoints
     % start optimization
     [xr, fr] = fmincon(@human_ik_cost, x0_r, [], [], [], [], lb, ub);
     x0_r = xr;
+    r_cost_history(n) = fr;
     % store the result
     r_joint_angle(:, n) = xr;
 end
 
 
 %% Cost history ?
-
+figure;
+plot(1:num_datapoints, l_cost_history, 'b-'); hold on; grid on;
+plot(1:num_datapoints, r_cost_history, 'r-');
+title('Cost history');
+xlabel('Path point'); ylabel('Costs');
 
 %% Store the human IK results into file
 h5create(file_name, ['/', group_name, '/l_joint_angles_optim_ik'], size(l_joint_angle));

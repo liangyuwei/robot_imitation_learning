@@ -54,7 +54,7 @@ wrist_rot = wrist_tform(1:3, 1:3); % should be transformed to local frame!!!
 % therefore, there should be a conversion, so as to utilize the orientation data of wrist(from mocap where eye(3) is exactly the same as world frame)    
 world_R_local = [1, 0, 0; ...
                  0, -1, 0; ...
-                 0, 0, -1];
+                 0, 0, -1];       
 world_R_wrist = world_R_local * wrist_rot; % local_R_wrist(current result) = local_R_world * world_R_wrist(desired output for us to compare with the goal from mocap data)
 wrist_rot = world_R_wrist; % assign the adjusted orientation
 

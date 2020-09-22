@@ -3,7 +3,7 @@
 
 %% Prep
 file_name = '../motion-retargeting/test_imi_data.h5'; % the original demonstrations that are not transformed to YuMi's local frames
-group_name = 'kaoqin_2';
+group_name = 'fengren_1';
 
 
 %% Load motion capture data
@@ -36,6 +36,22 @@ for n = 1 : num_datapoints
     l_joint_angle(:, n) = convert_mocap_to_joint1(l_shoulder_pos(:, n), l_elbow_pos(:, n), l_wrist_pos(:, n), l_wrist_rot(:, :, n), true, l_elbow_rot(:, :, n));
     r_joint_angle(:, n) = convert_mocap_to_joint1(r_shoulder_pos(:, n), r_elbow_pos(:, n), r_wrist_pos(:, n), r_wrist_rot(:, :, n), false, r_elbow_rot(:, :, n));
 end
+
+%% Clamping (manually set, for human model)
+ub_l = [pi, pi/2, pi/2, pi, pi/2, pi/2, pi/3];
+lb_l = [-pi/4, -pi/2, -pi*2/3, 0, -pi/2, -pi/2, -pi/3];
+ub_r = [pi/4, pi/2, pi*2/3, pi, pi/2, pi/2, pi/3];
+lb_r = [-pi, -pi/2, -pi/2, 0, -pi/2, -pi/2, -pi/3];
+
+for n = 1 : num_datapoints
+   for d = 1 : 7
+        % left
+        l_joint_angle(d, n) = max(min(l_joint_angle(d, n), ub_l(d)), lb_l(d));
+        % right
+        r_joint_angle(d, n) = max(min(r_joint_angle(d, n), ub_r(d)), lb_r(d));
+   end
+end
+
 
 %% Store the human IK results into file
 h5create(file_name, ['/', group_name, '/l_joint_angles_ik'], size(l_joint_angle));

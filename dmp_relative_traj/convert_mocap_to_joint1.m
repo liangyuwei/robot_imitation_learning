@@ -18,13 +18,26 @@ else
     v_se_l = [v_se_w(1), -v_se_w(2), -v_se_w(3)]'; % convert to local frame of human mocap marker
 end
 % calculate rotation (euler angle (fixed frame)) of v_se_l from local frame's z-axis      
-eul = euler_from_two_vector([0, 0, 1]', v_se_l);
-gamma = eul(1); % x-axis
-beta = eul(2); % y-axis
-alpha = eul(3); % z-axis
-q1 = -beta;
-q2 = gamma;
-q3 = -alpha;
+% eul = euler_from_two_vector([0, 0, 1]', v_se_l);
+% gamma = eul(1); % x-axis
+% beta = eul(2); % y-axis
+% alpha = eul(3); % z-axis
+% q1 = -beta;
+% q2 = gamma;
+% q3 = -alpha;
+
+% Hujin's method (wrong...)
+vec_k = unit(cross([0, 0, -1]', v_se_w)); % cross dot to yield axis of rotation     
+theta = acos(dot([0, 0, -1]', v_se_w)); % by the law of cosines
+r3 = angvec2r(theta,vec_k);
+% pitch - y, yaw - z, roll - x
+% [q(1) q(2) q(3)] = r2pry(r3); % r2pry not found...
+rpy_tmp = tr2rpy(r3); % r2pry not found..
+q(2) = rpy_tmp(1); % x-axis
+q(1) = rpy_tmp(2); % y-axis
+q(3) = rpy_tmp(3); % z-axis
+q1 = q(1); q2 = q(2); q3 = q(3);
+
 
 % 2 - elbow joint q4
 v_ew_w = pw - pe; % vector under world frame
@@ -43,7 +56,8 @@ else
           0, -1, 0; ...
           0, 0, -1];
 end
-s_R_e = eul2rotm(eul, 'XYZ') * eul2rotm([q4, 0, 0], 'XYZ'); % rotation q4 around the x-axis of its own should be included!!! % since it's relative rotation, it should be post-multiplied(i.e. on the right)
+% s_R_e = eul2rotm(eul, 'XYZ') * eul2rotm([q4, 0, 0], 'XYZ'); % rotation q4 around the x-axis of its own should be included!!! % since it's relative rotation, it should be post-multiplied(i.e. on the right)
+s_R_e = r3 * eul2rotm([q4, 0, 0], 'XYZ');
 e_R_w = s_R_e' * Rs' * Rw; % equation is Rw = Rs * s_R_e * e_R_w, try to obtain the transform from elbow frame to wrist frame...
 eul1 = rotm2eul(e_R_w, 'XYZ');
 gamma1 = eul1(1); % x-axis
@@ -53,30 +67,6 @@ alpha1 = eul1(3); % z-axis
 q5 = -alpha1;
 q6 = gamma1;
 q7 = -beta1;
-
-
-
-% q5
-%{
-elb_z = v_ew_w;
-elb_x = cross(v_se_w, v_ew_w);
-elb_y = cross(elb_z, elb_x);
-Re = [elb_x, elb_y, elb_z]; % orientaion w.r.t world, just like Rw
-e_R_w = Re' * Rw; % wrist orientation under elbow frame % already have Re, Rw in world frame, and the relation Rw = Re * e_R_w by chain rule
-tmp_x = e_R_w(:, 1); tmp_y = e_R_w(:, 2); tmp_z = e_R_w(:, 3); 
-tmp1 = [tmp_y(1), tmp_y(2), 0.0]';
-tmp2 = [0, 1, 0]'; %[0.0, tmp_y(2), 0.0]'; % the y-axis of elbow frame w.r.t elbow frame
-q5 = sign(tmp_y(1)) * acos(tmp1'*tmp2/norm(tmp1)/norm(tmp2)); % use Re or just ps & pe & pw 
-
-% q6
-tmp1 = [0.0, tmp_z(2), tmp_z(3)]';
-tmp2 = [0, 0, 1]'; % the z axis of elbow frame w.r.t elbow frame
-q6 = -sign(tmp_z(2)) * acos(tmp1'*tmp2/norm(tmp1)/norm(tmp2));
-% q7 
-tmp1 = [tmp_z(1), 0.0, tmp_z(3)]';
-tmp2 = [0, 0, 1]'; % the z axis of elbow frame w.r.t elbow frame
-q7 = -sign(tmp_z(1)) * acos(tmp1'*tmp2/norm(tmp1)/norm(tmp2));
-%}
 
 
 %% In total

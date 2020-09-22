@@ -4,8 +4,15 @@ function eul = euler_from_two_vector(A, B)
 % Note that the rotation matrix derived from A transforming to B is specific to the frame which A and B are defined w.r.t.   
 
 %% Angle-Axis representation
-C = cross(A, B); C = C / norm(C); % normalized rotation axis
+C = cross(A, B); 
+if (norm(C) <= eps) % close to zero, but it might have rotated around z axis...what to do with it??   
+    eul = [0, 0, 0];
+    return;
+end
+C = C / norm(C); % normalized rotation axis
+
 theta = acos(A' * B / norm(A) / norm(B));
+
 
 %% Get the corresponding rotation matrix(uniqueness)
 %{
