@@ -3,7 +3,7 @@
 
 %% Load human joint data
 file_name = '../motion-retargeting/test_imi_data.h5'; % the original demonstrations that are not transformed to YuMi's local frames
-group_name = 'gun_2';
+group_name = 'fengren_1';
 l_joint_angles_ik = h5read(file_name, ['/', group_name, '/l_joint_angles_optim_ik']); %'/l_joint_angles_ik']);
 r_joint_angles_ik = h5read(file_name, ['/', group_name, '/r_joint_angles_optim_ik']); %'/r_joint_angles_ik']);
 

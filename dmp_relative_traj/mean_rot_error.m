@@ -1,5 +1,5 @@
 function err = mean_rot_error(R1, R2)
-%% This function calcualtes the average orientation error.
+%% MEAN_ROT_ERROR This function calcualtes the average orientation error.
 
 num_datapoints = size(R1, 3);
 assert(num_datapoints == size(R2, 3), 'Number of rotation matrices should be consistent!!!');

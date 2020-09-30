@@ -1,5 +1,5 @@
 function cost = human_ik_cost(x, tracking_goal)
-%% This function is used for Human IK optimization as the cost function.
+%% HUMAN_IK_COST This function is used for Human IK optimization as the cost function.
 
 
 %% Obtain goal information    

@@ -1,5 +1,5 @@
 function [T_shoulder_mocap, T_elbow_mocap, T_wrist_mocap] = human_fk(p_s, q, l_up, l_fr, left_or_right, display_flag)
-%% This function computes Forward Kinematics on a human arm.
+%% HUMAN_FK This function computes Forward Kinematics on a human arm.
 % Input:
 %   p_s - shoulder position in world frame, should be of size 3 x 1
 %   q - human joint angle (the same as WuKong Humanoid)

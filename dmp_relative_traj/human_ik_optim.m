@@ -3,7 +3,7 @@
 
 %% Prep
 file_name = '../motion-retargeting/test_imi_data.h5'; % the original demonstrations that are not transformed to YuMi's local frames
-group_name = 'kaoqin_2';
+group_name = 'fengren_1';
 
 
 %% Load motion capture data
@@ -163,61 +163,69 @@ end
 
 figure;
 
-subplot(2, 4, 1);
+subplot(3, 4, 1);
 p1 = plot3(l_shoulder_pos(1, :), l_shoulder_pos(2, :), l_shoulder_pos(3, :), 'b-'); hold on; grid on;
 p2 = plot3(shoulder_pos_tracked_l(1, :), shoulder_pos_tracked_l(2, :), shoulder_pos_tracked_l(3, :), 'r--');
 xlabel('x'); ylabel('y'); zlabel('z');
 % legend([p1(1), p2(1)], 'Original Traj', 'Tracked Traj', 'Location', 'NorthEastOutside');
 title('Left Shoulder Pos');
 
-subplot(2, 4, 2);
+subplot(3, 4, 2);
 p1 = plot3(l_elbow_pos(1, :), l_elbow_pos(2, :), l_elbow_pos(3, :), 'b-'); hold on; grid on;
 p2 = plot3(elbow_pos_tracked_l(1, :), elbow_pos_tracked_l(2, :), elbow_pos_tracked_l(3, :), 'r--');
 xlabel('x'); ylabel('y'); zlabel('z');
 % legend([p1(1), p2(1)], 'Original Traj', 'Tracked Traj', 'Location', 'NorthEastOutside');
 title('Left Elbow Pos');
 
-subplot(2, 4, 3);
+subplot(3, 4, 3);
 p1 = plot3(l_wrist_pos(1, :), l_wrist_pos(2, :), l_wrist_pos(3, :), 'b-'); hold on; grid on;
 p2 = plot3(wrist_pos_tracked_l(1, :), wrist_pos_tracked_l(2, :), wrist_pos_tracked_l(3, :), 'r--');
 xlabel('x'); ylabel('y'); zlabel('z');
 % legend([p1(1), p2(1)], 'Original Traj', 'Tracked Traj', 'Location', 'NorthEastOutside');
 title('Left Wrist Eul');
 
-subplot(2, 4, 4);
+subplot(3, 4, 4);
 p1 = plot3(l_wrist_eul(1, :), l_wrist_eul(2, :), l_wrist_eul(3, :), 'b-'); hold on; grid on;
 p2 = plot3(wrist_eul_tracked_l(1, :), wrist_eul_tracked_l(2, :), wrist_eul_tracked_l(3, :), 'r--');
 xlabel('x'); ylabel('y'); zlabel('z');
-legend([p1(1), p2(1)], 'Original Traj', 'Tracked Traj', 'Location', 'NorthEastOutside');
+% legend([p1(1), p2(1)], 'Original Traj', 'Tracked Traj', 'Location', 'NorthEastOutside');
 title('Left Wrist Pos');
 
-subplot(2, 4, 5);
+subplot(3, 4, 5);
 p1 = plot3(r_shoulder_pos(1, :), r_shoulder_pos(2, :), r_shoulder_pos(3, :), 'b-'); hold on; grid on;
 p2 = plot3(shoulder_pos_tracked_r(1, :), shoulder_pos_tracked_r(2, :), shoulder_pos_tracked_r(3, :), 'r--');
 xlabel('x'); ylabel('y'); zlabel('z');
 % legend([p1(1), p2(1)], 'Original Traj', 'Tracked Traj', 'Location', 'NorthEastOutside');
 title('Right Shoulder Pos');
 
-subplot(2, 4, 6);
+subplot(3, 4, 6);
 p1 = plot3(r_elbow_pos(1, :), r_elbow_pos(2, :), r_elbow_pos(3, :), 'b-'); hold on; grid on;
 p2 = plot3(elbow_pos_tracked_r(1, :), elbow_pos_tracked_r(2, :), elbow_pos_tracked_r(3, :), 'r--');
 xlabel('x'); ylabel('y'); zlabel('z');
 % legend([p1(1), p2(1)], 'Original Traj', 'Tracked Traj', 'Location', 'NorthEastOutside');
 title('Right Elbow Pos');
 
-subplot(2, 4, 7);
+subplot(3, 4, 7);
 p1 = plot3(r_wrist_pos(1, :), r_wrist_pos(2, :), r_wrist_pos(3, :), 'b-'); hold on; grid on;
 p2 = plot3(wrist_pos_tracked_r(1, :), wrist_pos_tracked_r(2, :), wrist_pos_tracked_r(3, :), 'r--');
 xlabel('x'); ylabel('y'); zlabel('z');
 % legend([p1(1), p2(1)], 'Original Traj', 'Tracked Traj', 'Location', 'NorthEastOutside');
 title('Right Wrist Pos');
 
-subplot(2, 4, 8);
+subplot(3, 4, 8);
 p1 = plot3(r_wrist_eul(1, :), r_wrist_eul(2, :), r_wrist_eul(3, :), 'b-'); hold on; grid on;
 p2 = plot3(wrist_eul_tracked_r(1, :), wrist_eul_tracked_r(2, :), wrist_eul_tracked_r(3, :), 'r--');
 xlabel('x'); ylabel('y'); zlabel('z');
-legend([p1(1), p2(1)], 'Original Traj', 'Tracked Traj', 'Location', 'NorthEastOutside');
+% legend([p1(1), p2(1)], 'Original Traj', 'Tracked Traj', 'Location', 'NorthEastOutside');
 title('Right Wrist Eul');
+
+hL = subplot(3, 4, 12);
+plot(1, nan, 1, nan, 'r'); set(hL, 'Visible', 'off')
+poshL = get(hL, 'position');     % Getting its position
+lgd = legend(hL, [p1, p2], 'Original Traj', 'Tracked Traj', 'Location', 'NorthEastOutside');
+set(lgd, 'position', poshL);      % Adjusting legend's position
+axis(hL, 'off');           
+
 
 
 % Quantitative statistics

@@ -1,4 +1,4 @@
-%% check trajectory similarity
+%% compare Hujin, pure IK and ours
 
 
 
@@ -11,15 +11,20 @@ addpath('../vmp/'); % use resample_traj
 addpath('./'); % add all to include class folders
 
 ori_file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
-file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity.h5';
-group_name = 'gun_2';%'kai_2';%'baozhu_1';%'fengren_1';
+hujin_file_name = '../motion-retargeting/mocap_ik_results_YuMi_hujin.h5';
+our_file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity.h5';
+pure_ik_file_name = '../motion-retargeting/test_imi_data_YuMi_pure_ik.h5';
+
+group_name = 'fengren_1';%'kai_2';%'baozhu_1';%'fengren_1';
 
 num_datapoints = 50;
 
-max_round = h5read(file_name, ['/', group_name, '/max_round']); % for ease of display
+max_round = h5read(our_file_name, ['/', group_name, '/max_round']); % for ease of display
+best_round = h5read(our_file_name, ['/', group_name, '/best_round']); % for ease of display
+
 
 % if normalize original and actually tracked trajectories
-normalize_flag = true;
+normalize_flag = true; % this is a must, because human stands in a different place in space 
 
 % store pics 
 if (normalize_flag)
@@ -37,12 +42,10 @@ l_wrist_pos_human = h5read(ori_file_name, ['/', group_name, '/l_wrist_pos']);
 r_wrist_pos_human = h5read(ori_file_name, ['/', group_name, '/r_wrist_pos']);
 l_elbow_pos_human = h5read(ori_file_name, ['/', group_name, '/l_elbow_pos']);
 r_elbow_pos_human = h5read(ori_file_name, ['/', group_name, '/r_elbow_pos']);
-
 % relative
 lrw_pos_human = l_wrist_pos_human - r_wrist_pos_human;
 lew_pos_human = l_elbow_pos_human - l_wrist_pos_human;
 rew_pos_human = r_elbow_pos_human - r_wrist_pos_human;
-
 % normalize to [0,1] x [0,1] x [0,1]
 if (normalize_flag)
     for i = 1 : 3
@@ -57,10 +60,30 @@ if (normalize_flag)
     %     rew_pos_human(i, :) = mapminmax(rew_pos_human(i, :), 0, 1);
     end
 end
+% align the length
+l_wrist_pos_human_aligned = zeros(3, num_datapoints);
+l_elbow_pos_human_aligned = zeros(3, num_datapoints);
+r_wrist_pos_human_aligned = zeros(3, num_datapoints);
+r_elbow_pos_human_aligned = zeros(3, num_datapoints);
+lrw_pos_human_aligned = zeros(3, num_datapoints);
+lew_pos_human_aligned = zeros(3, num_datapoints);
+rew_pos_human_aligned = zeros(3, num_datapoints);
+original_num_datapoints = size(l_wrist_pos_human, 2);
+original_timestamps = linspace(0, 1, original_num_datapoints);
+target_timestamps = linspace(0, 1, num_datapoints);
+for i = 1 : 3
+    l_wrist_pos_human_aligned(i, :) = interp1(original_timestamps, l_wrist_pos_human(i, :), target_timestamps, 'linear');
+    l_elbow_pos_human_aligned(i, :) = interp1(original_timestamps, l_elbow_pos_human(i, :), target_timestamps, 'linear');
+    r_wrist_pos_human_aligned(i, :) = interp1(original_timestamps, r_wrist_pos_human(i, :), target_timestamps, 'linear');
+    r_elbow_pos_human_aligned(i, :) = interp1(original_timestamps, r_elbow_pos_human(i, :), target_timestamps, 'linear');
+    lrw_pos_human_aligned(i, :) = interp1(original_timestamps, lrw_pos_human(i, :), target_timestamps, 'linear');
+    lew_pos_human_aligned(i, :) = interp1(original_timestamps, lew_pos_human(i, :), target_timestamps, 'linear');
+    rew_pos_human_aligned(i, :) = interp1(original_timestamps, rew_pos_human(i, :), target_timestamps, 'linear');
+end
 
 
 %% Calculate Frechet distance
-%
+%{
 % max_round = 0; % for checking frechet distance using generalized DMP new trajs
 % initialize frechet distance history
 % absolute
@@ -180,6 +203,7 @@ plot_3d_subplots(rew_pos_human_aligned, y_rew, {'Right Elbow-Wrist', ['Frechet D
 
 
 %% Display all Frechet distance history in one figure
+%{
 figure;
 sgtitle('History of discrete Frechet distances across different optimization rounds');
 % lw
@@ -221,17 +245,17 @@ title('Right Elbow-Wrist Relative');
 %}
 
 
-%% Display the original trajectories and the last-round tracked trajectories (which is best_q indeed) in split view
+%% Load motion retargeting results
+% 1 - our method: the best tracked round's result(may not be max_round); actually tracked trajectories     
 % read actually tracked trajectories (absolute)
-actual_l_wrist_pos_traj = h5read(file_name, ['/', group_name, '/actual_l_wrist_pos_traj_', num2str(max_round)]);
-actual_r_wrist_pos_traj = h5read(file_name, ['/', group_name, '/actual_r_wrist_pos_traj_', num2str(max_round)]);
-actual_l_elbow_pos_traj = h5read(file_name, ['/', group_name, '/actual_l_elbow_pos_traj_', num2str(max_round)]);
-actual_r_elbow_pos_traj = h5read(file_name, ['/', group_name, '/actual_r_elbow_pos_traj_', num2str(max_round)]);
-% compute actually tracked trajectories (relative)
+actual_l_wrist_pos_traj = h5read(our_file_name, ['/', group_name, '/actual_l_wrist_pos_traj_', num2str(best_round)]);
+actual_r_wrist_pos_traj = h5read(our_file_name, ['/', group_name, '/actual_r_wrist_pos_traj_', num2str(best_round)]);
+actual_l_elbow_pos_traj = h5read(our_file_name, ['/', group_name, '/actual_l_elbow_pos_traj_', num2str(best_round)]);
+actual_r_elbow_pos_traj = h5read(our_file_name, ['/', group_name, '/actual_r_elbow_pos_traj_', num2str(best_round)]);
+% relative
 actual_lrw_pos_traj = actual_l_wrist_pos_traj - actual_r_wrist_pos_traj;
 actual_lew_pos_traj = actual_l_elbow_pos_traj - actual_l_wrist_pos_traj;
 actual_rew_pos_traj = actual_r_elbow_pos_traj - actual_r_wrist_pos_traj;
-
 % normalize (absolute)
 if (normalize_flag)
     for j = 1 : 3
@@ -247,51 +271,112 @@ if (normalize_flag)
     end
 end
 
+
+% 2 - Hujin's method
+% absolute
+actual_l_wrist_pos_traj_hujin = h5read(hujin_file_name, ['/', group_name, '/actual_l_wrist_pos_traj_hujin']);
+actual_r_wrist_pos_traj_hujin = h5read(hujin_file_name, ['/', group_name, '/actual_r_wrist_pos_traj_hujin']);
+actual_l_elbow_pos_traj_hujin = h5read(hujin_file_name, ['/', group_name, '/actual_l_elbow_pos_traj_hujin']);
+actual_r_elbow_pos_traj_hujin = h5read(hujin_file_name, ['/', group_name, '/actual_r_elbow_pos_traj_hujin']);
+% relative
+actual_lrw_pos_traj_hujin = actual_l_wrist_pos_traj_hujin - actual_r_wrist_pos_traj_hujin;
+actual_lew_pos_traj_hujin = actual_l_elbow_pos_traj_hujin - actual_l_wrist_pos_traj_hujin;
+actual_rew_pos_traj_hujin = actual_r_elbow_pos_traj_hujin - actual_r_wrist_pos_traj_hujin;
+% normalize (absolute)
+if (normalize_flag)
+    for j = 1 : 3
+        % absolute
+        actual_l_wrist_pos_traj_hujin(j, :) = mapminmax(actual_l_wrist_pos_traj_hujin(j, :), 0, 1);
+        actual_r_wrist_pos_traj_hujin(j, :) = mapminmax(actual_r_wrist_pos_traj_hujin(j, :), 0, 1);
+        actual_l_elbow_pos_traj_hujin(j, :) = mapminmax(actual_l_elbow_pos_traj_hujin(j, :), 0, 1);
+        actual_r_elbow_pos_traj_hujin(j, :) = mapminmax(actual_r_elbow_pos_traj_hujin(j, :), 0, 1);
+        % relative
+%         actual_lrw_pos_traj(j, :) = mapminmax(actual_lrw_pos_traj(j, :), 0, 1);
+%         actual_lew_pos_traj(j, :) = mapminmax(actual_lew_pos_traj(j, :), 0, 1);
+%         actual_rew_pos_traj(j, :) = mapminmax(actual_rew_pos_traj(j, :), 0, 1);
+    end
+end
 % align the length
-l_wrist_pos_human_aligned = zeros(3, num_datapoints);
-l_elbow_pos_human_aligned = zeros(3, num_datapoints);
-r_wrist_pos_human_aligned = zeros(3, num_datapoints);
-r_elbow_pos_human_aligned = zeros(3, num_datapoints);
-lrw_pos_human_aligned = zeros(3, num_datapoints);
-lew_pos_human_aligned = zeros(3, num_datapoints);
-rew_pos_human_aligned = zeros(3, num_datapoints);
-original_num_datapoints = size(l_wrist_pos_human, 2);
+actual_l_wrist_pos_traj_hujin_aligned = zeros(3, num_datapoints);
+actual_l_elbow_pos_traj_hujin_aligned = zeros(3, num_datapoints);
+actual_r_wrist_pos_traj_hujin_aligned = zeros(3, num_datapoints);
+actual_r_elbow_pos_traj_hujin_aligned = zeros(3, num_datapoints);
+actual_lrw_pos_traj_hujin_aligned = zeros(3, num_datapoints);
+actual_lew_pos_traj_hujin_aligned = zeros(3, num_datapoints);
+actual_rew_pos_traj_hujin_aligned = zeros(3, num_datapoints);
+original_num_datapoints = size(actual_l_wrist_pos_traj_hujin, 2);
 original_timestamps = linspace(0, 1, original_num_datapoints);
 target_timestamps = linspace(0, 1, num_datapoints);
 for i = 1 : 3
-    l_wrist_pos_human_aligned(i, :) = interp1(original_timestamps, l_wrist_pos_human(i, :), target_timestamps, 'linear');
-    l_elbow_pos_human_aligned(i, :) = interp1(original_timestamps, l_elbow_pos_human(i, :), target_timestamps, 'linear');
-    r_wrist_pos_human_aligned(i, :) = interp1(original_timestamps, r_wrist_pos_human(i, :), target_timestamps, 'linear');
-    r_elbow_pos_human_aligned(i, :) = interp1(original_timestamps, r_elbow_pos_human(i, :), target_timestamps, 'linear');
-    lrw_pos_human_aligned(i, :) = interp1(original_timestamps, lrw_pos_human(i, :), target_timestamps, 'linear');
-    lew_pos_human_aligned(i, :) = interp1(original_timestamps, lew_pos_human(i, :), target_timestamps, 'linear');
-    rew_pos_human_aligned(i, :) = interp1(original_timestamps, rew_pos_human(i, :), target_timestamps, 'linear');
+    actual_l_wrist_pos_traj_hujin_aligned(i, :) = interp1(original_timestamps, actual_l_wrist_pos_traj_hujin(i, :), target_timestamps, 'linear');
+    actual_l_elbow_pos_traj_hujin_aligned(i, :) = interp1(original_timestamps, actual_l_elbow_pos_traj_hujin(i, :), target_timestamps, 'linear');
+    actual_r_wrist_pos_traj_hujin_aligned(i, :) = interp1(original_timestamps, actual_r_wrist_pos_traj_hujin(i, :), target_timestamps, 'linear');
+    actual_r_elbow_pos_traj_hujin_aligned(i, :) = interp1(original_timestamps, actual_r_elbow_pos_traj_hujin(i, :), target_timestamps, 'linear');
+    actual_lrw_pos_traj_hujin_aligned(i, :) = interp1(original_timestamps, actual_lrw_pos_traj_hujin(i, :), target_timestamps, 'linear');
+    actual_lew_pos_traj_hujin_aligned(i, :) = interp1(original_timestamps, actual_lew_pos_traj_hujin(i, :), target_timestamps, 'linear');
+    actual_rew_pos_traj_hujin_aligned(i, :) = interp1(original_timestamps, actual_rew_pos_traj_hujin(i, :), target_timestamps, 'linear');
 end
 
-% display
+
+% 3 - Pure IK results
 % absolute
-plot_3d_subplots(l_wrist_pos_human_aligned, actual_l_wrist_pos_traj, ...
-                 {'Left Wrist', ['Frechet Distance = ', num2str(frdist_l_wrist_pos(end))]}, 'Human', 'Robot');
+l_wrist_pos_pure_ik = h5read(pure_ik_file_name, ['/', group_name, '/l_wrist_pos']);
+r_wrist_pos_pure_ik = h5read(pure_ik_file_name, ['/', group_name, '/r_wrist_pos']);
+l_elbow_pos_pure_ik = h5read(pure_ik_file_name, ['/', group_name, '/l_elbow_pos']);
+r_elbow_pos_pure_ik = h5read(pure_ik_file_name, ['/', group_name, '/r_elbow_pos']);
+% relative
+lrw_pos_pure_ik = l_wrist_pos_pure_ik - r_wrist_pos_pure_ik;
+lew_pos_pure_ik = l_elbow_pos_pure_ik - l_wrist_pos_pure_ik;
+rew_pos_pure_ik = r_elbow_pos_pure_ik - r_wrist_pos_pure_ik;
+% normalize (absolute)
+if (normalize_flag)
+    for j = 1 : 3
+        % absolute
+        l_wrist_pos_pure_ik(j, :) = mapminmax(l_wrist_pos_pure_ik(j, :), 0, 1);
+        r_wrist_pos_pure_ik(j, :) = mapminmax(r_wrist_pos_pure_ik(j, :), 0, 1);
+        l_elbow_pos_pure_ik(j, :) = mapminmax(l_elbow_pos_pure_ik(j, :), 0, 1);
+        r_elbow_pos_pure_ik(j, :) = mapminmax(r_elbow_pos_pure_ik(j, :), 0, 1);
+        % relative
+%         actual_lrw_pos_traj(j, :) = mapminmax(actual_lrw_pos_traj(j, :), 0, 1);
+%         actual_lew_pos_traj(j, :) = mapminmax(actual_lew_pos_traj(j, :), 0, 1);
+%         actual_rew_pos_traj(j, :) = mapminmax(actual_rew_pos_traj(j, :), 0, 1);
+    end
+end
+
+
+%% Display the comparison results
+% absolute
+plot_3d_subplots_4traj(l_wrist_pos_human_aligned, actual_l_wrist_pos_traj, actual_l_wrist_pos_traj_hujin_aligned, l_wrist_pos_pure_ik, ...
+                       'Left Wrist', 'Human', 'Ours', 'Hujin''s', 'Pure IK');
+%                  {'Left Wrist', ['Frechet Distance = ', num2str(frdist_l_wrist_pos(end))]}, 'Human', 'Robot');
 % saveas(gcf, [store_pics_folder, 'left_wrist_human_robot_comp'], 'png');
-plot_3d_subplots(l_elbow_pos_human_aligned, actual_l_elbow_pos_traj, ...
-                 {'Left Elbow', ['Frechet Distance = ', num2str(frdist_l_elbow_pos(end))]}, 'Human', 'Robot');
+plot_3d_subplots_4traj(l_elbow_pos_human_aligned, actual_l_elbow_pos_traj, actual_l_elbow_pos_traj_hujin_aligned, l_elbow_pos_pure_ik, ...
+                 'Left Elbow', 'Human', 'Ours', 'Hujin''s', 'Pure IK');
+%                  {'Left Elbow', ['Frechet Distance = ', num2str(frdist_l_elbow_pos(end))]}, 'Human', 'Robot');
 % saveas(gcf, [store_pics_folder, 'left_elbow_human_robot_comp'], 'png');
-plot_3d_subplots(r_wrist_pos_human_aligned, actual_r_wrist_pos_traj, ...
-                 {'Right Wrist', ['Frechet Distance = ', num2str(frdist_r_wrist_pos(end))]}, 'Human', 'Robot');
+plot_3d_subplots_4traj(r_wrist_pos_human_aligned, actual_r_wrist_pos_traj, actual_r_wrist_pos_traj_hujin_aligned, r_wrist_pos_pure_ik, ...
+                 'Right Wrist', 'Human', 'Ours', 'Hujin''s', 'Pure IK');
+%                  {'Right Wrist', ['Frechet Distance = ', num2str(frdist_r_wrist_pos(end))]}, 'Human', 'Robot');
 % saveas(gcf, [store_pics_folder, 'right_wrist_human_robot_comp'], 'png');
-plot_3d_subplots(r_elbow_pos_human_aligned, actual_r_elbow_pos_traj, ...
-                 {'Right Elbow', ['Frechet Distance = ', num2str(frdist_l_elbow_pos(end))]}, 'Human', 'Robot');
+plot_3d_subplots_4traj(r_elbow_pos_human_aligned, actual_r_elbow_pos_traj, actual_r_elbow_pos_traj_hujin_aligned, r_elbow_pos_pure_ik, ...
+                 'Right Elbow', 'Human', 'Ours', 'Hujin''s', 'Pure IK');
+%                  {'Right Elbow', ['Frechet Distance = ', num2str(frdist_l_elbow_pos(end))]}, 'Human', 'Robot');
 % saveas(gcf, [store_pics_folder, 'right_elbow_human_robot_comp'], 'png');
 
 
 % relative
-plot_3d_subplots(lrw_pos_human_aligned, actual_lrw_pos_traj, ...
-                 {'Left-Right Wrist', ['Frechet Distance = ', num2str(frdist_lrw_pos(end))]}, 'Human', 'Robot');
+plot_3d_subplots_4traj(lrw_pos_human_aligned, actual_lrw_pos_traj, actual_lrw_pos_traj_hujin_aligned, lrw_pos_pure_ik, ...
+                 'Left-Right Wrist', 'Human', 'Ours', 'Hujin''s', 'Pure IK');
+%                  {'Left-Right Wrist', ['Frechet Distance = ', num2str(frdist_lrw_pos(end))]}, 'Human', 'Robot');
 % saveas(gcf, [store_pics_folder, 'lrw_human_robot_comp'], 'png');
-plot_3d_subplots(lew_pos_human_aligned, actual_lew_pos_traj, ...
-                 {'Left Elbow-Wrist', ['Frechet Distance = ', num2str(frdist_lew_pos(end))]}, 'Human', 'Robot');
+plot_3d_subplots_4traj(lew_pos_human_aligned, actual_lew_pos_traj, actual_lew_pos_traj_hujin_aligned, lew_pos_pure_ik, ...
+                 'Left Elbow-Wrist', 'Human', 'Ours', 'Hujin''s', 'Pure IK');
+%                  {'Left Elbow-Wrist', ['Frechet Distance = ', num2str(frdist_lew_pos(end))]}, 'Human', 'Robot');
 % saveas(gcf, [store_pics_folder, 'lew_human_robot_comp'], 'png');
-plot_3d_subplots(rew_pos_human_aligned, actual_rew_pos_traj, ...
-                 {'Right Elbow-Wrist', ['Frechet Distance = ', num2str(frdist_rew_pos(end))]}, 'Human', 'Robot');
+plot_3d_subplots_4traj(rew_pos_human_aligned, actual_rew_pos_traj, actual_rew_pos_traj_hujin_aligned, rew_pos_pure_ik, ...
+                 'Right Elbow-Wrist', 'Human', 'Ours', 'Hujin''s', 'Pure IK');
+%                  {'Right Elbow-Wrist', ['Frechet Distance = ', num2str(frdist_rew_pos(end))]}, 'Human', 'Robot');
 % saveas(gcf, [store_pics_folder, 'rew_human_robot_comp'], 'png');
+
+
 
