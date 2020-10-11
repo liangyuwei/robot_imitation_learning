@@ -7,11 +7,11 @@ clc;
 ori_file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
 hujin_file_name = '../motion-retargeting/mocap_ik_results_YuMi_hujin.h5';
 
-group_name = 'fengren_1';%'kai_2';%'baozhu_1';%'fengren_1';
+group_name = 'zhenli_9';%'kai_2';%'baozhu_1';%'fengren_1';
 
 num_datapoints = 50;
 
-normalize_flag = false;
+normalize_flag = false; % no need to normalize at all, since we are not comparing different methods!!!!
 
 
 %% Load data 
@@ -42,16 +42,33 @@ r_wrist_pos_human = r_wrist_pos_human + rw_set_offset;
 r_elbow_pos_human = r_elbow_pos_human + re_set_offset;
 %}
 
-% way 3 - shift the whole trajectories together as a whole (center of shoulders to the origin of world frame)
+% way 3 - shift the whole trajectories together as a whole (from center of shoulders to the origin of world frame)
+%{
 l_shoulder_pos_human = h5read(ori_file_name, ['/', group_name, '/l_shoulder_pos']);
 r_shoulder_pos_human = h5read(ori_file_name, ['/', group_name, '/r_shoulder_pos']);
 human_shoulder_center = (l_shoulder_pos_human(:, 1) + r_shoulder_pos_human(:, 1)) / 2;
-manual_offset = [0, 0, 0.65]'; 
+manual_offset = [0.0, 0, 0.65]'; 
 % apply offset
 l_wrist_pos_human = l_wrist_pos_human - human_shoulder_center + manual_offset;
 r_wrist_pos_human = r_wrist_pos_human - human_shoulder_center + manual_offset;
 l_elbow_pos_human = l_elbow_pos_human - human_shoulder_center + manual_offset;
 r_elbow_pos_human = r_elbow_pos_human - human_shoulder_center + manual_offset;
+%}
+
+% way 4 - shift the whole trajectories together as a whole (move human shoulder center to robot shoulder center)
+%
+l_shoulder_pos_human = h5read(ori_file_name, ['/', group_name, '/l_shoulder_pos']);
+r_shoulder_pos_human = h5read(ori_file_name, ['/', group_name, '/r_shoulder_pos']);
+human_shoulder_center = (l_shoulder_pos_human(:, 1) + r_shoulder_pos_human(:, 1)) / 2;
+robot_shoulder_center = ([0.05355, 0.0725, 0.51492]' + [0.05355, -0.0725, 0.51492]') / 2;
+manual_offset = [0.25, 0.0, 0.0]'; %[0, 0, 0]'; %
+human_robot_offset = robot_shoulder_center - human_shoulder_center + manual_offset; 
+% apply offset
+l_wrist_pos_human = l_wrist_pos_human + human_robot_offset;
+r_wrist_pos_human = r_wrist_pos_human + human_robot_offset;
+l_elbow_pos_human = l_elbow_pos_human + human_robot_offset;
+r_elbow_pos_human = r_elbow_pos_human + human_robot_offset;
+%}
 
 
 % relative

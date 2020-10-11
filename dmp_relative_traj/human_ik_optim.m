@@ -1,9 +1,12 @@
 %% This script performs Human IK on motion capture data, i.e. convert motion capture position(or maybe orientation) trajectories to 7-DOF joint trajectories.
 % Using optimization to solve IK for more precise results!!!
 
+%% This is used for providing data fed into Affine Deformation-based optimization. After the original motion capture data is converted into corresponding joint trajectories using this script, they should be processed by map_human_joints_to_yumi.m for the next step.
+
+
 %% Prep
 file_name = '../motion-retargeting/test_imi_data.h5'; % the original demonstrations that are not transformed to YuMi's local frames
-group_name = 'fengren_1';
+group_name = 'zhenli_9';
 
 
 %% Load motion capture data
@@ -164,8 +167,8 @@ end
 figure;
 
 subplot(3, 4, 1);
-p1 = plot3(l_shoulder_pos(1, :), l_shoulder_pos(2, :), l_shoulder_pos(3, :), 'b-'); hold on; grid on;
-p2 = plot3(shoulder_pos_tracked_l(1, :), shoulder_pos_tracked_l(2, :), shoulder_pos_tracked_l(3, :), 'r--');
+p1 = plot3(l_shoulder_pos(1, :), l_shoulder_pos(2, :), l_shoulder_pos(3, :), 'b-', 'LineWidth', 1); hold on; grid on;
+p2 = plot3(shoulder_pos_tracked_l(1, :), shoulder_pos_tracked_l(2, :), shoulder_pos_tracked_l(3, :), 'r--', 'LineWidth', 2);
 xlabel('x'); ylabel('y'); zlabel('z');
 % legend([p1(1), p2(1)], 'Original Traj', 'Tracked Traj', 'Location', 'NorthEastOutside');
 title('Left Shoulder Pos');
@@ -182,14 +185,14 @@ p1 = plot3(l_wrist_pos(1, :), l_wrist_pos(2, :), l_wrist_pos(3, :), 'b-'); hold 
 p2 = plot3(wrist_pos_tracked_l(1, :), wrist_pos_tracked_l(2, :), wrist_pos_tracked_l(3, :), 'r--');
 xlabel('x'); ylabel('y'); zlabel('z');
 % legend([p1(1), p2(1)], 'Original Traj', 'Tracked Traj', 'Location', 'NorthEastOutside');
-title('Left Wrist Eul');
+title('Left Wrist Pos');
 
 subplot(3, 4, 4);
 p1 = plot3(l_wrist_eul(1, :), l_wrist_eul(2, :), l_wrist_eul(3, :), 'b-'); hold on; grid on;
 p2 = plot3(wrist_eul_tracked_l(1, :), wrist_eul_tracked_l(2, :), wrist_eul_tracked_l(3, :), 'r--');
 xlabel('x'); ylabel('y'); zlabel('z');
 % legend([p1(1), p2(1)], 'Original Traj', 'Tracked Traj', 'Location', 'NorthEastOutside');
-title('Left Wrist Pos');
+title('Left Wrist Eul');
 
 subplot(3, 4, 5);
 p1 = plot3(r_shoulder_pos(1, :), r_shoulder_pos(2, :), r_shoulder_pos(3, :), 'b-'); hold on; grid on;

@@ -10,7 +10,7 @@ addpath('../vmp/'); % use resample_traj
 %% Prep
 file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity.h5';
 dmp_file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
-group_name = 'fengren_1';
+group_name = 'kai_3';
 
 num_resampled_points = 50;
 

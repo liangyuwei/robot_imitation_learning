@@ -8,7 +8,7 @@ addpath('../vmp/'); % use resample_traj
 
 ori_file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
 file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity.h5';
-group_name = 'gun_2';
+group_name = 'zhenli_9';
 
 num_datapoints = 50;
 

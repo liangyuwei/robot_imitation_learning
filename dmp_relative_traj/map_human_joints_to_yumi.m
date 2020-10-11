@@ -1,9 +1,10 @@
-%% direct mapping from human IK results(joint trajectories) to robot by T-pose or I-pose..
+%% Direct mapping from human IK results(joint trajectories) to robot by T-pose or I-pose..
+%% After mapped to YuMi's configuration, the robot joint trajectories can be used for affine deformation based optimization (implemented in C++).
 
 
 %% Load human joint data
 file_name = '../motion-retargeting/test_imi_data.h5'; % the original demonstrations that are not transformed to YuMi's local frames
-group_name = 'fengren_1';
+group_name = 'zhenli_9';
 l_joint_angles_ik = h5read(file_name, ['/', group_name, '/l_joint_angles_optim_ik']); %'/l_joint_angles_ik']);
 r_joint_angles_ik = h5read(file_name, ['/', group_name, '/r_joint_angles_optim_ik']); %'/r_joint_angles_ik']);
 
