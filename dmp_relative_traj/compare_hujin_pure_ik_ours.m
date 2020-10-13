@@ -350,6 +350,7 @@ plot_3d_subplots_4traj(l_wrist_pos_human_aligned, actual_l_wrist_pos_traj, actua
                        'Left Wrist', 'Human', 'Ours', 'Hujin''s', 'Pure IK');
 %                  {'Left Wrist', ['Frechet Distance = ', num2str(frdist_l_wrist_pos(end))]}, 'Human', 'Robot');
 % saveas(gcf, [store_pics_folder, 'left_wrist_human_robot_comp'], 'png');
+% saveas(gcf, [store_pics_folder, 'left_wrist_human_robot_comp'], 'eps');
 plot_3d_subplots_4traj(l_elbow_pos_human_aligned, actual_l_elbow_pos_traj, actual_l_elbow_pos_traj_hujin_aligned, l_elbow_pos_pure_ik, ...
                  'Left Elbow', 'Human', 'Ours', 'Hujin''s', 'Pure IK');
 %                  {'Left Elbow', ['Frechet Distance = ', num2str(frdist_l_elbow_pos(end))]}, 'Human', 'Robot');

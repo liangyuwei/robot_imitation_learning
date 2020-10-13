@@ -1,4 +1,4 @@
-function dist = frdist(curve_1, curve_2)
+function dist = frdist(curve_1, curve_2, debug)
 %% This function computes Discrete Frechet Distance using the algorithm proposed in Computing discrete Fréchet distance, 1994.
 % Input:
 %   curve_1, curve_2 - curves with the size of DOF x N, with N being the
@@ -28,9 +28,11 @@ tic;
 % end
 % dist = ca(N1, N2);
 dist = calculate_coupling_measure(N1, N2, curve_1, curve_2);
-disp(['Time used for computing Discrete Frechet Distance for ', num2str(N1), ' x ', num2str(N1), ' path points']);
-toc;
 
-disp(['Frechet Distance is: ', num2str(dist)]);
+if (debug)
+    disp(['Time used for computing Discrete Frechet Distance for ', num2str(N1), ' x ', num2str(N1), ' path points']);
+    toc;
+    disp(['Frechet Distance is: ', num2str(dist)]);
+end
 
 end
