@@ -12,8 +12,8 @@ function dist = dtwdist(curve_1, curve_2)
 [DOF2, N2] = size(curve_2);
 assert(DOF1 == DOF2, 'Dimensions of two curves are not consistent!');
 
-N1 = 5;
-N2 = 5;
+% N1 = 5;
+% N2 = 5;
 
 % initialize coupling measure
 dtw_mat = ones(N1+1, N2+1) * Inf;

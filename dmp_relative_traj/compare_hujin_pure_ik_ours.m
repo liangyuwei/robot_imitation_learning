@@ -28,9 +28,9 @@ normalize_flag = true; % this is a must, because human stands in a different pla
 
 % store pics 
 if (normalize_flag)
-    store_pics_folder = ['/home/liangyuwei/pics/2020-09-13/', group_name, '_normalized/'];
+    store_pics_folder = ['/home/liangyuwei/pics/2020-10-15/', group_name, '_normalized/'];
 else
-    store_pics_folder = ['/home/liangyuwei/pics/2020-09-13/', group_name, '/'];
+    store_pics_folder = ['/home/liangyuwei/pics/2020-10-15/', group_name, '/'];
 end    
 mkdir(store_pics_folder);
 
@@ -60,6 +60,11 @@ if (normalize_flag)
     %     rew_pos_human(i, :) = mapminmax(rew_pos_human(i, :), 0, 1);
     end
 end
+% orientation, in [w, x, y, z]
+l_wrist_quat_human = h5read(ori_file_name, ['/', group_name, '/l_wrist_quat_resampled']);
+r_wrist_quat_human = h5read(ori_file_name, ['/', group_name, '/r_wrist_quat_resampled']);
+l_wrist_eul_human = quat2eul(l_wrist_quat_human', 'XYZ')';
+r_wrist_eul_human = quat2eul(r_wrist_quat_human', 'XYZ')';
 % align the length
 l_wrist_pos_human_aligned = zeros(3, num_datapoints);
 l_elbow_pos_human_aligned = zeros(3, num_datapoints);
@@ -270,6 +275,13 @@ if (normalize_flag)
     %     actual_rew_pos_traj(j, :) = mapminmax(actual_rew_pos_traj(j, :), 0, 1);
     end
 end
+% orientation, in [x, y, z, w]
+l_wrist_quat_our = h5read(our_file_name, ['/', group_name, '/actual_l_wrist_ori_traj']);
+r_wrist_quat_our = h5read(our_file_name, ['/', group_name, '/actual_r_wrist_ori_traj']);
+l_wrist_quat_our = [l_wrist_quat_our(4, :); l_wrist_quat_our(1:3, :)];
+r_wrist_quat_our = [r_wrist_quat_our(4, :); r_wrist_quat_our(1:3, :)];
+l_wrist_eul_our = quat2eul(l_wrist_quat_our', 'XYZ')';
+r_wrist_eul_our = quat2eul(r_wrist_quat_our', 'XYZ')';
 
 
 % 2 - Hujin's method
@@ -296,6 +308,13 @@ if (normalize_flag)
 %         actual_rew_pos_traj(j, :) = mapminmax(actual_rew_pos_traj(j, :), 0, 1);
     end
 end
+% orientation, in [x, y, z, w]
+l_wrist_quat_hujin = h5read(hujin_file_name, ['/', group_name, '/actual_l_wrist_ori_traj']);
+r_wrist_quat_hujin = h5read(hujin_file_name, ['/', group_name, '/actual_r_wrist_ori_traj']);
+l_wrist_quat_hujin = [l_wrist_quat_hujin(4, :); l_wrist_quat_hujin(1:3, :)];
+r_wrist_quat_hujin = [r_wrist_quat_hujin(4, :); r_wrist_quat_hujin(1:3, :)];
+l_wrist_eul_hujin = quat2eul(l_wrist_quat_hujin', 'XYZ')';
+r_wrist_eul_hujin = quat2eul(r_wrist_quat_hujin', 'XYZ')';
 % align the length
 actual_l_wrist_pos_traj_hujin_aligned = zeros(3, num_datapoints);
 actual_l_elbow_pos_traj_hujin_aligned = zeros(3, num_datapoints);
@@ -304,6 +323,8 @@ actual_r_elbow_pos_traj_hujin_aligned = zeros(3, num_datapoints);
 actual_lrw_pos_traj_hujin_aligned = zeros(3, num_datapoints);
 actual_lew_pos_traj_hujin_aligned = zeros(3, num_datapoints);
 actual_rew_pos_traj_hujin_aligned = zeros(3, num_datapoints);
+actual_l_wrist_eul_traj_hujin_aligned = zeros(3, num_datapoints);
+actual_r_wrist_eul_traj_hujin_aligned = zeros(3, num_datapoints);
 original_num_datapoints = size(actual_l_wrist_pos_traj_hujin, 2);
 original_timestamps = linspace(0, 1, original_num_datapoints);
 target_timestamps = linspace(0, 1, num_datapoints);
@@ -315,6 +336,8 @@ for i = 1 : 3
     actual_lrw_pos_traj_hujin_aligned(i, :) = interp1(original_timestamps, actual_lrw_pos_traj_hujin(i, :), target_timestamps, 'linear');
     actual_lew_pos_traj_hujin_aligned(i, :) = interp1(original_timestamps, actual_lew_pos_traj_hujin(i, :), target_timestamps, 'linear');
     actual_rew_pos_traj_hujin_aligned(i, :) = interp1(original_timestamps, actual_rew_pos_traj_hujin(i, :), target_timestamps, 'linear');
+    actual_l_wrist_eul_traj_hujin_aligned(i, :) = interp1(original_timestamps, l_wrist_eul_hujin(i, :), target_timestamps, 'linear');    
+    actual_r_wrist_eul_traj_hujin_aligned(i, :) = interp1(original_timestamps, r_wrist_eul_hujin(i, :), target_timestamps, 'linear');    
 end
 
 
@@ -342,42 +365,110 @@ if (normalize_flag)
 %         actual_rew_pos_traj(j, :) = mapminmax(actual_rew_pos_traj(j, :), 0, 1);
     end
 end
+% orientation, in [x, y, z, w]
+l_wrist_quat_pure_ik = h5read(pure_ik_file_name, ['/', group_name, '/actual_l_wrist_ori_traj']);
+r_wrist_quat_pure_ik = h5read(pure_ik_file_name, ['/', group_name, '/actual_r_wrist_ori_traj']);
+l_wrist_quat_pure_ik = [l_wrist_quat_pure_ik(4, :); l_wrist_quat_pure_ik(1:3, :)];
+r_wrist_quat_pure_ik = [r_wrist_quat_pure_ik(4, :); r_wrist_quat_pure_ik(1:3, :)];
+l_wrist_eul_pure_ik = quat2eul(l_wrist_quat_pure_ik', 'XYZ')';
+r_wrist_eul_pure_ik = quat2eul(r_wrist_quat_pure_ik', 'XYZ')';
 
 
 %% Display the comparison results
+print_flag = true;
+img_wid = 16;
+img_hgt = 9;
+dpi = 600; % 600 dpi ? (does EPS file format has the concept???)
+use_legend = true;
+human_tag = '  Human';
+ours_tag = '  Ours'; 
+hujin_tag = '  Affine'; % tags used in legend
 % absolute
-plot_3d_subplots_4traj(l_wrist_pos_human_aligned, actual_l_wrist_pos_traj, actual_l_wrist_pos_traj_hujin_aligned, l_wrist_pos_pure_ik, ...
-                       'Left Wrist', 'Human', 'Ours', 'Hujin''s', 'Pure IK');
-%                  {'Left Wrist', ['Frechet Distance = ', num2str(frdist_l_wrist_pos(end))]}, 'Human', 'Robot');
-% saveas(gcf, [store_pics_folder, 'left_wrist_human_robot_comp'], 'png');
-% saveas(gcf, [store_pics_folder, 'left_wrist_human_robot_comp'], 'eps');
-plot_3d_subplots_4traj(l_elbow_pos_human_aligned, actual_l_elbow_pos_traj, actual_l_elbow_pos_traj_hujin_aligned, l_elbow_pos_pure_ik, ...
-                 'Left Elbow', 'Human', 'Ours', 'Hujin''s', 'Pure IK');
-%                  {'Left Elbow', ['Frechet Distance = ', num2str(frdist_l_elbow_pos(end))]}, 'Human', 'Robot');
-% saveas(gcf, [store_pics_folder, 'left_elbow_human_robot_comp'], 'png');
-plot_3d_subplots_4traj(r_wrist_pos_human_aligned, actual_r_wrist_pos_traj, actual_r_wrist_pos_traj_hujin_aligned, r_wrist_pos_pure_ik, ...
-                 'Right Wrist', 'Human', 'Ours', 'Hujin''s', 'Pure IK');
-%                  {'Right Wrist', ['Frechet Distance = ', num2str(frdist_r_wrist_pos(end))]}, 'Human', 'Robot');
-% saveas(gcf, [store_pics_folder, 'right_wrist_human_robot_comp'], 'png');
-plot_3d_subplots_4traj(r_elbow_pos_human_aligned, actual_r_elbow_pos_traj, actual_r_elbow_pos_traj_hujin_aligned, r_elbow_pos_pure_ik, ...
-                 'Right Elbow', 'Human', 'Ours', 'Hujin''s', 'Pure IK');
-%                  {'Right Elbow', ['Frechet Distance = ', num2str(frdist_l_elbow_pos(end))]}, 'Human', 'Robot');
-% saveas(gcf, [store_pics_folder, 'right_elbow_human_robot_comp'], 'png');
+fig = plot_3d_subplots_4traj(l_wrist_pos_human_aligned, actual_l_wrist_pos_traj, actual_l_wrist_pos_traj_hujin_aligned, l_wrist_pos_pure_ik, ...
+    'Left Wrist Pos', human_tag, ours_tag, hujin_tag, 'Pure IK', use_legend);
+if (print_flag)
+    % save as PNG image
+    saveas(gcf, [store_pics_folder, 'lw_human_robot_comp-', group_name], 'png');
+    % save as EPS image, with 16:9 image size and 600 dpi resolution
+    set(fig, 'PaperPositionMode', 'manual');
+    set(fig, 'PaperPosition', [0, 0, img_wid, img_hgt]);
+    print(fig, [store_pics_folder, 'lw_human_robot_comp-', group_name], '-depsc', ['-r',num2str(dpi)]); % 600 dpi
+end
 
+fig = plot_3d_subplots_4traj(l_elbow_pos_human_aligned, actual_l_elbow_pos_traj, actual_l_elbow_pos_traj_hujin_aligned, l_elbow_pos_pure_ik, ...
+    'Left Elbow Pos', human_tag, ours_tag, hujin_tag, 'Pure IK', use_legend);
+if (print_flag)
+    saveas(gcf, [store_pics_folder, 'le_human_robot_comp-', group_name], 'png');
+    set(fig, 'PaperPositionMode', 'manual');
+    set(fig, 'PaperPosition', [0, 0, img_wid, img_hgt]);
+    print(fig, [store_pics_folder, 'le_human_robot_comp-', group_name], '-depsc', ['-r',num2str(dpi)]);
+end
+
+fig = plot_3d_subplots_4traj(r_wrist_pos_human_aligned, actual_r_wrist_pos_traj, actual_r_wrist_pos_traj_hujin_aligned, r_wrist_pos_pure_ik, ...
+    'Right Wrist Pos', human_tag, ours_tag, hujin_tag, 'Pure IK', use_legend);
+if (print_flag)
+    saveas(gcf, [store_pics_folder, 'rw_human_robot_comp-', group_name], 'png');
+    set(fig, 'PaperPositionMode', 'manual');
+    set(fig, 'PaperPosition', [0, 0, img_wid, img_hgt]);
+    print(fig, [store_pics_folder, 'rw_human_robot_comp-', group_name], '-depsc', ['-r',num2str(dpi)]);
+end
+
+fig = plot_3d_subplots_4traj(r_elbow_pos_human_aligned, actual_r_elbow_pos_traj, actual_r_elbow_pos_traj_hujin_aligned, r_elbow_pos_pure_ik, ...
+    'Right Elbow Pos', human_tag, ours_tag, hujin_tag, 'Pure IK', use_legend);
+if (print_flag)
+    saveas(gcf, [store_pics_folder, 're_human_robot_comp-', group_name], 'png');
+    set(fig, 'PaperPositionMode', 'manual');
+    set(fig, 'PaperPosition', [0, 0, img_wid, img_hgt]);
+    print(fig, [store_pics_folder, 're_human_robot_comp-', group_name], '-depsc', ['-r',num2str(dpi)]);
+end
 
 % relative
-plot_3d_subplots_4traj(lrw_pos_human_aligned, actual_lrw_pos_traj, actual_lrw_pos_traj_hujin_aligned, lrw_pos_pure_ik, ...
-                 'Left-Right Wrist', 'Human', 'Ours', 'Hujin''s', 'Pure IK');
-%                  {'Left-Right Wrist', ['Frechet Distance = ', num2str(frdist_lrw_pos(end))]}, 'Human', 'Robot');
-% saveas(gcf, [store_pics_folder, 'lrw_human_robot_comp'], 'png');
-plot_3d_subplots_4traj(lew_pos_human_aligned, actual_lew_pos_traj, actual_lew_pos_traj_hujin_aligned, lew_pos_pure_ik, ...
-                 'Left Elbow-Wrist', 'Human', 'Ours', 'Hujin''s', 'Pure IK');
-%                  {'Left Elbow-Wrist', ['Frechet Distance = ', num2str(frdist_lew_pos(end))]}, 'Human', 'Robot');
-% saveas(gcf, [store_pics_folder, 'lew_human_robot_comp'], 'png');
-plot_3d_subplots_4traj(rew_pos_human_aligned, actual_rew_pos_traj, actual_rew_pos_traj_hujin_aligned, rew_pos_pure_ik, ...
-                 'Right Elbow-Wrist', 'Human', 'Ours', 'Hujin''s', 'Pure IK');
-%                  {'Right Elbow-Wrist', ['Frechet Distance = ', num2str(frdist_rew_pos(end))]}, 'Human', 'Robot');
-% saveas(gcf, [store_pics_folder, 'rew_human_robot_comp'], 'png');
+fig = plot_3d_subplots_4traj(lrw_pos_human_aligned, actual_lrw_pos_traj, actual_lrw_pos_traj_hujin_aligned, lrw_pos_pure_ik, ...
+    'Left-Right Wrist Pos', human_tag, ours_tag, hujin_tag, 'Pure IK', use_legend);
+if (print_flag)
+    saveas(gcf, [store_pics_folder, 'lrw_human_robot_comp-', group_name], 'png');
+    set(fig, 'PaperPositionMode', 'manual');
+    set(fig, 'PaperPosition', [0, 0, img_wid, img_hgt]);
+    print(fig, [store_pics_folder, 'lrw_human_robot_comp-', group_name], '-depsc', ['-r',num2str(dpi)]);
+end
+
+fig = plot_3d_subplots_4traj(lew_pos_human_aligned, actual_lew_pos_traj, actual_lew_pos_traj_hujin_aligned, lew_pos_pure_ik, ...
+    'Left Elbow-Wrist Pos', human_tag, ours_tag, hujin_tag, 'Pure IK', use_legend);
+if (print_flag)
+    saveas(gcf, [store_pics_folder, 'lew_human_robot_comp-', group_name], 'png');
+    set(fig, 'PaperPositionMode', 'manual');
+    set(fig, 'PaperPosition', [0, 0, img_wid, img_hgt]);
+    print(fig, [store_pics_folder, 'lew_human_robot_comp-', group_name], '-depsc', ['-r',num2str(dpi)]);
+end
+
+fig = plot_3d_subplots_4traj(rew_pos_human_aligned, actual_rew_pos_traj, actual_rew_pos_traj_hujin_aligned, rew_pos_pure_ik, ...
+    'Right Elbow-Wrist Pos', human_tag, ours_tag, hujin_tag, 'Pure IK', use_legend);
+if (print_flag)
+    saveas(gcf, [store_pics_folder, 'rew_human_robot_comp-', group_name], 'png');
+    set(fig, 'PaperPositionMode', 'manual');
+    set(fig, 'PaperPosition', [0, 0, img_wid, img_hgt]);
+    print(fig, [store_pics_folder, 'rew_human_robot_comp-', group_name], '-depsc', ['-r',num2str(dpi)]);
+end
+
+% orientation
+fig = plot_3d_subplots_4traj(l_wrist_eul_human, l_wrist_eul_our, actual_l_wrist_eul_traj_hujin_aligned, l_wrist_eul_pure_ik, ...
+    'Left Wrist Eul', human_tag, ours_tag, hujin_tag, 'Pure IK', use_legend);
+if (print_flag)
+    saveas(gcf, [store_pics_folder, 'lw_eul_human_robot_comp-', group_name], 'png');
+    set(fig, 'PaperPositionMode', 'manual');
+    set(fig, 'PaperPosition', [0, 0, img_wid, img_hgt]);
+    print(fig, [store_pics_folder, 'lw_eul_human_robot_comp-', group_name], '-depsc', ['-r',num2str(dpi)]);
+end
+
+fig = plot_3d_subplots_4traj(r_wrist_eul_human, r_wrist_eul_our, actual_r_wrist_eul_traj_hujin_aligned, r_wrist_eul_pure_ik, ...
+    'Right Wrist Eul', human_tag, ours_tag, hujin_tag, 'Pure IK', use_legend);
+if (print_flag)
+    saveas(gcf, [store_pics_folder, 'rw_eul_human_robot_comp-', group_name], 'png');
+    set(fig, 'PaperPositionMode', 'manual');
+    set(fig, 'PaperPosition', [0, 0, img_wid, img_hgt]);
+    print(fig, [store_pics_folder, 'rw_eul_human_robot_comp-', group_name], '-depsc', ['-r',num2str(dpi)]);
+end
+
 
 
 

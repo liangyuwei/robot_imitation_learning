@@ -36,6 +36,9 @@ frdist_r_elbow_pos_pure_ik = zeros(1, num_groups);
 frdist_lrw_pos_pure_ik = zeros(1, num_groups);
 frdist_lew_pos_pure_ik = zeros(1, num_groups);
 frdist_rew_pos_pure_ik = zeros(1, num_groups);
+% orientation
+frdist_l_wrist_eul_pure_ik = zeros(1, num_groups);
+frdist_r_wrist_eul_pure_ik = zeros(1, num_groups);
 
 % 2 - Hujin's method (affine deformation based)
 % absolute
@@ -47,6 +50,9 @@ frdist_r_elbow_pos_hujin = zeros(1, num_groups);
 frdist_lrw_pos_hujin = zeros(1, num_groups);
 frdist_lew_pos_hujin = zeros(1, num_groups);
 frdist_rew_pos_hujin = zeros(1, num_groups);
+% orientation
+frdist_l_wrist_eul_hujin = zeros(1, num_groups);
+frdist_r_wrist_eul_hujin = zeros(1, num_groups);
 
 % 3 - Ours (DMP based)
 % absolute
@@ -58,6 +64,9 @@ frdist_r_elbow_pos_ours = zeros(1, num_groups);
 frdist_lrw_pos_ours = zeros(1, num_groups);
 frdist_lew_pos_ours = zeros(1, num_groups);
 frdist_rew_pos_ours = zeros(1, num_groups);
+% orientation
+frdist_l_wrist_eul_ours = zeros(1, num_groups);
+frdist_r_wrist_eul_ours = zeros(1, num_groups);
 
 for g = 1 : num_groups
     %% Get group name
@@ -82,6 +91,11 @@ for g = 1 : num_groups
         l_elbow_pos_human(i, :) = mapminmax(l_elbow_pos_human(i, :), 0, 1);
         r_elbow_pos_human(i, :) = mapminmax(r_elbow_pos_human(i, :), 0, 1);
     end
+    % orientation, in [w, x, y, z]
+    l_wrist_quat_human = h5read(ori_file_name, ['/', group_name, '/l_wrist_quat_resampled']);
+    r_wrist_quat_human = h5read(ori_file_name, ['/', group_name, '/r_wrist_quat_resampled']);
+    l_wrist_eul_human = quat2eul(l_wrist_quat_human', 'XYZ')';
+    r_wrist_eul_human = quat2eul(r_wrist_quat_human', 'XYZ')';
     
     % 2 - Pure IK results
     % absolute
@@ -101,6 +115,13 @@ for g = 1 : num_groups
         l_elbow_pos_pure_ik(j, :) = mapminmax(l_elbow_pos_pure_ik(j, :), 0, 1);
         r_elbow_pos_pure_ik(j, :) = mapminmax(r_elbow_pos_pure_ik(j, :), 0, 1);
     end
+    % orientation, in [x, y, z, w]
+    l_wrist_quat_pure_ik = h5read(pure_ik_file_name, ['/', group_name, '/actual_l_wrist_ori_traj']);
+    r_wrist_quat_pure_ik = h5read(pure_ik_file_name, ['/', group_name, '/actual_r_wrist_ori_traj']);
+    l_wrist_quat_pure_ik = [l_wrist_quat_pure_ik(4, :); l_wrist_quat_pure_ik(1:3, :)];
+    r_wrist_quat_pure_ik = [r_wrist_quat_pure_ik(4, :); r_wrist_quat_pure_ik(1:3, :)];
+    l_wrist_eul_pure_ik = quat2eul(l_wrist_quat_pure_ik', 'XYZ')';
+    r_wrist_eul_pure_ik = quat2eul(r_wrist_quat_pure_ik', 'XYZ')';
     
     % 3 - Hujin's method (more precisely, affine transformation based)
     % absolute
@@ -120,6 +141,13 @@ for g = 1 : num_groups
         actual_l_elbow_pos_traj_hujin(j, :) = mapminmax(actual_l_elbow_pos_traj_hujin(j, :), 0, 1);
         actual_r_elbow_pos_traj_hujin(j, :) = mapminmax(actual_r_elbow_pos_traj_hujin(j, :), 0, 1);
     end
+    % orientation, in [x, y, z, w]
+    l_wrist_quat_hujin = h5read(hujin_file_name, ['/', group_name, '/actual_l_wrist_ori_traj']);
+    r_wrist_quat_hujin = h5read(hujin_file_name, ['/', group_name, '/actual_r_wrist_ori_traj']);
+    l_wrist_quat_hujin = [l_wrist_quat_hujin(4, :); l_wrist_quat_hujin(1:3, :)];
+    r_wrist_quat_hujin = [r_wrist_quat_hujin(4, :); r_wrist_quat_hujin(1:3, :)];
+    l_wrist_eul_hujin = quat2eul(l_wrist_quat_hujin', 'XYZ')';
+    r_wrist_eul_hujin = quat2eul(r_wrist_quat_hujin', 'XYZ')';
 
     % 4 - Ours (DMP-based motion retargeting)
     best_round = h5read(our_file_name, ['/', group_name, '/best_round']);
@@ -140,7 +168,14 @@ for g = 1 : num_groups
         actual_l_elbow_pos_traj(j, :) = mapminmax(actual_l_elbow_pos_traj(j, :), 0, 1);
         actual_r_elbow_pos_traj(j, :) = mapminmax(actual_r_elbow_pos_traj(j, :), 0, 1);
     end
-
+    % orientation, in [x, y, z, w]
+    l_wrist_quat_our = h5read(our_file_name, ['/', group_name, '/actual_l_wrist_ori_traj']);
+    r_wrist_quat_our = h5read(our_file_name, ['/', group_name, '/actual_r_wrist_ori_traj']);
+    l_wrist_quat_our = [l_wrist_quat_our(4, :); l_wrist_quat_our(1:3, :)];
+    r_wrist_quat_our = [r_wrist_quat_our(4, :); r_wrist_quat_our(1:3, :)];
+    l_wrist_eul_our = quat2eul(l_wrist_quat_our', 'XYZ')';
+    r_wrist_eul_our = quat2eul(r_wrist_quat_our', 'XYZ')';
+    
     
     %% Calculate Frechet distances
     % 1 - Pure IK
@@ -153,6 +188,9 @@ for g = 1 : num_groups
     frdist_lrw_pos_pure_ik(g) = frdist(lrw_pos_human, lrw_pos_pure_ik, debug);
     frdist_lew_pos_pure_ik(g) = frdist(lew_pos_human, lew_pos_pure_ik, debug);
     frdist_rew_pos_pure_ik(g) = frdist(rew_pos_human, rew_pos_pure_ik, debug);
+    % orientation
+    frdist_l_wrist_eul_pure_ik(g) = frdist(l_wrist_eul_human, l_wrist_eul_pure_ik, debug);
+    frdist_r_wrist_eul_pure_ik(g) = frdist(r_wrist_eul_human, r_wrist_eul_pure_ik, debug);
     
     % 2 - Hujin's method (affine deformation based)
     % absolute
@@ -164,6 +202,9 @@ for g = 1 : num_groups
     frdist_lrw_pos_hujin(g) = frdist(lrw_pos_human, actual_lrw_pos_traj_hujin, debug);
     frdist_lew_pos_hujin(g) = frdist(lew_pos_human, actual_lew_pos_traj_hujin, debug);
     frdist_rew_pos_hujin(g) = frdist(rew_pos_human, actual_rew_pos_traj_hujin, debug);
+    % orientation
+    frdist_l_wrist_eul_hujin(g) = frdist(l_wrist_eul_human, l_wrist_eul_hujin, debug);
+    frdist_r_wrist_eul_hujin(g) = frdist(r_wrist_eul_human, r_wrist_eul_hujin, debug);
     
     % 3 - Ours (DMP based)
     % absolute
@@ -175,6 +216,9 @@ for g = 1 : num_groups
     frdist_lrw_pos_ours(g) = frdist(lrw_pos_human, actual_lrw_pos_traj, debug);
     frdist_lew_pos_ours(g) = frdist(lew_pos_human, actual_lew_pos_traj, debug);
     frdist_rew_pos_ours(g) = frdist(rew_pos_human, actual_rew_pos_traj, debug);
+    % orientation
+    frdist_l_wrist_eul_ours(g) = frdist(l_wrist_eul_human, l_wrist_eul_our, debug);
+    frdist_r_wrist_eul_ours(g) = frdist(r_wrist_eul_human, r_wrist_eul_our, debug);
     
     
     %% Display results
@@ -183,28 +227,34 @@ for g = 1 : num_groups
     disp('>> 1. Pure IK');
     msg_pure_ik = sprintf(['F_lw=%0.5f, \t F_rw=%0.5f, ' ...
                          '\t F_le=%0.5f, \t F_re=%0.5f, ' ...
-                         '\t F_lrw=%0.5f, \t F_lew=%0.5f, \t F_rew=%0.5f'], ...
+                         '\t F_lrw=%0.5f, \t F_lew=%0.5f, \t F_rew=%0.5f, ' ...
+                         '\t F_lw_eul=%0.5f, \t F_rw_eul=%0.5f'], ...
                          frdist_l_wrist_pos_pure_ik(g), frdist_r_wrist_pos_pure_ik(g), ...
                          frdist_l_elbow_pos_pure_ik(g), frdist_r_elbow_pos_pure_ik(g), ...
-                         frdist_lrw_pos_pure_ik(g), frdist_lew_pos_pure_ik(g), frdist_rew_pos_pure_ik(g));
+                         frdist_lrw_pos_pure_ik(g), frdist_lew_pos_pure_ik(g), frdist_rew_pos_pure_ik(g), ...
+                         frdist_l_wrist_eul_pure_ik(g), frdist_r_wrist_eul_pure_ik(g));
     disp(msg_pure_ik);
     % 2 - Hujin's method
     disp('>> 2. Affine Transformation');
     msg_hujin = sprintf(['F_lw=%0.5f, \t F_rw=%0.5f, ' ...
                          '\t F_le=%0.5f, \t F_re=%0.5f, ' ...
-                         '\t F_lrw=%0.5f, \t F_lew=%0.5f, \t F_rew=%0.5f'], ...
+                         '\t F_lrw=%0.5f, \t F_lew=%0.5f, \t F_rew=%0.5f, '...
+                         '\t F_lw_eul=%0.5f, \t F_rw_eul=%0.5f'], ...
                          frdist_l_wrist_pos_hujin(g), frdist_r_wrist_pos_hujin(g), ...
                          frdist_l_elbow_pos_hujin(g), frdist_r_elbow_pos_hujin(g), ...
-                         frdist_lrw_pos_hujin(g), frdist_lew_pos_hujin(g), frdist_rew_pos_hujin(g));
+                         frdist_lrw_pos_hujin(g), frdist_lew_pos_hujin(g), frdist_rew_pos_hujin(g), ...
+                         frdist_l_wrist_eul_hujin(g), frdist_r_wrist_eul_hujin(g));
     disp(msg_hujin);
     % 3 - Ours
     disp('>> 3. Ours');
     msg_ours = sprintf(['F_lw=%0.5f, \t F_rw=%0.5f, ' ...
                          '\t F_le=%0.5f, \t F_re=%0.5f, ' ...
-                         '\t F_lrw=%0.5f, \t F_lew=%0.5f, \t F_rew=%0.5f'], ...
+                         '\t F_lrw=%0.5f, \t F_lew=%0.5f, \t F_rew=%0.5f, '...
+                         '\t F_lw_eul=%0.5f, \t F_rw_eul=%0.5f'], ...
                          frdist_l_wrist_pos_ours(g), frdist_r_wrist_pos_ours(g), ...
                          frdist_l_elbow_pos_ours(g), frdist_r_elbow_pos_ours(g), ...
-                         frdist_lrw_pos_ours(g), frdist_lew_pos_ours(g), frdist_rew_pos_ours(g));
+                         frdist_lrw_pos_ours(g), frdist_lew_pos_ours(g), frdist_rew_pos_ours(g), ...
+                         frdist_l_wrist_eul_ours(g), frdist_r_wrist_eul_ours(g));
     disp(msg_ours);
     
 end    
