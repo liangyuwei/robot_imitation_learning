@@ -13,16 +13,21 @@ ori_file_name = '../motion-retargeting/test_imi_data_YuMi.h5';
 hujin_file_name = '../motion-retargeting/mocap_ik_results_YuMi_hujin.h5';
 our_file_name = '../motion-retargeting/mocap_ik_results_YuMi_g2o_similarity.h5';
 pure_ik_file_name = '../motion-retargeting/test_imi_data_YuMi_pure_ik.h5';
+pos_scaling_file_name = '../motion-retargeting/mocap_ik_results_YuMi_pos_scaling.h5';
 
-group_name_list = {'baozhu_1', 'gun_2', 'fengren_1', 'kaoqin_2', ...
-                   'minzheng_1', 'kai_3', 'juan_2', 'jidong_1', ...
-                   'chengjian_1', 'jieshou_7', 'pao_3', 'qiao_2', ...
-                   'qie_6', 'shuan_1', 'zhenli_9'}; % list of names of motion that need processing
+
+% group_name_list = {'baozhu_1', 'gun_2', 'fengren_1', 'kaoqin_2', ...
+%                    'minzheng_1', 'kai_3', 'juan_2', 'jidong_1', ...
+%                    'chengjian_1', 'jieshou_7', 'pao_3', 'qiao_2', ...
+%                    'qie_6', 'shuan_1', 'zhenli_9'}; % list of names of motion that need processing
+group_name_list = {'baozhu_1', 'gun_2', 'fengren_1'};
+               
 num_groups = size(group_name_list, 2);
 
 num_datapoints = 50;
 
 debug = false; % display of frdist() function
+
 
 %% Compute Frechet distances of each trajectory pairs for each selected motion listed in group_name_list
 % Initialization
@@ -67,6 +72,21 @@ frdist_rew_pos_ours = zeros(1, num_groups);
 % orientation
 frdist_l_wrist_eul_ours = zeros(1, num_groups);
 frdist_r_wrist_eul_ours = zeros(1, num_groups);
+
+% 4 - Position Scaling (w.r.t the center of shoulders)
+% absolute
+frdist_l_wrist_pos_pos_scaling = zeros(1, num_groups);
+frdist_l_elbow_pos_pos_scaling = zeros(1, num_groups);
+frdist_r_wrist_pos_pos_scaling = zeros(1, num_groups);
+frdist_r_elbow_pos_pos_scaling = zeros(1, num_groups);
+% relative
+frdist_lrw_pos_pos_scaling  = zeros(1, num_groups);
+frdist_lew_pos_pos_scaling  = zeros(1, num_groups);
+frdist_rew_pos_pos_scaling  = zeros(1, num_groups);
+% orientation
+frdist_l_wrist_eul_pos_scaling  = zeros(1, num_groups);
+frdist_r_wrist_eul_pos_scaling  = zeros(1, num_groups);
+
 
 for g = 1 : num_groups
     %% Get group name
@@ -176,6 +196,32 @@ for g = 1 : num_groups
     l_wrist_eul_our = quat2eul(l_wrist_quat_our', 'XYZ')';
     r_wrist_eul_our = quat2eul(r_wrist_quat_our', 'XYZ')';
     
+    % 5 - Position scaling method
+    % absolute
+    actual_l_wrist_pos_traj_pos_scaling = h5read(pos_scaling_file_name, ['/', group_name, '/actual_l_wrist_pos']);
+    actual_r_wrist_pos_traj_pos_scaling = h5read(pos_scaling_file_name, ['/', group_name, '/actual_r_wrist_pos']);
+    actual_l_elbow_pos_traj_pos_scaling = h5read(pos_scaling_file_name, ['/', group_name, '/actual_l_elbow_pos']);
+    actual_r_elbow_pos_traj_pos_scaling = h5read(pos_scaling_file_name, ['/', group_name, '/actual_r_elbow_pos']);
+    % relative
+    actual_lrw_pos_traj_pos_scaling = actual_l_wrist_pos_traj_pos_scaling - actual_r_wrist_pos_traj_pos_scaling;
+    actual_lew_pos_traj_pos_scaling = actual_l_elbow_pos_traj_pos_scaling - actual_l_wrist_pos_traj_pos_scaling;
+    actual_rew_pos_traj_pos_scaling = actual_r_elbow_pos_traj_pos_scaling - actual_r_wrist_pos_traj_pos_scaling;
+    % normalize (absolute)
+    for j = 1 : 3
+        % absolute
+        actual_l_wrist_pos_traj_pos_scaling(j, :) = mapminmax(actual_l_wrist_pos_traj_pos_scaling(j, :), 0, 1);
+        actual_r_wrist_pos_traj_pos_scaling(j, :) = mapminmax(actual_r_wrist_pos_traj_pos_scaling(j, :), 0, 1);
+        actual_l_elbow_pos_traj_pos_scaling(j, :) = mapminmax(actual_l_elbow_pos_traj_pos_scaling(j, :), 0, 1);
+        actual_r_elbow_pos_traj_pos_scaling(j, :) = mapminmax(actual_r_elbow_pos_traj_pos_scaling(j, :), 0, 1);
+    end
+    % orientation, in [x, y, z, w]
+    l_wrist_quat_pos_scaling = h5read(pos_scaling_file_name, ['/', group_name, '/actual_l_wrist_ori_traj']);
+    r_wrist_quat_pos_scaling = h5read(pos_scaling_file_name, ['/', group_name, '/actual_r_wrist_ori_traj']);
+    l_wrist_quat_pos_scaling = [l_wrist_quat_pos_scaling(4, :); l_wrist_quat_pos_scaling(1:3, :)];
+    r_wrist_quat_pos_scaling = [r_wrist_quat_pos_scaling(4, :); r_wrist_quat_pos_scaling(1:3, :)];
+    l_wrist_eul_pos_scaling = quat2eul(l_wrist_quat_pos_scaling', 'XYZ')';
+    r_wrist_eul_pos_scaling = quat2eul(r_wrist_quat_pos_scaling', 'XYZ')';
+    
     
     %% Calculate Frechet distances
     % 1 - Pure IK
@@ -220,6 +266,20 @@ for g = 1 : num_groups
     frdist_l_wrist_eul_ours(g) = frdist(l_wrist_eul_human, l_wrist_eul_our, debug);
     frdist_r_wrist_eul_ours(g) = frdist(r_wrist_eul_human, r_wrist_eul_our, debug);
     
+    % 3 - Ours (DMP based)
+    % absolute
+    frdist_l_wrist_pos_pos_scaling(g) = frdist(l_wrist_pos_human, actual_l_wrist_pos_traj_pos_scaling, debug);
+    frdist_l_elbow_pos_pos_scaling(g) = frdist(l_elbow_pos_human, actual_l_elbow_pos_traj_pos_scaling, debug);
+    frdist_r_wrist_pos_pos_scaling(g) = frdist(r_wrist_pos_human, actual_r_wrist_pos_traj_pos_scaling, debug);
+    frdist_r_elbow_pos_pos_scaling(g) = frdist(r_elbow_pos_human, actual_r_elbow_pos_traj_pos_scaling, debug);
+    % relative
+    frdist_lrw_pos_pos_scaling(g) = frdist(lrw_pos_human, actual_lrw_pos_traj_pos_scaling, debug);
+    frdist_lew_pos_pos_scaling(g) = frdist(lew_pos_human, actual_lew_pos_traj_pos_scaling, debug);
+    frdist_rew_pos_pos_scaling(g) = frdist(rew_pos_human, actual_rew_pos_traj_pos_scaling, debug);
+    % orientation
+    frdist_l_wrist_eul_pos_scaling(g) = frdist(l_wrist_eul_human, l_wrist_eul_pos_scaling, debug);
+    frdist_r_wrist_eul_pos_scaling(g) = frdist(r_wrist_eul_human, r_wrist_eul_pos_scaling, debug);
+    
     
     %% Display results
     disp(['>>>> ', group_name, ' <<<<']);
@@ -256,6 +316,17 @@ for g = 1 : num_groups
                          frdist_lrw_pos_ours(g), frdist_lew_pos_ours(g), frdist_rew_pos_ours(g), ...
                          frdist_l_wrist_eul_ours(g), frdist_r_wrist_eul_ours(g));
     disp(msg_ours);
+    % 3 - Position Scaling
+    disp('>> 3. Position Scaling');
+    msg_pos_scaling = sprintf(['F_lw=%0.5f, \t F_rw=%0.5f, ' ...
+                         '\t F_le=%0.5f, \t F_re=%0.5f, ' ...
+                         '\t F_lrw=%0.5f, \t F_lew=%0.5f, \t F_rew=%0.5f, '...
+                         '\t F_lw_eul=%0.5f, \t F_rw_eul=%0.5f'], ...
+                         frdist_l_wrist_pos_pos_scaling(g), frdist_r_wrist_pos_pos_scaling(g), ...
+                         frdist_l_elbow_pos_pos_scaling(g), frdist_r_elbow_pos_pos_scaling(g), ...
+                         frdist_lrw_pos_pos_scaling(g), frdist_lew_pos_pos_scaling(g), frdist_rew_pos_pos_scaling(g), ...
+                         frdist_l_wrist_eul_pos_scaling(g), frdist_r_wrist_eul_pos_scaling(g));
+    disp(msg_pos_scaling);
     
 end    
 
