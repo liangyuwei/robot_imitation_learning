@@ -307,7 +307,7 @@ y_linear_fit = interp1(double(x_linear), y_linear, double(x_fit), 'linear');
 % y_linear_fit = spline(double(x_linear), double(y_linear), double(x_fit));
 
 % 2 - way 2: polynomial fitting
-n = 1; % order of magnitude
+n = 2; %4;%3;%2;%1; % order of magnitude
 [p, s] = polyfit(double(x), y, n);
 y_fit = polyval(p, double(x_fit));
 
@@ -421,7 +421,7 @@ y_linear_fit = interp1(double(x_linear), y_linear, double(x_fit), 'linear');
 % y_fit = spline(double(x), double(y), double(x_fit));
 
 % 2 - way 2: polynomial fitting (allows duplicate values for x)
-n = 1; % order of magnitude
+n = 4;%3;%1; % order of magnitude
 [p, s] = polyfit(double(x), y, n);
 y_fit = polyval(p, double(x_fit));
 
@@ -514,10 +514,11 @@ joint_id = [[3, 4]; ...
 d_right = 15; % offset from left joints to right corresponding joints
 
 % read an example data for calibration
-test_seq_name = 'test_finger_1';
+test_seq_name = 'test_finger_1'; %'gun_new'; %'test_finger_2'; %'test_finger_1';
 test_seq_angle = h5read(calib_file_name, ['/', test_seq_name, '/glove_angle']);
 test_seq_elec = h5read(calib_file_name, ['/', test_seq_name, '/glove_elec']);
 test_seq_angle_calib = test_seq_angle; % for storing the calibrated data
+
 
 % iterate
 for fid = 1 : 3
@@ -599,9 +600,12 @@ for fid = 1 : 3
     end
     
 end
+
+
     
 % save the calibrated results
+%{
 h5create(calib_file_name, ['/', test_seq_name, '_calibrated'], size(test_seq_angle_calib));
 h5write(calib_file_name, ['/', test_seq_name, '_calibrated'], test_seq_angle_calib);
-
+%}
 

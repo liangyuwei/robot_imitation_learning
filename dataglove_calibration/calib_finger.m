@@ -10,9 +10,9 @@ function [angle_calib_l, angle_calib_r] = calib_finger(angle_l, elec_l, angle_re
 
 
 %% Fit polynomials for calibration
-n = 2; %4; %3; %2; 
-[p_l, s_l] = polyfit(double(elec_l), double(angle_l), n);
-[p_r, s_r] = polyfit(double(elec_r), double(angle_r), n);
+% n = 3;%1; %2; %4; %3; %2; 
+[p_l, s_l] = polyfit(double(elec_l), double(angle_l), 4); %n);
+[p_r, s_r] = polyfit(double(elec_r), double(angle_r), 2); %n);
 
 
 % calibrate the raw data
@@ -27,13 +27,24 @@ angle_calib_r = polyval(p_r, double(elec_calib_r));
 % display the results for comparison
 num_points = size(elec_calib_l, 2);
 if (display)
-    
+    % linearly mapped (provided by Wiseglove SDK)
     figure;
     p1 = plot(1:num_points, angle_recorded_l, 'b-'); hold on; grid on;
     p2 = plot(1:num_points, angle_recorded_r, 'r-');
     xlabel('Points'); ylabel('Angle');
     title(['Linearly Mapped Left and Right Index ', joint_flag, ' Joint']);
     legend([p1(1), p2(1)], ['Left Index ', joint_flag], ['Right Index ', joint_flag], 'Location', 'NorthEastOutside');
+    
+    angle_recorded_lr_norm = mapminmax([angle_recorded_l, angle_recorded_r], 0, 1);
+    angle_recorded_l_norm = angle_recorded_lr_norm(1 : length(angle_recorded_l));
+    angle_recorded_r_norm = angle_recorded_lr_norm(length(angle_recorded_l)+1 : end);
+    figure;
+    p1 = plot(1:num_points, angle_recorded_l_norm, 'b-'); hold on; grid on;
+    p2 = plot(1:num_points, angle_recorded_r_norm, 'r-');
+    xlabel('Points'); ylabel('Angle');
+    title(['Linearly Mapped Left and Right Index (normalized) ', joint_flag, ' Joint']);
+    legend([p1(1), p2(1)], ['Left Index ', joint_flag], ['Right Index ', joint_flag], 'Location', 'NorthEastOutside');
+    
     
     % calibrated
     figure;
@@ -42,6 +53,25 @@ if (display)
     xlabel('Points'); ylabel('Angle');
     title(['Calibrated Left and Right Index ', joint_flag, ' Joint']);
     legend([p1(1), p2(1)], ['Left Index ', joint_flag], ['Right Index ', joint_flag], 'Location', 'NorthEastOutside');
+    
+    angle_calib_lr_norm = mapminmax([angle_calib_l, angle_calib_r], 0, 1);
+    angle_calib_l_norm = angle_calib_lr_norm(1 : length(angle_calib_l));
+    angle_calib_r_norm = angle_calib_lr_norm(length(angle_calib_l)+1 : end);
+    figure;
+    p1 = plot(1:num_points, angle_calib_l_norm, 'b-'); hold on; grid on;
+    p2 = plot(1:num_points, angle_calib_r_norm, 'r-');
+    xlabel('Points'); ylabel('Angle');
+    title(['Calibrated Left and Right Index (normalized) ', joint_flag, ' Joint']);
+    legend([p1(1), p2(1)], ['Left Index ', joint_flag], ['Right Index ', joint_flag], 'Location', 'NorthEastOutside');
+    
+    
+    % error comparison
+    figure;
+    p1 = plot(1:num_points, angle_recorded_l - angle_recorded_r, 'b-'); hold on; grid on;
+    p2 = plot(1:num_points, angle_calib_l - angle_calib_r, 'r-'); 
+    xlabel('Points'); ylabel('Angle');
+    title(['Comparison of Left-Right difference in ', joint_flag, ' Joint']);
+    legend([p1(1), p2(1)], ['Linearly Mapped ', joint_flag], ['Calibrated ', joint_flag], 'Location', 'NorthEastOutside');
     
 end
 
