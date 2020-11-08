@@ -260,6 +260,7 @@ plot(1:size(r_index_s3_90_angle_mapped_from_elec, 2), r_index_s3_90_angle_mapped
 r_index_s3_angle = 180 - [90, 120, 150, 180];
 % r_index_s3_elec = [median(r_index_s3_90_elec_clamped), median(r_index_s3_120_elec_clamped), median(r_index_s3_150_elec_clamped)];
 
+% plot all sample data points
 figure;
 p1 = plot(r_index_s3_90_elec, r_index_s3_angle(1)*ones(1, size(r_index_s3_90_elec_clamped ,2)), 'r.'); hold on; grid on;
 plot(r_index_s3_120_elec, r_index_s3_angle(2)*ones(1, size(r_index_s3_120_elec_clamped, 2)), 'r.');
@@ -273,6 +274,30 @@ plot(r_all_0_elec(4, :), r_all_0_angle(4, :), 'b.');
 xlabel('Electrical signal'); ylabel('Joint angle / degree');
 title('Right Index S3 Joint');
 legend([p1(1), p2(1)], 'Ground Truth', 'Linearly Mapped Result', 'Location', 'NorthEastOutside');
+
+
+% plot all sample data points for each sample of the same joint angle
+figure;
+subplot(2, 2, 1);
+plot(r_index_s3_90_elec, 'b.'); hold on; grid on;
+plot(1:size(r_index_s3_90_elec, 2), mean(r_index_s3_90_elec)*ones(size(r_index_s3_90_elec)), 'r-');
+plot(1:size(r_index_s3_90_elec, 2), double(median(r_index_s3_90_elec))*ones(size(r_index_s3_90_elec)), 'g--');
+title('Right index S3 electrical signal under 90 deg');
+subplot(2, 2, 2);
+plot(r_index_s3_120_elec, 'b.'); hold on; grid on;
+plot(1:size(r_index_s3_120_elec, 2), mean(r_index_s3_120_elec)*ones(size(r_index_s3_120_elec)), 'r-');
+plot(1:size(r_index_s3_120_elec, 2), double(median(r_index_s3_120_elec))*ones(size(r_index_s3_120_elec)), 'g--');
+title('Right index S3 electrical signal under 60 deg');
+subplot(2, 2, 3);
+plot(r_index_s3_150_elec, 'b.'); hold on; grid on;
+plot(1:size(r_index_s3_150_elec, 2), mean(r_index_s3_150_elec)*ones(size(r_index_s3_150_elec)), 'r-');
+plot(1:size(r_index_s3_150_elec, 2), double(median(r_index_s3_150_elec))*ones(size(r_index_s3_150_elec)), 'g--');
+title('Right index S3 electrical signal under 30 deg');
+subplot(2, 2, 4);
+plot(r_all_0_elec(4, :), 'b.'); hold on; grid on;
+plot(1:size(r_all_0_elec(4, :), 2), mean(r_all_0_elec(4, :))*ones(size(r_all_0_elec(4, :))), 'r-');
+plot(1:size(r_all_0_elec(4, :), 2), double(median(r_all_0_elec(4, :)))*ones(size(r_all_0_elec(4, :))), 'g--');
+title('Right index S3 electrical signal under 0 deg');
 
 
 
@@ -311,6 +336,19 @@ n = 2; %4;%3;%2;%1; % order of magnitude
 [p, s] = polyfit(double(x), y, n);
 y_fit = polyval(p, double(x_fit));
 
+% 3 - way 3: least mean squares regression (elec = a * angle + b)
+% try least mean squares regression
+y_elec = [r_index_s3_90_elec, r_index_s3_120_elec, r_index_s3_150_elec, r_all_0_elec(4, :)];
+x_angle = [r_index_s3_angle(1)*ones(size(r_index_s3_90_elec)), ...
+           r_index_s3_angle(2)*ones(size(r_index_s3_120_elec)), ...
+           r_index_s3_angle(3)*ones(size(r_index_s3_150_elec)), ...
+           r_index_s3_angle(4)*ones(size(r_all_0_elec(4, :)))];
+[pp, ss] = polyfit(x_angle, double(y_elec), 1); % elec = a * angle + b ==> angle = (elec - b) / a
+a = pp(1); b = pp(2);
+pp(1) = 1 / a; pp(2) = -b / a;
+y_fit2 = polyval(pp, double(x_fit));
+
+
 % plot the fitted result
 figure;
 p1 = plot(r_index_s3_90_elec, r_index_s3_angle(1)*ones(1, size(r_index_s3_90_elec ,2)), 'r.'); hold on; grid on;
@@ -325,11 +363,12 @@ plot(r_all_0_elec(4, :), r_all_0_angle(4, :), 'b.');
 
 p3 = plot(x_fit, y_fit, 'r-');
 p4 = plot(x_fit, y_linear_fit, 'b-');
+p5 = plot(x_fit, y_fit2, 'g-');
 
 xlabel('Electrical signal', 'FontSize', 16); ylabel('Joint angle / degree', 'FontSize', 16);
 title('Right Index S3 Joint');
-legend([p1(1), p2(1), p3(1), p4(1)], 'Ground Truth', 'Linearly Mapped Result', ...
-                                     'Fitted Curve - Ground Truth', 'Fitted Curve - Linearly Mapped Result', ...
+legend([p1(1), p2(1), p3(1), p4(1), p5(1)], 'Ground Truth', 'Linearly Mapped Result', ...
+                                     'Fitted Curve - Ground Truth', 'Fitted Curve - Linearly Mapped Result', 'Reversely linearly mapped', ...
                                      'Location', 'NorthEastOutside', 'FontSize', 14);
 
                                  
@@ -425,6 +464,20 @@ n = 4;%3;%1; % order of magnitude
 [p, s] = polyfit(double(x), y, n);
 y_fit = polyval(p, double(x_fit));
 
+
+% 3 - way 3: least mean squares regression (elec = a * angle + b)
+% try least mean squares regression
+y_elec = [l_index_s3_90_elec, l_index_s3_120_elec, l_index_s3_150_elec, l_all_0_elec(4, :)];
+x_angle = [l_index_s3_angle(1)*ones(size(l_index_s3_90_elec)), ...
+           l_index_s3_angle(2)*ones(size(l_index_s3_120_elec)), ...
+           l_index_s3_angle(3)*ones(size(l_index_s3_150_elec)), ...
+           l_index_s3_angle(4)*ones(size(l_all_0_elec(4, :)))];
+[pp, ss] = polyfit(x_angle, double(y_elec), 1); % elec = a * angle + b ==> angle = (elec - b) / a
+a = pp(1); b = pp(2);
+pp(1) = 1 / a; pp(2) = -b / a;
+y_fit2 = polyval(pp, double(x_fit));
+
+
 % 3 - way 3: piecewise cubic Hermite interpolating polynomial, i.e. pchip
 % y_fit = pchip(double(x), double(y), double(x_fit));
 
@@ -445,11 +498,12 @@ plot(l_all_0_elec(4, :), l_all_0_angle(4, :), 'b.');
 
 p3 = plot(x_fit, y_fit, 'r-');
 p4 = plot(x_fit, y_linear_fit, 'b-');
+p5 = plot(x_fit, y_fit2, 'g-');
 
 xlabel('Electrical signal', 'FontSize', 16); ylabel('Joint angle / degree', 'FontSize', 16);
 title('Left Index S3 Joint');
-legend([p1(1), p2(1), p3(1), p4(1)], 'Ground Truth', 'Linearly Mapped Result', ...
-                                     'Fitted Curve - Ground Truth', 'Fitted Curve - Linearly Mapped Result', ...
+legend([p1(1), p2(1), p3(1), p4(1), p5(1)], 'Ground Truth', 'Linearly Mapped Result', ...
+                                     'Fitted Curve - Ground Truth', 'Fitted Curve - Linearly Mapped Result', 'Reversely linearly mapped', ...
                                      'Location', 'NorthEastOutside', 'FontSize', 14);
 
 
@@ -505,7 +559,7 @@ calib_finger(y_l_index_s3, x_l_index_s3, l_test_seq_1_index_s3_angle, l_test_seq
 
          
 
-%% Calibrate all required finger joints 
+%% Calibrate all flexion/extension joints of three fingers
 %prep
 finger_name = {'index', 'middle', 'ring'};
 joint_id = [[3, 4]; ...
@@ -514,7 +568,7 @@ joint_id = [[3, 4]; ...
 d_right = 15; % offset from left joints to right corresponding joints
 
 % read an example data for calibration
-test_seq_name = 'test_finger_1'; %'gun_new'; %'test_finger_2'; %'test_finger_1';
+test_seq_name = 'gun_new'; %'test_finger_1'; %'gun_new'; %'test_finger_2'; %'test_finger_1';
 test_seq_angle = h5read(calib_file_name, ['/', test_seq_name, '/glove_angle']);
 test_seq_elec = h5read(calib_file_name, ['/', test_seq_name, '/glove_elec']);
 test_seq_angle_calib = test_seq_angle; % for storing the calibrated data
@@ -561,6 +615,7 @@ for fid = 1 : 3
         r_150_elec = r_150_elec(r_id, :);
         
         % set paired data 
+        % 1 - use mean data only
         l_elec = [mean(l_90_elec), ...
             mean(l_120_elec), ...
             mean(l_150_elec), ...
@@ -569,8 +624,19 @@ for fid = 1 : 3
         r_elec = [mean(r_90_elec), ...
             mean(r_120_elec), ...
             mean(r_150_elec), ...
-            mean(r_all_0_elec(4, :))];
+            mean(r_all_0_elec(l_id, :))];
         r_angle = 180 - [90, 120, 150, 180]; 
+        % 2 - use all data
+%         l_elec = [l_90_elec, l_120_elec, l_150_elec, l_all_0_elec(l_id, :)];
+%         l_angle = [90 * ones(size(l_90_elec)), ...
+%                    60 * ones(size(l_120_elec)), ...
+%                    30 * ones(size(l_150_elec)), ...
+%                    0 * ones(size(l_all_0_elec(l_id, :)))];
+%         r_elec = [r_90_elec, r_120_elec, r_150_elec, r_all_0_elec(l_id, :)];
+%         r_angle = [90 * ones(size(r_90_elec)), ...
+%                    60 * ones(size(r_120_elec)), ...
+%                    30 * ones(size(r_150_elec)), ...
+%                    0 * ones(size(r_all_0_elec(l_id, :)))];       
         
         % get data for calibration 
         l_calib_angle = test_seq_angle(l_id, :);

@@ -10,9 +10,18 @@ function [angle_calib_l, angle_calib_r] = calib_finger(angle_l, elec_l, angle_re
 
 
 %% Fit polynomials for calibration
+% choose order of polynomial
 % n = 3;%1; %2; %4; %3; %2; 
-[p_l, s_l] = polyfit(double(elec_l), double(angle_l), 4); %n);
-[p_r, s_r] = polyfit(double(elec_r), double(angle_r), 2); %n);
+% [p_l, s_l] = polyfit(double(elec_l), double(angle_l), 4); %n);
+% [p_r, s_r] = polyfit(double(elec_r), double(angle_r), 2); %n);
+
+% Least Mean Squares regression
+[p_l, s_l] = polyfit(double(angle_l), double(elec_l), 1); 
+a = p_l(1); b = p_l(2);
+p_l(1) = 1 / a; p_l(2) = -b / a; % convert to angle = (elec - b) / a
+[p_r, s_r] = polyfit(double(angle_r), double(elec_r), 1); 
+a = p_r(1); b = p_r(2);
+p_r(1) = 1 / a; p_r(2) = -b / a; % convert to angle = (elec - b) / a
 
 
 % calibrate the raw data
@@ -67,8 +76,8 @@ if (display)
     
     % error comparison
     figure;
-    p1 = plot(1:num_points, angle_recorded_l - angle_recorded_r, 'b-'); hold on; grid on;
-    p2 = plot(1:num_points, angle_calib_l - angle_calib_r, 'r-'); 
+    p1 = plot(1:num_points, abs(angle_recorded_l - angle_recorded_r), 'b-'); hold on; grid on;
+    p2 = plot(1:num_points, abs(angle_calib_l - angle_calib_r), 'r-'); 
     xlabel('Points'); ylabel('Angle');
     title(['Comparison of Left-Right difference in ', joint_flag, ' Joint']);
     legend([p1(1), p2(1)], ['Linearly Mapped ', joint_flag], ['Calibrated ', joint_flag], 'Location', 'NorthEastOutside');
