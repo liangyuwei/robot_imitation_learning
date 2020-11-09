@@ -35,7 +35,8 @@ l_angle_min = zeros(1, 15); %zeros(1, 14); %l_angle_min(4) = 12;
 %               2239, 2596, 1671, 2223, 2385, 1471, 1801];
 l_angle_max = [45, 100, 53, 90, 120, 22, 90, ...
                120, 22, 90, 120, 35, 90, 120, ...
-               58]; %l_angle_max(4) = 83;
+               90];
+               %58]; %l_angle_max(4) = 83;
 
 % right glove
 %r_elec_min = [783, 323, 1936, 335, 327, 1686, 382, ...
@@ -49,7 +50,8 @@ r_angle_min = zeros(1, 15); %zeros(1, 14);
 %               1866, 2224, 1802, 2332, 2083, 1741, 2543];
 r_angle_max = [45, 100, 53, 90, 120, 22, 90, ...
                120, 22, 90, 120, 35, 90, 120, ...
-               58];
+               90];
+               %58];
            
            
 %% Test sequences data
@@ -507,6 +509,7 @@ legend([p1(1), p2(1), p3(1), p4(1), p5(1)], 'Ground Truth', 'Linearly Mapped Res
                                      'Location', 'NorthEastOutside', 'FontSize', 14);
 
 
+                                 
 %% Calibrate index S3 joint data according to calibration data       
 %{
 % load test sequence data
@@ -568,13 +571,13 @@ joint_id = [[3, 4]; ...
 d_right = 15; % offset from left joints to right corresponding joints
 
 % read an example data for calibration
-test_seq_name = 'gun_new'; %'test_finger_1'; %'gun_new'; %'test_finger_2'; %'test_finger_1';
+test_seq_name = 'kaoqin_new'; %'test_finger_1'; %'gun_new'; %'test_finger_2'; %'test_finger_1';
 test_seq_angle = h5read(calib_file_name, ['/', test_seq_name, '/glove_angle']);
 test_seq_elec = h5read(calib_file_name, ['/', test_seq_name, '/glove_elec']);
 test_seq_angle_calib = test_seq_angle; % for storing the calibrated data
 
 
-% iterate
+% 1 - iterate over flexion/extension for four fingers
 for fid = 1 : 3
     for jid = 1 : 2
         %% get ID
@@ -616,27 +619,27 @@ for fid = 1 : 3
         
         % set paired data 
         % 1 - use mean data only
-        l_elec = [mean(l_90_elec), ...
-            mean(l_120_elec), ...
-            mean(l_150_elec), ...
-            mean(l_all_0_elec(l_id, :))];
-        l_angle = 180 - [90, 120, 150, 180]; 
-        r_elec = [mean(r_90_elec), ...
-            mean(r_120_elec), ...
-            mean(r_150_elec), ...
-            mean(r_all_0_elec(l_id, :))];
-        r_angle = 180 - [90, 120, 150, 180]; 
+%         l_elec = [mean(l_90_elec), ...
+%             mean(l_120_elec), ...
+%             mean(l_150_elec), ...
+%             mean(l_all_0_elec(l_id, :))];
+%         l_angle = 180 - [90, 120, 150, 180]; 
+%         r_elec = [mean(r_90_elec), ...
+%             mean(r_120_elec), ...
+%             mean(r_150_elec), ...
+%             mean(r_all_0_elec(l_id, :))];
+%         r_angle = 180 - [90, 120, 150, 180]; 
         % 2 - use all data
-%         l_elec = [l_90_elec, l_120_elec, l_150_elec, l_all_0_elec(l_id, :)];
-%         l_angle = [90 * ones(size(l_90_elec)), ...
-%                    60 * ones(size(l_120_elec)), ...
-%                    30 * ones(size(l_150_elec)), ...
-%                    0 * ones(size(l_all_0_elec(l_id, :)))];
-%         r_elec = [r_90_elec, r_120_elec, r_150_elec, r_all_0_elec(l_id, :)];
-%         r_angle = [90 * ones(size(r_90_elec)), ...
-%                    60 * ones(size(r_120_elec)), ...
-%                    30 * ones(size(r_150_elec)), ...
-%                    0 * ones(size(r_all_0_elec(l_id, :)))];       
+        l_elec = [l_90_elec, l_120_elec, l_150_elec, l_all_0_elec(l_id, :)];
+        l_angle = [90 * ones(size(l_90_elec)), ...
+                   60 * ones(size(l_120_elec)), ...
+                   30 * ones(size(l_150_elec)), ...
+                   0 * ones(size(l_all_0_elec(l_id, :)))];
+        r_elec = [r_90_elec, r_120_elec, r_150_elec, r_all_0_elec(l_id, :)];
+        r_angle = [90 * ones(size(r_90_elec)), ...
+                   60 * ones(size(r_120_elec)), ...
+                   30 * ones(size(r_150_elec)), ...
+                   0 * ones(size(r_all_0_elec(l_id, :)))];       
         
         % get data for calibration 
         l_calib_angle = test_seq_angle(l_id, :);
@@ -653,11 +656,13 @@ for fid = 1 : 3
         finger_flag = ['S', num2str(joint_id(fid, jid))];
         [new_angle_calib_l, new_angle_calib_r] = calib_finger(l_angle, l_elec, l_calib_angle, l_calib_elec, ...
                                                               r_angle, r_elec, r_calib_angle, r_calib_elec, ...
-                                                              true, finger_flag);
+                                                              l_angle_min(l_id), l_angle_max(l_id), ...
+                                                              r_angle_min(l_id), r_angle_max(l_id), ..., 
+                                                              false, finger_flag);
         
         % post-processing, clampping on angle data
-%         new_angle_calib_l = max(min(new_angle_calib_l, l_elec_max(l_id)), l_elec_min(l_id));
-%         new_angle_calib_r = max(min(new_angle_calib_r, r_elec_max(l_id)), r_elec_min(l_id)); % use l_id for r_elec_min too
+%         new_angle_calib_l = max(min(new_angle_calib_l, l_angle_max(l_id)), l_angle_min(l_id));
+%         new_angle_calib_r = max(min(new_angle_calib_r, r_angle_max(l_id)), r_angle_min(l_id)); % use l_id for r_elec_min too
                                                           
         % store the calibrated data
         test_seq_angle_calib(l_id, :) = new_angle_calib_l;
@@ -667,10 +672,61 @@ for fid = 1 : 3
     
 end
 
+% 2 - iterate over abduction/adduction for all five fingers
+% S2 (thumb-index)
 
-    
-% save the calibrated results
-%{
+% S5 (index-middle)
+
+% S8 (middle-ring)
+
+% S11 (ring-little)
+
+
+
+% 3 - thumb angles
+% S14
+thumb_s14_0_elec = h5read(calib_file_name, ['/lr_thumb_s14_0/glove_elec']);
+l_thumb_s14_0_elec = thumb_s14_0_elec(15, :);
+r_thumb_s14_0_elec = thumb_s14_0_elec(15+d_right, :);
+
+thumb_s14_90_elec = h5read(calib_file_name, ['/lr_thumb_s14_90/glove_elec']);
+l_thumb_s14_90_elec = thumb_s14_90_elec(15, :);
+r_thumb_s14_90_elec = thumb_s14_90_elec(15+d_right, :);
+
+% prepare data to aid calibration
+l_elec = [l_thumb_s14_0_elec, l_thumb_s14_90_elec];
+l_angle = [0 * ones(size(l_thumb_s14_0_elec)), 90 * ones(size(l_thumb_s14_90_elec))];
+r_elec = [r_thumb_s14_0_elec, r_thumb_s14_90_elec];
+r_angle = [0 * ones(size(r_thumb_s14_0_elec)), 90 * ones(size(r_thumb_s14_90_elec))];
+
+% get data for calibration 
+l_calib_angle = test_seq_angle(15, :);
+l_calib_elec = test_seq_elec(15, :);
+r_calib_angle = test_seq_angle(15+d_right, :);
+r_calib_elec = test_seq_elec(15+d_right, :);  
+
+% calibrate
+finger_flag = 'S14';
+[new_angle_calib_l, new_angle_calib_r] = calib_finger(l_angle, l_elec, l_calib_angle, l_calib_elec, ...
+                                                      r_angle, r_elec, r_calib_angle, r_calib_elec, ...
+                                                      l_angle_min(15), l_angle_max(15), ...
+                                                      r_angle_min(15), r_angle_max(15), ..., 
+                                                      false, finger_flag);
+
+% save the calibrated result
+test_seq_angle_calib(15, :) = new_angle_calib_l;
+test_seq_angle_calib(15+d_right, :) = new_angle_calib_r;
+
+
+% S0
+
+
+% S1
+
+
+
+%% save the calibrated results
+%
 h5create(calib_file_name, ['/', test_seq_name, '_calibrated'], size(test_seq_angle_calib));
 h5write(calib_file_name, ['/', test_seq_name, '_calibrated'], test_seq_angle_calib);
 %}

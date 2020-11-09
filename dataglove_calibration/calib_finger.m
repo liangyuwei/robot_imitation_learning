@@ -1,4 +1,8 @@
-function [angle_calib_l, angle_calib_r] = calib_finger(angle_l, elec_l, angle_recorded_l, elec_calib_l, angle_r, elec_r, angle_recorded_r, elec_calib_r, display, joint_flag)
+function [angle_calib_l, angle_calib_r] = calib_finger(angle_l, elec_l, angle_recorded_l, elec_calib_l, ...
+                                                       angle_r, elec_r, angle_recorded_r, elec_calib_r, ...
+                                                       l_angle_min, l_angle_max, ...
+                                                       r_angle_min, r_angle_max, ...
+                                                       display, joint_flag)
 %% Calibrate finger joint data using paired data of angle and electricity data.
 % Input:
 %   angle_lr - angle data, 1 x N, for calibration.
@@ -33,6 +37,11 @@ angle_calib_r = polyval(p_r, double(elec_calib_r));
 % angle_calib_r = spline(double(elec_r), double(angle_r), double(elec_calib_r));
 
 
+% post-processing, clampping resultant angles to be within range
+angle_calib_l = max(min(angle_calib_l, l_angle_max), l_angle_min);
+angle_calib_r = max(min(angle_calib_r, r_angle_max), r_angle_min); 
+
+
 % display the results for comparison
 num_points = size(elec_calib_l, 2);
 if (display)
@@ -44,15 +53,15 @@ if (display)
     title(['Linearly Mapped Left and Right Index ', joint_flag, ' Joint']);
     legend([p1(1), p2(1)], ['Left Index ', joint_flag], ['Right Index ', joint_flag], 'Location', 'NorthEastOutside');
     
-    angle_recorded_lr_norm = mapminmax([angle_recorded_l, angle_recorded_r], 0, 1);
-    angle_recorded_l_norm = angle_recorded_lr_norm(1 : length(angle_recorded_l));
-    angle_recorded_r_norm = angle_recorded_lr_norm(length(angle_recorded_l)+1 : end);
-    figure;
-    p1 = plot(1:num_points, angle_recorded_l_norm, 'b-'); hold on; grid on;
-    p2 = plot(1:num_points, angle_recorded_r_norm, 'r-');
-    xlabel('Points'); ylabel('Angle');
-    title(['Linearly Mapped Left and Right Index (normalized) ', joint_flag, ' Joint']);
-    legend([p1(1), p2(1)], ['Left Index ', joint_flag], ['Right Index ', joint_flag], 'Location', 'NorthEastOutside');
+%     angle_recorded_lr_norm = mapminmax([angle_recorded_l, angle_recorded_r], 0, 1);
+%     angle_recorded_l_norm = angle_recorded_lr_norm(1 : length(angle_recorded_l));
+%     angle_recorded_r_norm = angle_recorded_lr_norm(length(angle_recorded_l)+1 : end);
+%     figure;
+%     p1 = plot(1:num_points, angle_recorded_l_norm, 'b-'); hold on; grid on;
+%     p2 = plot(1:num_points, angle_recorded_r_norm, 'r-');
+%     xlabel('Points'); ylabel('Angle');
+%     title(['Linearly Mapped Left and Right Index (normalized) ', joint_flag, ' Joint']);
+%     legend([p1(1), p2(1)], ['Left Index ', joint_flag], ['Right Index ', joint_flag], 'Location', 'NorthEastOutside');
     
     
     % calibrated
@@ -63,15 +72,15 @@ if (display)
     title(['Calibrated Left and Right Index ', joint_flag, ' Joint']);
     legend([p1(1), p2(1)], ['Left Index ', joint_flag], ['Right Index ', joint_flag], 'Location', 'NorthEastOutside');
     
-    angle_calib_lr_norm = mapminmax([angle_calib_l, angle_calib_r], 0, 1);
-    angle_calib_l_norm = angle_calib_lr_norm(1 : length(angle_calib_l));
-    angle_calib_r_norm = angle_calib_lr_norm(length(angle_calib_l)+1 : end);
-    figure;
-    p1 = plot(1:num_points, angle_calib_l_norm, 'b-'); hold on; grid on;
-    p2 = plot(1:num_points, angle_calib_r_norm, 'r-');
-    xlabel('Points'); ylabel('Angle');
-    title(['Calibrated Left and Right Index (normalized) ', joint_flag, ' Joint']);
-    legend([p1(1), p2(1)], ['Left Index ', joint_flag], ['Right Index ', joint_flag], 'Location', 'NorthEastOutside');
+%     angle_calib_lr_norm = mapminmax([angle_calib_l, angle_calib_r], 0, 1);
+%     angle_calib_l_norm = angle_calib_lr_norm(1 : length(angle_calib_l));
+%     angle_calib_r_norm = angle_calib_lr_norm(length(angle_calib_l)+1 : end);
+%     figure;
+%     p1 = plot(1:num_points, angle_calib_l_norm, 'b-'); hold on; grid on;
+%     p2 = plot(1:num_points, angle_calib_r_norm, 'r-');
+%     xlabel('Points'); ylabel('Angle');
+%     title(['Calibrated Left and Right Index (normalized) ', joint_flag, ' Joint']);
+%     legend([p1(1), p2(1)], ['Left Index ', joint_flag], ['Right Index ', joint_flag], 'Location', 'NorthEastOutside');
     
     
     % error comparison
