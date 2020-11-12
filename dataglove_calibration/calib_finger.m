@@ -1,16 +1,17 @@
-function [angle_calib_l, angle_calib_r] = calib_finger(angle_l, elec_l, angle_recorded_l, elec_calib_l, ...
-                                                       angle_r, elec_r, angle_recorded_r, elec_calib_r, ...
+function [angle_calib_l, angle_calib_r] = calib_finger(angle_sample_l, elec_sample_l, angle_recorded_l, elec_calib_l, ...
+                                                       angle_sample_r, elec_sample_r, angle_recorded_r, elec_calib_r, ...
                                                        l_angle_min, l_angle_max, ...
                                                        r_angle_min, r_angle_max, ...
                                                        display, joint_flag)
 %% Calibrate finger joint data using paired data of angle and electricity data.
+% use samples pairs (angle_sample_{lr}, elec_sample_{lr}) to calibrate a new piece of data *elec_calib_l*   
 % Input:
-%   angle_lr - angle data, 1 x N, for calibration.
-%   elec_lr - electricity signal data, 1 x N, for calibration.
-%   elec_calib_lr - electricity signal data to calibrate.
-%   angle_recorded_lr - recorded angle data given by dataglove SDK, which is actually linearly mapped.      
+%   angle_sample_lr - angle sample data, 1 x N, for calibration.
+%   elec_sample_lr - electricity signal sample data, 1 x N, for calibration.
+%   elec_calib_lr - a new piece of electricity signal data to calibrate.
+%   angle_recorded_lr - recorded angle data given by dataglove SDK, which is actually linearly mapped. (for comparison)      
 % Output:
-%   angle_calib_lr - calibrated angle data.
+%   angle_calib_lr - calibrated angle data. 
 
 
 %% Fit polynomials for calibration
@@ -20,10 +21,10 @@ function [angle_calib_l, angle_calib_r] = calib_finger(angle_l, elec_l, angle_re
 % [p_r, s_r] = polyfit(double(elec_r), double(angle_r), 2); %n);
 
 % Least Mean Squares regression
-[p_l, s_l] = polyfit(double(angle_l), double(elec_l), 1); 
+[p_l, s_l] = polyfit(double(angle_sample_l), double(elec_sample_l), 1); 
 a = p_l(1); b = p_l(2);
 p_l(1) = 1 / a; p_l(2) = -b / a; % convert to angle = (elec - b) / a
-[p_r, s_r] = polyfit(double(angle_r), double(elec_r), 1); 
+[p_r, s_r] = polyfit(double(angle_sample_r), double(elec_sample_r), 1); 
 a = p_r(1); b = p_r(2);
 p_r(1) = 1 / a; p_r(2) = -b / a; % convert to angle = (elec - b) / a
 
@@ -50,8 +51,8 @@ if (display)
     p1 = plot(1:num_points, angle_recorded_l, 'b-'); hold on; grid on;
     p2 = plot(1:num_points, angle_recorded_r, 'r-');
     xlabel('Points'); ylabel('Angle');
-    title(['Linearly Mapped Left and Right Index ', joint_flag, ' Joint']);
-    legend([p1(1), p2(1)], ['Left Index ', joint_flag], ['Right Index ', joint_flag], 'Location', 'NorthEastOutside');
+    title(['Linearly Mapped Left and Right Finger ', joint_flag, ' Joint']);
+    legend([p1(1), p2(1)], ['Left Finger ', joint_flag], ['Right Finger ', joint_flag], 'Location', 'NorthEastOutside');
     
 %     angle_recorded_lr_norm = mapminmax([angle_recorded_l, angle_recorded_r], 0, 1);
 %     angle_recorded_l_norm = angle_recorded_lr_norm(1 : length(angle_recorded_l));
@@ -69,8 +70,8 @@ if (display)
     p1 = plot(1:num_points, angle_calib_l, 'b-'); hold on; grid on;
     p2 = plot(1:num_points, angle_calib_r, 'r-');
     xlabel('Points'); ylabel('Angle');
-    title(['Calibrated Left and Right Index ', joint_flag, ' Joint']);
-    legend([p1(1), p2(1)], ['Left Index ', joint_flag], ['Right Index ', joint_flag], 'Location', 'NorthEastOutside');
+    title(['Calibrated Left and Right Finger ', joint_flag, ' Joint']);
+    legend([p1(1), p2(1)], ['Left Finger ', joint_flag], ['Right Finger ', joint_flag], 'Location', 'NorthEastOutside');
     
 %     angle_calib_lr_norm = mapminmax([angle_calib_l, angle_calib_r], 0, 1);
 %     angle_calib_l_norm = angle_calib_lr_norm(1 : length(angle_calib_l));
